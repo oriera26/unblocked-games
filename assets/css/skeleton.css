@@ -1,0 +1,104 @@
+/* Afegir al final de styles.css */
+
+/* Animacions per skeleton */
+@keyframes skeleton-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Grid skeleton */
+.skeleton-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 30px;
+    opacity: 0.7;
+}
+
+.skeleton-grid-item {
+    animation: skeleton-fade-in 0.3s ease forwards;
+    opacity: 0;
+}
+
+/* Estats de les imatges */
+.card-image-container.skeleton {
+    background-color: var(--skeleton-base) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-image-container.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--skeleton-gradient);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.7s infinite linear;
+}
+
+.card-image-container.loaded {
+    background: transparent !important;
+}
+
+.card-image-container.loaded::after {
+    display: none;
+}
+
+/* Millores d'animació */
+.card {
+    animation: skeleton-fade-in 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    opacity: 0;
+}
+
+.card:nth-child(n) {
+    animation-delay: calc(var(--index, 0) * 0.05s);
+}
+
+/* Optimització per moltes cards */
+.grid {
+    will-change: transform;
+    contain: layout style paint;
+}
+
+/* Ajustos per skeleton a mode light */
+.card-image-container.skeleton {
+    --skeleton-base: #e5e5ea;
+    --skeleton-highlight: #f2f2f7;
+    --skeleton-gradient: linear-gradient(
+        90deg,
+        var(--skeleton-base) 25%,
+        var(--skeleton-highlight) 50%,
+        var(--skeleton-base) 75%
+    );
+}
+
+/* Transició suau per imatges carregades */
+.card-image-container img {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.card-image-container.loaded img {
+    opacity: 1;
+}
+
+/* Millores per dispositius mòbils */
+@media (max-width: 768px) {
+    .skeleton-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .card-image-container.skeleton::after {
+        animation-duration: 2s;
+    }
+    
+    .card {
+        animation-duration: 0.3s;
+    }
+}

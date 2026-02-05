@@ -1,340 +1,141 @@
 <!DOCTYPE html>
 <html lang="ca">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Descarrega | App Nativa</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-dark: #050505;
-            --accent: #00f2ff;
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="theme-color" content="#007AFF">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            color: white;
-        }
+    <!-- Meta tags per a PWA -->
+    <meta name="application-name" content="ulaGames">
+    <meta name="apple-mobile-web-app-title" content="ulaGames">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-        /* Fons de llums líquides */
-        .liquid-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            filter: blur(80px);
-            opacity: 0.4;
-        }
+    <!-- Icones per a iOS -->
+    <link rel="apple-touch-icon" href="icons/icon-pla">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-pla.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-pla.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-pla.png">
 
-        .orb {
-            position: absolute;
-            width: 50vw;
-            height: 50vw;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #0066ff, #00f2ff);
-            animation: move 20s infinite alternate ease-in-out;
-        }
+    <!-- Safari pinned tab icon -->
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#007AFF">
 
-        .orb-2 {
-            background: linear-gradient(45deg, #7000ff, #ff0070);
-            right: -10%;
-            bottom: -10%;
-            animation-duration: 25s;
-            animation-delay: -5s;
-        }
+    <!-- Theme color per a diferents navegadors -->
+    <meta name="theme-color" content="#007AFF" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="msapplication-TileColor" content="#007AFF">
+    <meta name="msapplication-config" content="browserconfig.xml">
 
-        @keyframes move {
-            from { transform: translate(-10%, -10%) rotate(0deg); }
-            to { transform: translate(10%, 10%) rotate(180deg); }
-        }
-
-        /* Contenidor Acrílic Principal */
-        .acrylic-container {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 40px;
-            padding: 3rem;
-            text-align: center;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
-            max-width: 450px;
-            width: 90%;
-            position: relative;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden;
-        }
-
-        /* Botó Líquid */
-        .download-trigger {
-            position: relative;
-            width: 140px;
-            height: 140px;
-            margin: 0 auto 2rem;
-            cursor: pointer;
-        }
-
-        .liquid-sphere {
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            overflow: hidden;
-        }
-
-        .liquid-fill {
-            position: absolute;
-            bottom: -110%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: var(--accent);
-            border-radius: 42%;
-            transition: bottom 1s ease;
-            animation: rotate-liquid 4s infinite linear;
-            opacity: 0.8;
-            pointer-events: none;
-        }
-
-        .download-trigger:hover .liquid-fill { bottom: -40%; }
-        .download-trigger.loading .liquid-fill { bottom: 0% !important; }
-
-        @keyframes rotate-liquid {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* Gestió de Vistes (Sense Refrescar) */
-        .view {
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            width: 100%;
-        }
-
-        .hidden-view {
-            display: none;
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        .visible-view {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Tutorial Smart Screen */
-        .smartscreen-tip {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 1rem;
-            margin-top: 1rem;
-            width: 100%;
-            border: 1px solid rgba(255,255,255,0.1);
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .step-number {
-            background: var(--accent);
-            color: black;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        #btn-back {
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-        
-        #btn-back:hover {
-            color: white;
-        }
-    </style>
+    <!-- Per a iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Per a Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Inici | ulaGames</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="icons/favicon.png">
+    <!-- Estils propis -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/skeleton.css">
 </head>
 <body>
-
-    <div class="liquid-bg">
-        <div class="orb"></div>
-        <div class="orb orb-2"></div>
-    </div>
-
-    <div class="acrylic-container" id="main-container">
-        
-        <!-- PANTALLA 1: DESCARREGA -->
-        <div id="view-download" class="view visible-view">
-            <div class="download-trigger" id="btn-download" onclick="handleDownload()">
-                <div class="liquid-sphere">
-                    <div class="liquid-fill"></div>
-                    <svg class="relative z-10 w-12 h-12 stroke-white fill-none" viewBox="0 0 24 24">
-                        <path d="M12 5v14M19 12l-7 7-7-7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-            </div>
-
-            <h1 class="text-2xl font-semibold tracking-tight mb-2">ulaGames v2.6.7 (beta)</h1>
-            <p id="status-text" class="text-gray-400 text-sm font-light mb-8 uppercase tracking-[0.2em]">Descarrega la nova aplicació</p>
-            
-            <div class="h-[1px] w-12 bg-white/20 mx-auto mb-8"></div>
-            
-            <div class="flex justify-between w-full text-[10px] uppercase tracking-widest text-gray-500">
-                <span>Windows 7/8/10/11</span>
-                <span>329 MB</span>
-            </div>
-        </div>
-
-        <!-- PANTALLA 2: TUTORIAL SMART SCREEN -->
-        <div id="view-tutorial" class="view hidden-view">
-            <div class="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6 border border-blue-400/30">
-                <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-            </div>
-            
-            <h2 class="text-xl font-bold mb-4">Com instal·lar?</h2>
-            <p class="text-gray-400 text-sm mb-6">Si Windows bloqueja l'aplicació, segueix aquests passos per instalar</p>
-
-            <div class="space-y-3 w-full">
-                <div class="smartscreen-tip">
-                    <div class="step-number text-xs">1</div>
-                    <p class="text-xs text-gray-200">Clica <span class="text-blue-400 font-bold">"Més informació"</span> a la finestra de Windows.</p>
-                </div>
-                <div class="smartscreen-tip">
-                    <div class="step-number text-xs">2</div>
-                    <p class="text-xs text-gray-200">Clica el botó <span class="text-blue-400 font-bold">"Executar de totes maneres"</span>.</p>
-                </div>
-            </div>
-
-            <div id="btn-back" onclick="resetUI()" class="mt-8 text-[10px] uppercase tracking-widest text-gray-500">
-                Torna a la descàrrega
-            </div>
-        </div>
-
+    <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease;">
+        <video src="assets/videos/loading.mp4" autoplay loop muted playsinline style="width: 200px; height: auto; border-radius: 10px;"></video>
     </div>
 
     <script>
-        const container = document.getElementById('main-container');
-        const btnDownload = document.getElementById('btn-download');
-        const viewDownload = document.getElementById('view-download');
-        const viewTutorial = document.getElementById('view-tutorial');
-        const statusText = document.getElementById('status-text');
-
-        // Tilt 3D suau
-        document.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth / 2 - e.pageX) / 65;
-            const y = (window.innerHeight / 2 - e.pageY) / 65;
-            container.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
-        });
-
-        async function handleDownload() {
-            if (btnDownload.classList.contains('loading')) return;
-
-            btnDownload.classList.add('loading');
-            statusText.textContent = "Iniciant descàrrega...";
-
-            try {
-                // Per evitar la redirecció i forçar la descàrrega, fem un fetch del blob
-                const url = 'https://www.dropbox.com/scl/fi/6yxhntragojodz8l1ha4e/ulaGames-2.6.7-win-x64.exe?rlkey=9ze9eo3oyajutgt5bm2ctfw07&st=zzbqrim8&dl=1';
-                
-                // Opció més compatible: usem un link directe amb atribut download
-                // Però alguns navegadors ignoren 'download' si el domini és diferent.
-                // Usem un hack de descàrrega neta:
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-                
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.setAttribute('download', 'LauncherNativa.exe');
-                document.body.appendChild(link);
-                link.click();
-                
-                // Neteja
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(blobUrl);
-
-                // Transició interna cap al tutorial
-                setTimeout(() => {
-                    showTutorial();
-                }, 800);
-
-            } catch (error) {
-                // Fallback si el fetch falla per CORS (molt comú amb GitHub)
-                // Usem el mètode tradicional de link directe
-                const link = document.createElement('a');
-                link.href = 'https://www.dropbox.com/scl/fi/6yxhntragojodz8l1ha4e/ulaGames-2.6.7-win-x64.exe?rlkey=9ze9eo3oyajutgt5bm2ctfw07&st=zzbqrim8&dl=1';
-                link.setAttribute('download', 'LauncherNativa.exe');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                setTimeout(() => {
-                    showTutorial();
-                }, 1000);
+        (function() {
+            const overlay = document.getElementById('loadingOverlay');
+            const savedTheme = localStorage.getItem('ula-theme');
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            // Apliquem el color de fons immediatament segons el tema guardat
+            if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+                overlay.style.background = '#000000';
+            } else {
+                overlay.style.background = '#ffffff';
             }
-        }
 
-        function showTutorial() {
-            // Ocultar pantalla de descàrrega
-            viewDownload.classList.remove('visible-view');
-            viewDownload.classList.add('hidden-view');
+            // Generem un temps aleatori entre 4000ms (4s) i 12000ms (12s)
+            const randomTime = Math.floor(Math.random() * (12000 - 4000 + 1)) + 2000;
 
-            setTimeout(() => {
-                viewDownload.style.display = 'none';
-                viewTutorial.style.display = 'flex';
-                
-                // Reflow per a l'animació d'entrada
-                void viewTutorial.offsetWidth; 
-                
-                viewTutorial.classList.remove('hidden-view');
-                viewTutorial.classList.add('visible-view');
-                container.style.maxWidth = "500px";
-            }, 400);
-        }
-
-        function resetUI() {
-            // Tornar a l'estat inicial sense refrescar la pàgina
-            viewTutorial.classList.remove('visible-view');
-            viewTutorial.classList.add('hidden-view');
-
-            setTimeout(() => {
-                viewTutorial.style.display = 'none';
-                viewDownload.style.display = 'flex';
-                
-                // Reset dels estats del botó
-                btnDownload.classList.remove('loading');
-                statusText.textContent = "Rendiment Absolut";
-                container.style.maxWidth = "450px";
-
-                void viewDownload.offsetWidth;
-                viewDownload.classList.remove('hidden-view');
-                viewDownload.classList.add('visible-view');
-            }, 400);
-        }
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 500);
+                }, randomTime);
+            });
+        })();
     </script>
+
+    <!-- Fons i Aura Global -->
+    <div class="ambient-bg"><div class="blob"></div></div>
+    <div id="cursorAura" class="cursor-aura"></div>
+
+    <nav>
+        <div class="nav-left">
+            <div class="logo-box">
+                <i class="fa-solid fa-bars"></i>
+                <span>unlockedGames</span>
+            </div>
+            <div class="dropdown-menu">
+                <a href="index.html" class="menu-link"><i class="fa-solid fa-arrow-rotate-right"></i> Actualitzar Pàgina</a>
+                <a href="stats.html" class="menu-link"><i class="fa-solid fa-chart-line"></i> Estadístiques</a>
+                <a href="javascript:void(0)" onclick="togglePerformanceMode()" class="menu-link">
+                    <i class="fa-solid fa-gauge-high"></i> <span id="performanceModeText">Mode de rendiment: OFF</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Cerca el teu proper joc...">
+        </div>
+
+        <div style="font-weight: 600; font-size: 13px; color: var(--text-muted);">v2.6.7 (beta)</div>
+
+        <!-- Theme Toggle -->
+        <div class="theme-toggle-container">
+            <button class="theme-toggle" id="themeToggle" aria-label="Canviar tema">
+                <div class="theme-toggle-track">
+                    <div class="theme-toggle-sun">
+                        <svg viewBox="0 0 24 24">
+                            <path></path>
+                        </svg>
+                    </div>
+                    <div class="theme-toggle-moon">
+                        <svg viewBox="0 0 24 24">
+                            <path></path>
+                        </svg>
+                    </div>
+                    <div class="theme-toggle-thumb"></div>
+                </div>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- El grid es generarà via JS -->
+        <div class="grid" id="gamesGrid"></div>
+    </div>
+
+    <!-- Modal del Joc -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <div class="close-btn" onclick="GameCore.close()"><i class="fa-solid fa-xmark"></i></div>
+            <iframe id="gameIframe" src="" frameborder="0" style="width:100%; height:100%;"></iframe>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/gameList.js"></script>
+    <script src="assets/js/scripts.js"></script>
 </body>
 </html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crossbar Challenge</title>
+    <style>
+        /* Eliminem qualsevol espai residual del navegador */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Evita qualsevol scroll a la pàgina principal */
+            background-color: #000;
+        }
+
+        /* L'iframe s'adapta al 100% de l'alt i l'ample de la finestra */
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 
+        L'atribut 'allow' permet funcionalitats clau per a jocs.
+        L'atribut 'sandbox' amb 'allow-same-origin' és el que permet guardar cookies/localStorage.
+    -->
+    <iframe 
+        src="https://showcase.codethislab.com/games/crossbar_challenge/" 
+        allow="autoplay; fullscreen; keyboard; gamepad"
+        sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-presentation allow-scripts allow-same-origin"
+        scrolling="no">
+    </iframe>
+
+</body>
+</html>

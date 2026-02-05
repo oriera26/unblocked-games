@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penalty Shooters 3</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --accent-color: #3b82f6;
+            --text-color: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-color);
+        }
+
+        #app-wrapper {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* The Game Canvas/Frame Area */
+        #game-area {
+            flex-grow: 1;
+            position: relative;
+            background: radial-gradient(circle, #1a1a1f 0%, #000 100%);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none; /* Hidden until play button is clicked */
+        }
+
+        /* Splash Screen / Play Button */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+            background: rgba(0,0,0,0.8);
+            transition: opacity 0.5s ease;
+        }
+
+        .play-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            transition: transform 0.2s, background-color 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            background-color: #2563eb;
+        }
+
+        /* Toolbar for Stealth and Controls */
+        #toolbar {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        #toolbar:hover {
+            opacity: 1;
+        }
+
+        .tool-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            backdrop-filter: blur(5px);
+        }
+
+        .tool-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Banner Text */
+        h1 { margin-bottom: 10px; font-size: 2.5rem; }
+        p { margin-bottom: 30px; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div id="app-wrapper">
+    <div id="game-area">
+        <!-- Splash screen to prevent immediate external loading -->
+        <div id="overlay">
+            <h1>Penalty Shooters 3</h1>
+            <p>Ready to score the winning goal?</p>
+            <button class="play-btn" onclick="startGame()">Play Now</button>
+        </div>
+
+        <!-- The actual game frame -->
+        <iframe 
+            id="game-frame"
+            src="about:blank" 
+            referrerpolicy="no-referrer"
+            allow="autoplay; fullscreen; focus"
+            sandbox="allow-scripts allow-same-origin allow-forms"
+            scrolling="no">
+        </iframe>
+    </div>
+
+    <div id="toolbar">
+        <button class="tool-btn" onclick="toggleStealth()">Stealth Mode</button>
+        <button class="tool-btn" onclick="toggleFullscreen()">Fullscreen</button>
+    </div>
+</div>
+
+<script>
+    const gameUrl = "https://html5.gamedistribution.com/rvvASMiM/ac793d41fb5845e59afaad6292e141e1/index.html";
+    const frame = document.getElementById('game-frame');
+    const overlay = document.getElementById('overlay');
+    let isStealth = false;
+
+    function startGame() {
+        // Only load the game when requested
+        frame.src = gameUrl;
+        frame.style.display = "block";
+        overlay.classList.add('hidden');
+        
+        // Give focus to the frame
+        setTimeout(() => {
+            frame.focus();
+        }, 500);
+    }
+
+    function toggleStealth() {
+        isStealth = !isStealth;
+        if (isStealth) {
+            document.title = "My Drive - Google Drive";
+            // Change favicon to a generic folder/drive icon if needed
+        } else {
+            document.title = "Penalty Shooters 3";
+        }
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    // Keep the frame focused so keyboard controls work
+    window.addEventListener('blur', () => {
+        if (frame.style.display === "block") {
+            setTimeout(() => {
+                frame.focus();
+            }, 100);
+        }
+    });
+</script>
+
+</body>
+</html>
