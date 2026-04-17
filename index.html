@@ -455,7 +455,63 @@
             // Mapa per reutilitzar canvas
             const cardCanvasCache = new Map();
 
-            function drawCardOnce(canvas, color, initial) {
+			function drawCardOnce(canvas, color, initial) {
+				const ctx = canvas.getContext('2d', { alpha: true });
+				const w = canvas.width, h = canvas.height;
+				const centerX = w / 2, centerY = h / 2;
+				const radius = w * 0.45; // radi per al gradient radial
+				
+				// Netejar
+				ctx.clearRect(0, 0, w, h);
+				
+				// 1. Fons base amb gradient radial suau (3 colors)
+				const gradient = ctx.createRadialGradient(
+					centerX - 5, centerY - 8, radius * 0.2,  // desplaçat per donar sensació de llum
+					centerX, centerY, radius * 1.2
+				);
+				gradient.addColorStop(0, color);                      // color principal al centre
+				gradient.addColorStop(0.5, adjustColor(color, 15));   // lleugerament més clar
+				gradient.addColorStop(1, adjustColor(color, -20));    // més fosc a les vores
+				
+				ctx.fillStyle = gradient;
+				ctx.fillRect(0, 0, w, h);
+				
+				// 2. Reflex superior (efecte vidre) - gradient lineal de blanc a transparent
+				const glassGradient = ctx.createLinearGradient(0, 0, 0, h * 0.6);
+				glassGradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+				glassGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.1)');
+				glassGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+				
+				ctx.fillStyle = glassGradient;
+				ctx.fillRect(0, 0, w, h * 0.7);
+				
+				// 3. Ombres interiors simulades (per donar profunditat)
+				ctx.save();
+				ctx.globalCompositeOperation = 'overlay';
+				const shadowGrad = ctx.createRadialGradient(centerX-3, centerY-5, 2, centerX, centerY, radius);
+				shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
+				shadowGrad.addColorStop(1, 'rgba(0,0,0,0.1)');
+				ctx.fillStyle = shadowGrad;
+				ctx.fillRect(0, 0, w, h);
+				ctx.restore();
+				
+				// 4. Lletra inicial (amb ombra suau perquè ressalti)
+				ctx.font = `600 ${w * 0.45}px -apple-system, 'SF Pro Text', sans-serif`;
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'middle';
+				ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+				ctx.shadowBlur = 8;
+				ctx.shadowOffsetY = 1;
+				ctx.fillStyle = '#ffffff';
+				ctx.fillText(initial, centerX, centerY);
+				ctx.shadowColor = 'transparent';
+				ctx.shadowBlur = 0;
+				
+				// 5. Lleu contorn per definir la forma
+				ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+				ctx.lineWidth = 1.5;
+				ctx.strokeRect(0.5, 0.5, w-1, h-1);
+			}
                 const ctx = canvas.getContext('2d', { alpha: true });
                 const w = canvas.width, h = canvas.height;
                 const center = w / 2;
