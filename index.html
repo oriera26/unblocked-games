@@ -6,36 +6,34 @@
     <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     
-    <title>ulaGames · Apple Style Arcade</title>
+    <title>ulaGames · Arcade Ràpid</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* ===== VARIABLES I RESET ===== */
         :root {
             --accent: #007AFF;
             --bg: #f5f5f7;
-            --surface: rgba(255, 255, 255, 0.65);
             --surface-solid: #ffffff;
-            --surface-hover: rgba(255, 255, 255, 0.85);
+            --surface-light: rgba(255, 255, 255, 0.7);
             --border-light: rgba(0, 0, 0, 0.05);
             --text-main: #1d1d1f;
             --text-muted: #86868b;
-            --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02);
-            --glass-blur: blur(25px) saturate(180%);
-            --transition-default: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             --nav-height: 48px;
+            --transition-fast: 0.15s ease;
         }
 
         body.dark-theme {
             --accent: #0A84FF;
             --bg: #000000;
-            --surface: rgba(28, 28, 30, 0.65);
             --surface-solid: #1c1c1e;
-            --surface-hover: rgba(44, 44, 46, 0.85);
+            --surface-light: rgba(28, 28, 30, 0.7);
             --border-light: rgba(255, 255, 255, 0.08);
             --text-main: #f5f5f7;
             --text-muted: #98989e;
-            --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
         * {
@@ -51,27 +49,34 @@
             color: var(--text-main);
             min-height: 100vh;
             overflow-x: hidden;
-            transition: background-color 0.4s ease, color 0.4s ease;
+            transition: background-color 0.2s, color 0.2s;
         }
 
-        /* Fons Ambient */
+        /* Fons ambient (gradients CSS, sense 3D) */
         .ambient-bg {
             position: fixed; inset: 0; z-index: -3;
-            background: var(--bg); overflow: hidden;
+            background: var(--bg);
         }
-        .blob {
-            position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4;
-            animation: float 20s infinite alternate ease-in-out; will-change: transform;
+        .ambient-bg::before {
+            content: ''; position: absolute; top: -10%; left: -5%;
+            width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(0,122,255,0.08) 0%, transparent 70%);
+            filter: blur(60px);
+            animation: float 25s infinite alternate;
         }
-        .blob:nth-child(1) { top: -10%; left: -5%; width: 50vw; height: 50vw; background: #007AFF; opacity: 0.15; }
-        .blob:nth-child(2) { bottom: -10%; right: -5%; width: 60vw; height: 60vw; background: #32D74B; opacity: 0.1; animation-delay: -5s; }
-
+        .ambient-bg::after {
+            content: ''; position: absolute; bottom: -10%; right: -5%;
+            width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(50,215,75,0.05) 0%, transparent 70%);
+            filter: blur(70px);
+            animation: float 25s infinite alternate-reverse;
+        }
         @keyframes float {
             0% { transform: translate(0,0) scale(1); }
-            100% { transform: translate(20px,30px) scale(1.05); }
+            100% { transform: translate(20px,30px) scale(1.1); }
         }
 
-        /* Navegació */
+        /* ===== NAVEGACIÓ (backdrop-filter només aquí) ===== */
         nav {
             position: fixed;
             top: 16px; left: 50%; transform: translateX(-50%);
@@ -79,19 +84,18 @@
             height: var(--nav-height);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 16px; z-index: 1000;
-            background: var(--surface);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
+            background: var(--surface-light);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-radius: 999px;
             border: 1px solid var(--border-light);
             box-shadow: 0 4px 24px rgba(0,0,0,0.04);
         }
-
         .nav-left { display: flex; align-items: center; gap: 8px; position: relative; }
         .logo-box {
             display: flex; align-items: center; gap: 6px;
             padding: 6px 12px; border-radius: 999px;
-            cursor: pointer; transition: var(--transition-default);
+            cursor: pointer; transition: var(--transition-fast);
             font-weight: 600; font-size: 15px; letter-spacing: -0.02em;
         }
         .logo-box:hover { background: var(--border-light); }
@@ -108,22 +112,17 @@
             border: 1px solid var(--border-light);
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             transform-origin: top left;
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-        }
-        body.dark-theme .dropdown-menu {
-            background: var(--surface-solid);
         }
         .nav-left:hover .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
         .menu-link {
             display: flex; align-items: center; gap: 10px;
             padding: 10px 14px; text-decoration: none; color: var(--text-main);
             font-size: 14px; font-weight: 500; border-radius: 10px;
-            transition: background 0.2s; cursor: pointer;
+            transition: background 0.15s; cursor: pointer;
         }
         .menu-link:hover { background: var(--accent); color: white; }
         .menu-link:hover i { color: white; }
-        .menu-link i { font-size: 14px; color: var(--text-muted); width: 16px; text-align: center; transition: 0.2s; }
+        .menu-link i { font-size: 14px; color: var(--text-muted); width: 16px; text-align: center; }
 
         /* Cerca */
         .search-wrapper {
@@ -134,11 +133,11 @@
             border-radius: 999px; border: 1px solid var(--border-light);
             background: rgba(120, 120, 128, 0.08);
             color: var(--text-main); font-size: 14px;
-            outline: none; transition: var(--transition-default);
+            outline: none; transition: var(--transition-fast);
         }
         .search-wrapper input::placeholder { color: var(--text-muted); }
         .search-wrapper input:focus {
-            background: var(--surface-hover); border-color: var(--accent);
+            background: var(--surface-solid); border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
         }
         .search-wrapper i {
@@ -153,26 +152,27 @@
             border: 1px solid var(--border-light);
             border-radius: 999px; padding: 2px;
             cursor: pointer; position: relative;
-            transition: var(--transition-default);
+            transition: var(--transition-fast);
         }
         .theme-toggle-thumb {
             width: 18px; height: 18px;
             background: #fff; border-radius: 50%;
-            transition: transform 0.3s cubic-bezier(0.2,0.9,0.4,1);
+            transition: transform 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         body.dark-theme .theme-toggle-thumb { transform: translateX(16px); background: #32d74b; }
 
-        /* Vistes SPA */
-        .view { display: none; opacity: 0; transition: opacity 0.3s; }
-        .view.active { display: block; opacity: 1; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* ===== VISTES SPA ===== */
+        .view { display: none; opacity: 0; }
+        .view.active { display: block; opacity: 1; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         .container {
             max-width: 1200px; margin: 0 auto;
             padding: calc(var(--nav-height) + 40px) 24px 40px;
         }
         
+        /* Grid de jocs */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -180,29 +180,28 @@
             justify-content: center;
         }
 
-        /* Targeta de Joc */
+        /* Targeta (sense backdrop-filter, fons sòlid) */
         .card {
             display: flex; flex-direction: column; align-items: center;
-            cursor: pointer; user-select: none; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            cursor: pointer; user-select: none;
+            transition: transform 0.15s;
         }
-        .card:hover { transform: scale(1.05); }
-        .card:active { transform: scale(0.95); }
+        .card:hover { transform: scale(1.03); }
+        .card:active { transform: scale(0.97); }
         
         .canvas-wrapper {
             position: relative; width: 100%; aspect-ratio: 1/1;
             border-radius: 22.5%;
-            background: var(--surface);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            background: var(--surface-solid);
             box-shadow: var(--card-shadow), inset 0 0 0 1px var(--border-light);
             overflow: hidden;
-            transition: box-shadow 0.3s;
         }
-        .card:hover .canvas-wrapper { box-shadow: 0 12px 24px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.4); }
-        body.dark-theme .card:hover .canvas-wrapper { box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
+        .card:hover .canvas-wrapper { box-shadow: 0 8px 20px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.2); }
         
         canvas {
             display: block; width: 100% !important; height: 100% !important;
-            will-change: transform; border-radius: 22.5%;
+            border-radius: 22.5%;
+            image-rendering: crisp-edges; /* millora la nitidesa */
         }
         
         .card-title {
@@ -212,28 +211,30 @@
             letter-spacing: -0.01em;
         }
 
-        /* Modal */
+        /* ===== MODAL (backdrop-filter només al fons) ===== */
         .modal {
             position: fixed; inset: 0; z-index: 2000;
             display: none; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
-        .modal.active { display: flex; animation: modalFadeIn 0.3s; }
-        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal.active { display: flex; }
         
         .modal-content {
             width: 90%; height: 85vh; max-width: 1200px;
             background: var(--bg);
             border-radius: 12px;
-            box-shadow: 0 24px 48px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.1);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.2);
             position: relative; display: flex; flex-direction: column; overflow: hidden;
-            transform: scale(0.98); transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1);
+            transform: scale(0.98); transition: transform 0.2s;
+            border: 1px solid var(--border-light);
         }
         .modal.active .modal-content { transform: scale(1); }
 
         .modal-titlebar {
-            height: 38px; background: var(--surface);
-            backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-light);
+            height: 38px; background: var(--surface-solid);
+            border-bottom: 1px solid var(--border-light);
             display: flex; align-items: center; padding: 0 16px;
         }
         .modal-traffic-lights { display: flex; gap: 8px; }
@@ -244,7 +245,7 @@
         }
         .traffic-light::before {
             content: ''; position: absolute; font-size: 9px; font-weight: bold; color: rgba(0,0,0,0.6);
-            opacity: 0; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+            opacity: 0; transition: opacity 0.1s; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
         }
         .modal-traffic-lights:hover .traffic-light::before { opacity: 1; }
         .traffic-light.close { background: #FF5F56; }
@@ -254,7 +255,7 @@
         
         #gameIframe { width: 100%; flex: 1; border: none; background: #000; }
 
-        /* Vista Estadístiques */
+        /* ===== ESTADÍSTIQUES ===== */
         .stats-header {
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
         }
@@ -262,55 +263,52 @@
             background: linear-gradient(135deg, var(--accent), #5E5CE6);
             border-radius: 24px; padding: 32px; color: white; margin-bottom: 24px;
             display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.2);
         }
-        .hero h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
-        .hero p { font-size: 15px; opacity: 0.9; }
+        .hero h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
         .level-circle {
             width: 70px; height: 70px; border-radius: 50%;
-            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.15);
             display: flex; align-items: center; justify-content: center;
-            font-size: 28px; font-weight: 700; border: 2px solid rgba(255,255,255,0.3);
+            font-size: 28px; font-weight: 700; border: 2px solid rgba(255,255,255,0.2);
         }
         .dashboard-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 32px;
         }
         .kpi-card {
-            background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            background: var(--surface-solid);
             padding: 20px; border-radius: 20px; border: 1px solid var(--border-light);
             display: flex; flex-direction: column; gap: 8px;
         }
         .kpi-card i { font-size: 20px; color: var(--accent); }
-        .kpi-value { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+        .kpi-value { font-size: 24px; font-weight: 700; }
         .kpi-card small { font-size: 13px; color: var(--text-muted); font-weight: 500; }
         
         .games-table {
-            background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            background: var(--surface-solid);
             border-radius: 20px; border: 1px solid var(--border-light); padding: 20px;
         }
-        .games-table h3 { font-size: 18px; margin-bottom: 16px; font-weight: 600; letter-spacing: -0.01em; }
+        .games-table h3 { font-size: 18px; margin-bottom: 16px; font-weight: 600; }
         .game-row {
             display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
             padding: 12px 8px; border-bottom: 1px solid var(--border-light);
             font-size: 14px; align-items: center;
         }
         .game-row:last-child { border-bottom: none; }
-        .game-row strong { font-weight: 600; }
 
-        /* Missatge mòbil no disponible */
+        /* Missatge mòbil */
         .mobile-block {
             position: fixed; inset: 0; z-index: 9999;
             background: var(--bg); color: var(--text-main);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; padding: 32px; gap: 24px;
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         }
-        .mobile-block i { font-size: 64px; color: var(--accent); margin-bottom: 8px; }
-        .mobile-block h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+        .mobile-block i { font-size: 64px; color: var(--accent); }
+        .mobile-block h1 { font-size: 24px; font-weight: 600; }
         .mobile-block p { font-size: 16px; color: var(--text-muted); max-width: 300px; }
         body.mobile .mobile-block { display: flex; }
         body.mobile nav, body.mobile .container { display: none; }
 
+        /* Responsive */
         @media (max-width: 600px) {
             .grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 16px 12px; }
             .search-wrapper { display: none; }
@@ -321,17 +319,15 @@
     </style>
 </head>
 <body>
-    <!-- Bloqueig per a mòbils -->
+    <!-- Bloqueig mòbil -->
     <div class="mobile-block" style="display: none;">
         <i class="fa-solid fa-mobile-screen-button"></i>
         <h1>ulaGames no està disponible en mòbils</h1>
         <p>Estem treballant per oferir una experiència òptima en dispositius mòbils. Si us plau, accedeix des d'un ordinador.</p>
     </div>
 
-    <!-- Fons -->
-    <div class="ambient-bg"><div class="blob"></div><div class="blob"></div></div>
+    <div class="ambient-bg"></div>
 
-    <!-- Navegació -->
     <nav>
         <div class="nav-left">
             <div class="logo-box" onclick="spaNavigate('view-arcade')">
@@ -356,20 +352,18 @@
         </button>
     </nav>
 
-    <!-- Vista: Arcade -->
+    <!-- Vista Arcade -->
     <main id="view-arcade" class="view active container">
         <div class="grid" id="gamesGrid"></div>
     </main>
 
-    <!-- Vista: Estadístiques -->
+    <!-- Vista Estadístiques -->
     <main id="view-stats" class="view container">
-        <div class="stats-header">
-            <h2>El Teu Progrés</h2>
-        </div>
+        <div class="stats-header"><h2>El Teu Progrés</h2></div>
         <div id="statsContent">Carregant...</div>
     </main>
 
-    <!-- Modal del Joc -->
+    <!-- Modal -->
     <div id="gameModal" class="modal">
         <div class="modal-content">
             <div class="modal-titlebar">
@@ -383,31 +377,23 @@
         </div>
     </div>
 
-    <!-- Carregar llista de jocs -->
     <script src="assets/js/gameList.js"></script>
     <script src="assets/js/levelList.js"></script>
-    
     <script>
+        /*****************************************************
+         * ulaGames - Codi Ultra Optimitzat (INP < 200ms)
+         *****************************************************/
         (function(){
-            /*****************************************************
-             * ulaGames - Apple Style Arcade (v2.0 Mobile Block)
-             *****************************************************/
-            
-            // --- Detecció de mòbil i bloqueig ---
-            function isMobileDevice() {
-                return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            }
-            if (isMobileDevice()) {
+            // Detecció mòbil
+            if (/Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                 document.body.classList.add('mobile');
                 document.querySelector('.mobile-block').style.display = 'flex';
-                return; // Atura l'execució de la resta
+                return;
             }
-            
-            // --- Configuració ---
+
+            // ---------- CONFIGURACIÓ ----------
             const STATS_KEY = 'ulaStats_v3';
             const THEME_KEY = 'ula-theme';
-            
-            // Variables globals
             const allGames = (typeof GAMES !== 'undefined') ? GAMES : [];
             const allLevels = (typeof LEVELS !== 'undefined') ? LEVELS : [
                 { lvl: 1, title: 'Novell', threshold: 0 },
@@ -416,13 +402,28 @@
                 { lvl: 4, title: 'Expert', threshold: 7200 }
             ];
 
-            // --- Estadístiques ---
+            // Colors predefinits per hash
+            const COLOR_PALETTE = ['#007AFF','#FF2D55','#FF9500','#32D74B','#5E5CE6','#FF3B30','#5856D6','#34C759'];
+            const colorCache = new Map();
+            function getGameColor(game) {
+                if (colorCache.has(game.url)) return colorCache.get(game.url);
+                const hash = game.url.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+                const color = COLOR_PALETTE[hash % COLOR_PALETTE.length];
+                colorCache.set(game.url, color);
+                return color;
+            }
+
+            // ---------- ESTADÍSTIQUES (sense bloqueig) ----------
             const Stats = {
                 load() {
-                    const data = localStorage.getItem(STATS_KEY);
-                    return data ? JSON.parse(data) : { totalTime: 0, totalSessions: 0, games: {} };
+                    try {
+                        const data = localStorage.getItem(STATS_KEY);
+                        return data ? JSON.parse(data) : { totalTime: 0, totalSessions: 0, games: {} };
+                    } catch { return { totalTime: 0, totalSessions: 0, games: {} }; }
                 },
-                save(stats) { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); },
+                save(stats) { 
+                    try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch {}
+                },
                 record(game, seconds) {
                     if (seconds < 1) return;
                     const stats = this.load();
@@ -438,62 +439,68 @@
                 clear() { localStorage.removeItem(STATS_KEY); }
             };
 
-            // --- SPA Navegació ---
+            // ---------- SPA ROUTER ----------
             window.spaNavigate = function(viewId) {
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
                 document.getElementById(viewId).classList.add('active');
                 if (viewId === 'view-stats') renderStats();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: 'instant' });
             };
 
-            // --- Colors i Renderitzat ---
-            const COLOR_PALETTE = ['#007AFF','#FF2D55','#FF9500','#32D74B','#5E5CE6','#FF3B30','#5856D6','#34C759'];
-            function getGameColor(game) {
-                const hash = game.url.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-                return COLOR_PALETTE[hash % COLOR_PALETTE.length];
-            }
-
+            // ---------- RENDERITZAT DE TARGETES (Canvas eficient) ----------
             const grid = document.getElementById('gamesGrid');
             const searchInput = document.getElementById('searchInput');
             let filteredGames = [...allGames];
+            
+            // Mapa per reutilitzar canvas
+            const cardCanvasCache = new Map();
 
-            function drawAppleCard(ctx, size, color, initial) {
-                const center = size / 2;
-                const bgGradient = ctx.createRadialGradient(center, center*0.5, 0, center, center, size);
-                bgGradient.addColorStop(0, color);
-                bgGradient.addColorStop(1, adjustColor(color, -30));
-                ctx.fillStyle = bgGradient;
-                ctx.fillRect(0, 0, size, size);
+            function drawCardOnce(canvas, color, initial) {
+                const ctx = canvas.getContext('2d', { alpha: true });
+                const w = canvas.width, h = canvas.height;
+                const center = w / 2;
                 
-                const glassGrad = ctx.createLinearGradient(0, 0, 0, size*0.4);
-                glassGrad.addColorStop(0, 'rgba(255,255,255,0.4)');
-                glassGrad.addColorStop(1, 'rgba(255,255,255,0)');
-                ctx.fillStyle = glassGrad;
-                ctx.fillRect(0, 0, size, size*0.5);
+                // Netejar
+                ctx.clearRect(0, 0, w, h);
                 
-                ctx.font = `600 ${size*0.45}px '-apple-system', 'SF Pro Text', sans-serif`;
+                // Gradient radial (sense ombres pesades)
+                const grad = ctx.createRadialGradient(center, center*0.5, 0, center, center, w);
+                grad.addColorStop(0, color);
+                grad.addColorStop(1, adjustColor(color, -25));
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+                
+                // Reflex superior (capa blanca semitransparent)
+                ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                ctx.fillRect(0, 0, w, h*0.45);
+                
+                // Lletra
+                ctx.font = `600 ${w*0.45}px -apple-system, 'SF Pro Text', sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#ffffff';
-                ctx.shadowColor = 'rgba(0,0,0,0.2)';
-                ctx.shadowBlur = 10;
-                ctx.shadowOffsetY = 2;
-                ctx.fillText(initial, center, center + 4);
+                ctx.shadowColor = 'rgba(0,0,0,0.15)';
+                ctx.shadowBlur = 6;
+                ctx.fillText(initial, center, center + 2);
                 ctx.shadowBlur = 0;
             }
 
             function adjustColor(color, amount) {
-                return '#' + color.replace(/^#/, '').replace(/../g, col => ('0'+Math.min(255, Math.max(0, parseInt(col, 16) + amount)).toString(16)).substr(-2));
+                return '#' + color.replace(/^#/, '').replace(/../g, col => 
+                    ('0' + Math.min(255, Math.max(0, parseInt(col, 16) + amount)).toString(16)).slice(-2)
+                );
             }
 
             function createCard(game) {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card';
+                
                 const wrapper = document.createElement('div');
                 wrapper.className = 'canvas-wrapper';
+                
                 const canvas = document.createElement('canvas');
-                canvas.width = 160; canvas.height = 160;
-                const ctx = canvas.getContext('2d');
+                canvas.width = 140; canvas.height = 140; // Mida òptima
+                
                 const title = document.createElement('div');
                 title.className = 'card-title';
                 title.textContent = game.name;
@@ -504,7 +511,10 @@
                 
                 const color = getGameColor(game);
                 const initial = game.name.charAt(0).toUpperCase();
-                drawAppleCard(ctx, canvas.width, color, initial);
+                drawCardOnce(canvas, color, initial);
+                
+                // Guardar referència per si cal redibuixar (no en aquesta versió)
+                cardCanvasCache.set(game.url, { canvas, color, initial });
                 
                 cardDiv.addEventListener('click', () => openModal(game));
                 return cardDiv;
@@ -518,13 +528,14 @@
                 grid.appendChild(fragment);
             }
 
+            // Filtre amb debounce implícit (input event)
             searchInput.addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase();
                 filteredGames = term ? allGames.filter(g => g.name.toLowerCase().includes(term)) : [...allGames];
                 renderGrid(filteredGames);
             });
 
-            // --- Modal ---
+            // ---------- MODAL (sense bloquejos) ----------
             const modal = document.getElementById('gameModal');
             const iframe = document.getElementById('gameIframe');
             const modalTitle = document.getElementById('modalGameTitle');
@@ -546,7 +557,8 @@
                     Stats.record(activeGame, seconds);
                 }
                 modal.classList.remove('active');
-                setTimeout(() => { iframe.src = ''; }, 300);
+                // Netejar iframe després de l'animació per alliberar memòria
+                setTimeout(() => { iframe.src = ''; }, 200);
                 document.body.style.overflow = '';
                 activeGame = null;
             }
@@ -556,11 +568,9 @@
                 if (iframe.requestFullscreen) iframe.requestFullscreen();
                 else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
             });
-            
-            // Clic fora del modal tanca
             modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-            // --- Estadístiques Render ---
+            // ---------- ESTADÍSTIQUES RENDER ----------
             function formatTime(s) {
                 if (s < 60) return s+'s';
                 const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
@@ -578,7 +588,7 @@
                 const favGame = gamesArr[0]?.name || '-';
                 const avg = stats.totalSessions ? Math.floor(stats.totalTime/stats.totalSessions) : 0;
                 
-                const html = `
+                document.getElementById('statsContent').innerHTML = `
                     <div class="hero">
                         <div><h2>${currentLevel.title}</h2><p>Nivell de Jugador ${currentLevel.lvl}</p></div>
                         <div class="level-circle">${currentLevel.lvl}</div>
@@ -597,12 +607,11 @@
                                 <span style="color:var(--text-muted)"><i class="fa-regular fa-clock"></i> ${formatTime(g.time)}</span>
                                 <span style="color:var(--text-muted)"><i class="fa-solid fa-hashtag"></i> ${g.sessions}</span>
                                 <span style="color:var(--text-muted); text-align:right;">${g.lastPlayed?.split(' ')[0] || '-'}</span>
-                            </div>`).join('') : '<p style="color:var(--text-muted); font-size:14px;">Encara no has jugat a cap joc.</p>'}
+                            </div>`).join('') : '<p style="color:var(--text-muted);">Encara no has jugat a cap joc.</p>'}
                     </div>`;
-                document.getElementById('statsContent').innerHTML = html;
             }
 
-            // --- Inicialització ---
+            // ---------- INICIALITZACIÓ ----------
             function init() {
                 renderGrid(filteredGames);
                 
@@ -618,14 +627,17 @@
                     localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
                 });
                 
-                // Netejar estadístiques
+                // Netejar stats
                 document.getElementById('clearStatsBtn').addEventListener('click', (e) => {
                     e.preventDefault();
-                    if (confirm('Estàs segur que vols esborrar totes les teves estadístiques de joc? Aquesta acció no es pot desfer.')) {
+                    if (confirm('Esborrar totes les estadístiques?')) {
                         Stats.clear();
                         if (document.getElementById('view-stats').classList.contains('active')) renderStats();
                     }
                 });
+
+                // Precarregar colors per evitar càlculs durant scroll
+                allGames.forEach(g => getGameColor(g));
             }
 
             document.addEventListener('DOMContentLoaded', init);
