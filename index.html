@@ -1,141 +1,635 @@
 <!DOCTYPE html>
 <html lang="ca">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="theme-color" content="#007AFF">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-
-    <!-- Meta tags per a PWA -->
-    <meta name="application-name" content="ulaGames">
-    <meta name="apple-mobile-web-app-title" content="ulaGames">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <!-- Icones per a iOS -->
-    <link rel="apple-touch-icon" href="icons/icon-pla">
-    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-pla.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-pla.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-pla.png">
-
-    <!-- Safari pinned tab icon -->
-    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#007AFF">
-
-    <!-- Theme color per a diferents navegadors -->
-    <meta name="theme-color" content="#007AFF" media="(prefers-color-scheme: light)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-    <meta name="msapplication-TileColor" content="#007AFF">
-    <meta name="msapplication-config" content="browserconfig.xml">
-
-    <!-- Per a iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <!-- Per a Android -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Inici | ulaGames</title>
+    <title>ulaGames · Apple Style Arcade</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="icons/favicon.png">
-    <!-- Estils propis -->
-    <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="stylesheet" href="assets/css/skeleton.css">
+    
+    <style>
+        :root {
+            --accent: #007AFF;
+            --bg: #f5f5f7;
+            --surface: rgba(255, 255, 255, 0.65);
+            --surface-solid: #ffffff;
+            --surface-hover: rgba(255, 255, 255, 0.85);
+            --border-light: rgba(0, 0, 0, 0.05);
+            --text-main: #1d1d1f;
+            --text-muted: #86868b;
+            --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02);
+            --glass-blur: blur(25px) saturate(180%);
+            --transition-default: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --nav-height: 48px;
+        }
+
+        body.dark-theme {
+            --accent: #0A84FF;
+            --bg: #000000;
+            --surface: rgba(28, 28, 30, 0.65);
+            --surface-solid: #1c1c1e;
+            --surface-hover: rgba(44, 44, 46, 0.85);
+            --border-light: rgba(255, 255, 255, 0.08);
+            --text-main: #f5f5f7;
+            --text-muted: #98989e;
+            --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Inter", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Fons Ambient */
+        .ambient-bg {
+            position: fixed; inset: 0; z-index: -3;
+            background: var(--bg); overflow: hidden;
+        }
+        .blob {
+            position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4;
+            animation: float 20s infinite alternate ease-in-out; will-change: transform;
+        }
+        .blob:nth-child(1) { top: -10%; left: -5%; width: 50vw; height: 50vw; background: #007AFF; opacity: 0.15; }
+        .blob:nth-child(2) { bottom: -10%; right: -5%; width: 60vw; height: 60vw; background: #32D74B; opacity: 0.1; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translate(0,0) scale(1); }
+            100% { transform: translate(20px,30px) scale(1.05); }
+        }
+
+        /* Navegació */
+        nav {
+            position: fixed;
+            top: 16px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 32px); max-width: 980px;
+            height: var(--nav-height);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px; z-index: 1000;
+            background: var(--surface);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 999px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 8px; position: relative; }
+        .logo-box {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 999px;
+            cursor: pointer; transition: var(--transition-default);
+            font-weight: 600; font-size: 15px; letter-spacing: -0.02em;
+        }
+        .logo-box:hover { background: var(--border-light); }
+        .logo-box i { color: var(--accent); font-size: 16px; }
+
+        /* Menú desplegable SÒLID (sense transparència) */
+        .dropdown-menu {
+            position: absolute; top: calc(100% + 12px); left: 0;
+            width: 220px;
+            background: var(--surface-solid);
+            border-radius: 16px; padding: 6px;
+            opacity: 0; visibility: hidden; transform: translateY(-8px) scale(0.96);
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transform-origin: top left;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+        body.dark-theme .dropdown-menu {
+            background: var(--surface-solid);
+        }
+        .nav-left:hover .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        .menu-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; text-decoration: none; color: var(--text-main);
+            font-size: 14px; font-weight: 500; border-radius: 10px;
+            transition: background 0.2s; cursor: pointer;
+        }
+        .menu-link:hover { background: var(--accent); color: white; }
+        .menu-link:hover i { color: white; }
+        .menu-link i { font-size: 14px; color: var(--text-muted); width: 16px; text-align: center; transition: 0.2s; }
+
+        /* Cerca */
+        .search-wrapper {
+            flex: 1; max-width: 320px; margin: 0 16px; position: relative;
+        }
+        .search-wrapper input {
+            width: 100%; padding: 8px 12px 8px 36px;
+            border-radius: 999px; border: 1px solid var(--border-light);
+            background: rgba(120, 120, 128, 0.08);
+            color: var(--text-main); font-size: 14px;
+            outline: none; transition: var(--transition-default);
+        }
+        .search-wrapper input::placeholder { color: var(--text-muted); }
+        .search-wrapper input:focus {
+            background: var(--surface-hover); border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+        .search-wrapper i {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: 13px;
+        }
+
+        /* Toggle Tema */
+        .theme-toggle {
+            width: 40px; height: 24px;
+            background: rgba(120, 120, 128, 0.16);
+            border: 1px solid var(--border-light);
+            border-radius: 999px; padding: 2px;
+            cursor: pointer; position: relative;
+            transition: var(--transition-default);
+        }
+        .theme-toggle-thumb {
+            width: 18px; height: 18px;
+            background: #fff; border-radius: 50%;
+            transition: transform 0.3s cubic-bezier(0.2,0.9,0.4,1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        body.dark-theme .theme-toggle-thumb { transform: translateX(16px); background: #32d74b; }
+
+        /* Vistes SPA */
+        .view { display: none; opacity: 0; transition: opacity 0.3s; }
+        .view.active { display: block; opacity: 1; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .container {
+            max-width: 1200px; margin: 0 auto;
+            padding: calc(var(--nav-height) + 40px) 24px 40px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 24px 16px;
+            justify-content: center;
+        }
+
+        /* Targeta de Joc */
+        .card {
+            display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; user-select: none; transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .card:hover { transform: scale(1.05); }
+        .card:active { transform: scale(0.95); }
+        
+        .canvas-wrapper {
+            position: relative; width: 100%; aspect-ratio: 1/1;
+            border-radius: 22.5%;
+            background: var(--surface);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow: var(--card-shadow), inset 0 0 0 1px var(--border-light);
+            overflow: hidden;
+            transition: box-shadow 0.3s;
+        }
+        .card:hover .canvas-wrapper { box-shadow: 0 12px 24px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.4); }
+        body.dark-theme .card:hover .canvas-wrapper { box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
+        
+        canvas {
+            display: block; width: 100% !important; height: 100% !important;
+            will-change: transform; border-radius: 22.5%;
+        }
+        
+        .card-title {
+            margin-top: 8px; font-size: 13px; font-weight: 500;
+            color: var(--text-main); text-align: center;
+            width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            letter-spacing: -0.01em;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed; inset: 0; z-index: 2000;
+            display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        }
+        .modal.active { display: flex; animation: modalFadeIn 0.3s; }
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .modal-content {
+            width: 90%; height: 85vh; max-width: 1200px;
+            background: var(--bg);
+            border-radius: 12px;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.1);
+            position: relative; display: flex; flex-direction: column; overflow: hidden;
+            transform: scale(0.98); transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1);
+        }
+        .modal.active .modal-content { transform: scale(1); }
+
+        .modal-titlebar {
+            height: 38px; background: var(--surface);
+            backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-light);
+            display: flex; align-items: center; padding: 0 16px;
+        }
+        .modal-traffic-lights { display: flex; gap: 8px; }
+        .traffic-light {
+            width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+        }
+        .traffic-light::before {
+            content: ''; position: absolute; font-size: 9px; font-weight: bold; color: rgba(0,0,0,0.6);
+            opacity: 0; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+        }
+        .modal-traffic-lights:hover .traffic-light::before { opacity: 1; }
+        .traffic-light.close { background: #FF5F56; }
+        .traffic-light.close::before { content: '✕'; }
+        .traffic-light.fullscreen { background: #28C840; }
+        .traffic-light.fullscreen::before { content: '⤢'; }
+        
+        #gameIframe { width: 100%; flex: 1; border: none; background: #000; }
+
+        /* Vista Estadístiques */
+        .stats-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+        }
+        .hero {
+            background: linear-gradient(135deg, var(--accent), #5E5CE6);
+            border-radius: 24px; padding: 32px; color: white; margin-bottom: 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.2);
+        }
+        .hero h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .hero p { font-size: 15px; opacity: 0.9; }
+        .level-circle {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 700; border: 2px solid rgba(255,255,255,0.3);
+        }
+        .dashboard-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 32px;
+        }
+        .kpi-card {
+            background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            padding: 20px; border-radius: 20px; border: 1px solid var(--border-light);
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .kpi-card i { font-size: 20px; color: var(--accent); }
+        .kpi-value { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+        .kpi-card small { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        
+        .games-table {
+            background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 20px; border: 1px solid var(--border-light); padding: 20px;
+        }
+        .games-table h3 { font-size: 18px; margin-bottom: 16px; font-weight: 600; letter-spacing: -0.01em; }
+        .game-row {
+            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+            padding: 12px 8px; border-bottom: 1px solid var(--border-light);
+            font-size: 14px; align-items: center;
+        }
+        .game-row:last-child { border-bottom: none; }
+        .game-row strong { font-weight: 600; }
+
+        /* Missatge mòbil no disponible */
+        .mobile-block {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--bg); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 32px; gap: 24px;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+        .mobile-block i { font-size: 64px; color: var(--accent); margin-bottom: 8px; }
+        .mobile-block h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+        .mobile-block p { font-size: 16px; color: var(--text-muted); max-width: 300px; }
+        body.mobile .mobile-block { display: flex; }
+        body.mobile nav, body.mobile .container { display: none; }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 16px 12px; }
+            .search-wrapper { display: none; }
+            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+            .game-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .game-row span:nth-child(n+3) { display: none; }
+        }
+    </style>
 </head>
 <body>
-    <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease;">
-        <video src="assets/videos/loading.mp4" autoplay loop muted playsinline style="width: 200px; height: auto; border-radius: 10px;"></video>
+    <!-- Bloqueig per a mòbils -->
+    <div class="mobile-block" style="display: none;">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <h1>ulaGames no està disponible en mòbils</h1>
+        <p>Estem treballant per oferir una experiència òptima en dispositius mòbils. Si us plau, accedeix des d'un ordinador.</p>
     </div>
 
-    <script>
-        (function() {
-            const overlay = document.getElementById('loadingOverlay');
-            const savedTheme = localStorage.getItem('ula-theme');
-            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            // Apliquem el color de fons immediatament segons el tema guardat
-            if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
-                overlay.style.background = '#000000';
-            } else {
-                overlay.style.background = '#ffffff';
-            }
+    <!-- Fons -->
+    <div class="ambient-bg"><div class="blob"></div><div class="blob"></div></div>
 
-            // Generem un temps aleatori entre 4000ms (4s) i 12000ms (12s)
-            const randomTime = Math.floor(Math.random() * (12000 - 4000 + 1)) + 2000;
-
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    overlay.style.opacity = '0';
-                    setTimeout(() => overlay.remove(), 500);
-                }, randomTime);
-            });
-        })();
-    </script>
-
-    <!-- Fons i Aura Global -->
-    <div class="ambient-bg"><div class="blob"></div></div>
-    <div id="cursorAura" class="cursor-aura"></div>
-
+    <!-- Navegació -->
     <nav>
         <div class="nav-left">
-            <div class="logo-box">
-                <i class="fa-solid fa-bars"></i>
-                <span>unlockedGames</span>
+            <div class="logo-box" onclick="spaNavigate('view-arcade')">
+                <i class="fa-solid fa-gamepad"></i>
+                <span>ulaGames</span>
             </div>
             <div class="dropdown-menu">
-                <a href="index.html" class="menu-link"><i class="fa-solid fa-arrow-rotate-right"></i> Actualitzar Pàgina</a>
-                <a href="stats.html" class="menu-link"><i class="fa-solid fa-chart-line"></i> Estadístiques</a>
-                <a href="javascript:void(0)" onclick="togglePerformanceMode()" class="menu-link">
-                    <i class="fa-solid fa-gauge-high"></i> <span id="performanceModeText">Mode de rendiment: OFF</span>
-                </a>
+                <a class="menu-link" onclick="spaNavigate('view-arcade')"><i class="fa-solid fa-border-all"></i> Arcade</a>
+                <a class="menu-link" onclick="spaNavigate('view-stats')"><i class="fa-solid fa-chart-pie"></i> Estadístiques</a>
+                <div style="height: 1px; background: var(--border-light); margin: 4px 0;"></div>
+                <a class="menu-link" id="clearStatsBtn"><i class="fa-solid fa-trash" style="color: #FF5F56;"></i> Netejar Dades</a>
             </div>
         </div>
 
         <div class="search-wrapper">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" placeholder="Cerca el teu proper joc...">
+            <input type="text" id="searchInput" placeholder="Cerca jocs..." autocomplete="off">
         </div>
 
-        <div style="font-weight: 600; font-size: 13px; color: var(--text-muted);">v2.6.7 (beta)</div>
-
-        <!-- Theme Toggle -->
-        <div class="theme-toggle-container">
-            <button class="theme-toggle" id="themeToggle" aria-label="Canviar tema">
-                <div class="theme-toggle-track">
-                    <div class="theme-toggle-sun">
-                        <svg viewBox="0 0 24 24">
-                            <path></path>
-                        </svg>
-                    </div>
-                    <div class="theme-toggle-moon">
-                        <svg viewBox="0 0 24 24">
-                            <path></path>
-                        </svg>
-                    </div>
-                    <div class="theme-toggle-thumb"></div>
-                </div>
-            </button>
-        </div>
+        <button class="theme-toggle" id="themeToggle" aria-label="Canviar tema">
+            <div class="theme-toggle-thumb"></div>
+        </button>
     </nav>
 
-    <div class="container">
-        <!-- El grid es generarà via JS -->
+    <!-- Vista: Arcade -->
+    <main id="view-arcade" class="view active container">
         <div class="grid" id="gamesGrid"></div>
-    </div>
+    </main>
+
+    <!-- Vista: Estadístiques -->
+    <main id="view-stats" class="view container">
+        <div class="stats-header">
+            <h2>El Teu Progrés</h2>
+        </div>
+        <div id="statsContent">Carregant...</div>
+    </main>
 
     <!-- Modal del Joc -->
     <div id="gameModal" class="modal">
         <div class="modal-content">
-            <div class="close-btn" onclick="GameCore.close()"><i class="fa-solid fa-xmark"></i></div>
-            <iframe id="gameIframe" src="" frameborder="0" style="width:100%; height:100%;"></iframe>
+            <div class="modal-titlebar">
+                <div class="modal-traffic-lights">
+                    <button class="traffic-light close" id="modalCloseBtn" aria-label="Tancar"></button>
+                    <button class="traffic-light fullscreen" id="modalFullscreenBtn" aria-label="Pantalla completa"></button>
+                </div>
+                <div style="flex:1; text-align:center; font-size:13px; font-weight:600; color:var(--text-muted);" id="modalGameTitle">Carregant...</div>
+            </div>
+            <iframe id="gameIframe" src="" frameborder="0" allowfullscreen allow="autoplay; fullscreen; gamepad;"></iframe>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Carregar llista de jocs -->
     <script src="assets/js/gameList.js"></script>
-    <script src="assets/js/scripts.js"></script>
+    <script src="assets/js/levelList.js"></script>
+    
+    <script>
+        (function(){
+            /*****************************************************
+             * ulaGames - Apple Style Arcade (v2.0 Mobile Block)
+             *****************************************************/
+            
+            // --- Detecció de mòbil i bloqueig ---
+            function isMobileDevice() {
+                return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            }
+            if (isMobileDevice()) {
+                document.body.classList.add('mobile');
+                document.querySelector('.mobile-block').style.display = 'flex';
+                return; // Atura l'execució de la resta
+            }
+            
+            // --- Configuració ---
+            const STATS_KEY = 'ulaStats_v3';
+            const THEME_KEY = 'ula-theme';
+            
+            // Variables globals
+            const allGames = (typeof GAMES !== 'undefined') ? GAMES : [];
+            const allLevels = (typeof LEVELS !== 'undefined') ? LEVELS : [
+                { lvl: 1, title: 'Novell', threshold: 0 },
+                { lvl: 2, title: 'Aprenent', threshold: 300 },
+                { lvl: 3, title: 'Aficionat', threshold: 1800 },
+                { lvl: 4, title: 'Expert', threshold: 7200 }
+            ];
+
+            // --- Estadístiques ---
+            const Stats = {
+                load() {
+                    const data = localStorage.getItem(STATS_KEY);
+                    return data ? JSON.parse(data) : { totalTime: 0, totalSessions: 0, games: {} };
+                },
+                save(stats) { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); },
+                record(game, seconds) {
+                    if (seconds < 1) return;
+                    const stats = this.load();
+                    const key = game.url;
+                    if (!stats.games[key]) stats.games[key] = { name: game.name, time: 0, sessions: 0, lastPlayed: '' };
+                    stats.games[key].time += seconds;
+                    stats.games[key].sessions += 1;
+                    stats.games[key].lastPlayed = new Date().toLocaleString('ca-ES');
+                    stats.totalTime += seconds;
+                    stats.totalSessions += 1;
+                    this.save(stats);
+                },
+                clear() { localStorage.removeItem(STATS_KEY); }
+            };
+
+            // --- SPA Navegació ---
+            window.spaNavigate = function(viewId) {
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                document.getElementById(viewId).classList.add('active');
+                if (viewId === 'view-stats') renderStats();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            // --- Colors i Renderitzat ---
+            const COLOR_PALETTE = ['#007AFF','#FF2D55','#FF9500','#32D74B','#5E5CE6','#FF3B30','#5856D6','#34C759'];
+            function getGameColor(game) {
+                const hash = game.url.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+                return COLOR_PALETTE[hash % COLOR_PALETTE.length];
+            }
+
+            const grid = document.getElementById('gamesGrid');
+            const searchInput = document.getElementById('searchInput');
+            let filteredGames = [...allGames];
+
+            function drawAppleCard(ctx, size, color, initial) {
+                const center = size / 2;
+                const bgGradient = ctx.createRadialGradient(center, center*0.5, 0, center, center, size);
+                bgGradient.addColorStop(0, color);
+                bgGradient.addColorStop(1, adjustColor(color, -30));
+                ctx.fillStyle = bgGradient;
+                ctx.fillRect(0, 0, size, size);
+                
+                const glassGrad = ctx.createLinearGradient(0, 0, 0, size*0.4);
+                glassGrad.addColorStop(0, 'rgba(255,255,255,0.4)');
+                glassGrad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = glassGrad;
+                ctx.fillRect(0, 0, size, size*0.5);
+                
+                ctx.font = `600 ${size*0.45}px '-apple-system', 'SF Pro Text', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 2;
+                ctx.fillText(initial, center, center + 4);
+                ctx.shadowBlur = 0;
+            }
+
+            function adjustColor(color, amount) {
+                return '#' + color.replace(/^#/, '').replace(/../g, col => ('0'+Math.min(255, Math.max(0, parseInt(col, 16) + amount)).toString(16)).substr(-2));
+            }
+
+            function createCard(game) {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'canvas-wrapper';
+                const canvas = document.createElement('canvas');
+                canvas.width = 160; canvas.height = 160;
+                const ctx = canvas.getContext('2d');
+                const title = document.createElement('div');
+                title.className = 'card-title';
+                title.textContent = game.name;
+                
+                cardDiv.appendChild(wrapper);
+                wrapper.appendChild(canvas);
+                cardDiv.appendChild(title);
+                
+                const color = getGameColor(game);
+                const initial = game.name.charAt(0).toUpperCase();
+                drawAppleCard(ctx, canvas.width, color, initial);
+                
+                cardDiv.addEventListener('click', () => openModal(game));
+                return cardDiv;
+            }
+
+            function renderGrid(games) {
+                grid.innerHTML = '';
+                const fragment = document.createDocumentFragment();
+                games.sort((a,b) => a.name.localeCompare(b.name));
+                games.forEach(game => fragment.appendChild(createCard(game)));
+                grid.appendChild(fragment);
+            }
+
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                filteredGames = term ? allGames.filter(g => g.name.toLowerCase().includes(term)) : [...allGames];
+                renderGrid(filteredGames);
+            });
+
+            // --- Modal ---
+            const modal = document.getElementById('gameModal');
+            const iframe = document.getElementById('gameIframe');
+            const modalTitle = document.getElementById('modalGameTitle');
+            let activeGame = null;
+            let sessionStart = 0;
+
+            function openModal(game) {
+                activeGame = game;
+                sessionStart = Date.now();
+                iframe.src = `assets/games/${game.url}`;
+                modalTitle.textContent = game.name;
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                if (activeGame && sessionStart) {
+                    const seconds = Math.floor((Date.now() - sessionStart) / 1000);
+                    Stats.record(activeGame, seconds);
+                }
+                modal.classList.remove('active');
+                setTimeout(() => { iframe.src = ''; }, 300);
+                document.body.style.overflow = '';
+                activeGame = null;
+            }
+
+            document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+            document.getElementById('modalFullscreenBtn').addEventListener('click', () => {
+                if (iframe.requestFullscreen) iframe.requestFullscreen();
+                else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+            });
+            
+            // Clic fora del modal tanca
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            // --- Estadístiques Render ---
+            function formatTime(s) {
+                if (s < 60) return s+'s';
+                const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+                return h>0 ? h+'h '+m+'m' : m+'m';
+            }
+
+            function renderStats() {
+                const stats = Stats.load();
+                let currentLevel = allLevels[0];
+                for (let i=0; i<allLevels.length; i++) {
+                    if (stats.totalTime >= allLevels[i].threshold) currentLevel = allLevels[i];
+                    else break;
+                }
+                const gamesArr = Object.entries(stats.games).map(([k,v])=> ({key:k, ...v})).sort((a,b)=> b.time - a.time);
+                const favGame = gamesArr[0]?.name || '-';
+                const avg = stats.totalSessions ? Math.floor(stats.totalTime/stats.totalSessions) : 0;
+                
+                const html = `
+                    <div class="hero">
+                        <div><h2>${currentLevel.title}</h2><p>Nivell de Jugador ${currentLevel.lvl}</p></div>
+                        <div class="level-circle">${currentLevel.lvl}</div>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="kpi-card"><i class="fa-solid fa-clock"></i><div class="kpi-value">${formatTime(stats.totalTime)}</div><small>Temps total</small></div>
+                        <div class="kpi-card"><i class="fa-solid fa-play"></i><div class="kpi-value">${stats.totalSessions}</div><small>Partides jugades</small></div>
+                        <div class="kpi-card"><i class="fa-solid fa-hourglass-half"></i><div class="kpi-value">${formatTime(avg)}</div><small>Mitjana per partida</small></div>
+                        <div class="kpi-card"><i class="fa-solid fa-trophy"></i><div class="kpi-value">${favGame}</div><small>Joc Preferit</small></div>
+                    </div>
+                    <div class="games-table">
+                        <h3>Historial de partides</h3>
+                        ${gamesArr.length ? gamesArr.map((g,i)=> `
+                            <div class="game-row">
+                                <span><strong>${i+1}. ${g.name}</strong></span>
+                                <span style="color:var(--text-muted)"><i class="fa-regular fa-clock"></i> ${formatTime(g.time)}</span>
+                                <span style="color:var(--text-muted)"><i class="fa-solid fa-hashtag"></i> ${g.sessions}</span>
+                                <span style="color:var(--text-muted); text-align:right;">${g.lastPlayed?.split(' ')[0] || '-'}</span>
+                            </div>`).join('') : '<p style="color:var(--text-muted); font-size:14px;">Encara no has jugat a cap joc.</p>'}
+                    </div>`;
+                document.getElementById('statsContent').innerHTML = html;
+            }
+
+            // --- Inicialització ---
+            function init() {
+                renderGrid(filteredGames);
+                
+                // Tema
+                const themeToggle = document.getElementById('themeToggle');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+                const savedTheme = localStorage.getItem(THEME_KEY);
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark.matches)) {
+                    document.body.classList.add('dark-theme');
+                }
+                themeToggle.addEventListener('click', () => {
+                    const isDark = document.body.classList.toggle('dark-theme');
+                    localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+                });
+                
+                // Netejar estadístiques
+                document.getElementById('clearStatsBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (confirm('Estàs segur que vols esborrar totes les teves estadístiques de joc? Aquesta acció no es pot desfer.')) {
+                        Stats.clear();
+                        if (document.getElementById('view-stats').classList.contains('active')) renderStats();
+                    }
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', init);
+        })();
+    </script>
 </body>
 </html>
