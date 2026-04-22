@@ -2,674 +2,440 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-    
-    <title>ulaGames · Arcade Ràpid</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ulaGames</title>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* ===== VARIABLES I RESET ===== */
         :root {
-            --accent: #007AFF;
-            --bg: #f5f5f7;
-            --surface-solid: #ffffff;
-            --surface-light: rgba(255, 255, 255, 0.7);
-            --border-light: rgba(0, 0, 0, 0.05);
+            --glow-color-rgb: 0, 122, 255;
             --text-main: #1d1d1f;
-            --text-muted: #86868b;
-            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            --nav-height: 48px;
-            --transition-fast: 0.15s ease;
+            --accent: #007AFF;
+            --bg-base: #fbfbfd;
+            --glass-bg: rgba(255, 255, 255, 0.01); 
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --cursor-size: 14px;
         }
 
-        body.dark-theme {
-            --accent: #0A84FF;
-            --bg: #000000;
-            --surface-solid: #1c1c1e;
-            --surface-light: rgba(28, 28, 30, 0.7);
-            --border-light: rgba(255, 255, 255, 0.08);
+        .dark-theme {
+            --glow-color-rgb: 10, 132, 255;
             --text-main: #f5f5f7;
-            --text-muted: #98989e;
-            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --accent: #0A84FF;
+            --bg-base: #000000;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.15);
         }
 
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Inter", sans-serif;
-            -webkit-font-smoothing: antialiased;
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            cursor: none !important;
+            user-select: none;
         }
 
         body {
-            background-color: var(--bg);
+            background-color: var(--bg-base);
             color: var(--text-main);
             min-height: 100vh;
-            overflow-x: hidden;
-            transition: background-color 0.2s, color 0.2s;
-        }
-
-        /* Fons ambient (gradients CSS, sense 3D) */
-        .ambient-bg {
-            position: fixed; inset: 0; z-index: -3;
-            background: var(--bg);
-        }
-        .ambient-bg::before {
-            content: ''; position: absolute; top: -10%; left: -5%;
-            width: 50vw; height: 50vw;
-            background: radial-gradient(circle, rgba(0,122,255,0.08) 0%, transparent 70%);
-            filter: blur(60px);
-            animation: float 25s infinite alternate;
-        }
-        .ambient-bg::after {
-            content: ''; position: absolute; bottom: -10%; right: -5%;
-            width: 60vw; height: 60vw;
-            background: radial-gradient(circle, rgba(50,215,75,0.05) 0%, transparent 70%);
-            filter: blur(70px);
-            animation: float 25s infinite alternate-reverse;
-        }
-        @keyframes float {
-            0% { transform: translate(0,0) scale(1); }
-            100% { transform: translate(20px,30px) scale(1.1); }
-        }
-
-        /* ===== NAVEGACIÓ (backdrop-filter només aquí) ===== */
-        nav {
-            position: fixed;
-            top: 16px; left: 50%; transform: translateX(-50%);
-            width: calc(100% - 32px); max-width: 980px;
-            height: var(--nav-height);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 16px; z-index: 1000;
-            background: var(--surface-light);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-radius: 999px;
-            border: 1px solid var(--border-light);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
-        }
-        .nav-left { display: flex; align-items: center; gap: 8px; position: relative; }
-        .logo-box {
-            display: flex; align-items: center; gap: 6px;
-            padding: 6px 12px; border-radius: 999px;
-            cursor: pointer; transition: var(--transition-fast);
-            font-weight: 600; font-size: 15px; letter-spacing: -0.02em;
-        }
-        .logo-box:hover { background: var(--border-light); }
-        .logo-box i { color: var(--accent); font-size: 16px; }
-
-        /* Menú desplegable SÒLID (sense transparència) */
-        .dropdown-menu {
-            position: absolute; top: calc(100% + 12px); left: 0;
-            width: 220px;
-            background: var(--surface-solid);
-            border-radius: 16px; padding: 6px;
-            opacity: 0; visibility: hidden; transform: translateY(-8px) scale(0.96);
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-            border: 1px solid var(--border-light);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            transform-origin: top left;
-        }
-        .nav-left:hover .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
-        .menu-link {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 14px; text-decoration: none; color: var(--text-main);
-            font-size: 14px; font-weight: 500; border-radius: 10px;
-            transition: background 0.15s; cursor: pointer;
-        }
-        .menu-link:hover { background: var(--accent); color: white; }
-        .menu-link:hover i { color: white; }
-        .menu-link i { font-size: 14px; color: var(--text-muted); width: 16px; text-align: center; }
-
-        /* Cerca */
-        .search-wrapper {
-            flex: 1; max-width: 320px; margin: 0 16px; position: relative;
-        }
-        .search-wrapper input {
-            width: 100%; padding: 8px 12px 8px 36px;
-            border-radius: 999px; border: 1px solid var(--border-light);
-            background: rgba(120, 120, 128, 0.08);
-            color: var(--text-main); font-size: 14px;
-            outline: none; transition: var(--transition-fast);
-        }
-        .search-wrapper input::placeholder { color: var(--text-muted); }
-        .search-wrapper input:focus {
-            background: var(--surface-solid); border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
-        }
-        .search-wrapper i {
-            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-            color: var(--text-muted); font-size: 13px;
-        }
-
-        /* Toggle Tema */
-        .theme-toggle {
-            width: 40px; height: 24px;
-            background: rgba(120, 120, 128, 0.16);
-            border: 1px solid var(--border-light);
-            border-radius: 999px; padding: 2px;
-            cursor: pointer; position: relative;
-            transition: var(--transition-fast);
-        }
-        .theme-toggle-thumb {
-            width: 18px; height: 18px;
-            background: #fff; border-radius: 50%;
-            transition: transform 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        body.dark-theme .theme-toggle-thumb { transform: translateX(16px); background: #32d74b; }
-
-        /* ===== VISTES SPA ===== */
-        .view { display: none; opacity: 0; }
-        .view.active { display: block; opacity: 1; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-        .container {
-            max-width: 1200px; margin: 0 auto;
-            padding: calc(var(--nav-height) + 40px) 24px 40px;
-        }
-        
-        /* Grid de jocs */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 24px 16px;
-            justify-content: center;
-        }
-
-        /* Targeta (sense backdrop-filter, fons sòlid) */
-        .card {
-            display: flex; flex-direction: column; align-items: center;
-            cursor: pointer; user-select: none;
-            transition: transform 0.15s;
-        }
-        .card:hover { transform: scale(1.03); }
-        .card:active { transform: scale(0.97); }
-        
-        .canvas-wrapper {
-            position: relative; width: 100%; aspect-ratio: 1/1;
-            border-radius: 22.5%;
-            background: var(--surface-solid);
-            box-shadow: var(--card-shadow), inset 0 0 0 1px var(--border-light);
             overflow: hidden;
-        }
-        .card:hover .canvas-wrapper { box-shadow: 0 8px 20px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.2); }
-        
-        canvas {
-            display: block; width: 100% !important; height: 100% !important;
-            border-radius: 22.5%;
-            image-rendering: crisp-edges; /* millora la nitidesa */
-        }
-        
-        .card-title {
-            margin-top: 8px; font-size: 13px; font-weight: 500;
-            color: var(--text-main); text-align: center;
-            width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            letter-spacing: -0.01em;
+            transition: background 0.5s ease;
         }
 
-        /* ===== MODAL (backdrop-filter només al fons) ===== */
+        #ambient-canvas {
+            position: fixed; inset: 0; z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Cursor Custom */
+        #custom-cursor {
+            position: fixed; top: 0; left: 0;
+            width: var(--cursor-size); height: var(--cursor-size);
+            pointer-events: none; z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            mix-blend-mode: difference;
+            transition: transform 0.1s ease-out;
+        }
+
+        #custom-cursor svg { width: 100%; height: 100%; color: white; stroke-width: 3px; }
+        body.pointer-active #custom-cursor { transform: scale(2.2) rotate(45deg); }
+
+        /* Nav */
+        nav {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 40px); max-width: 1000px; height: 64px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px; z-index: 1000;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 20px; }
+        
+        .logo { font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+        .logo i { color: var(--accent); }
+
+        .nav-links { display: flex; gap: 20px; }
+        .nav-link { font-size: 13px; font-weight: 600; opacity: 0.5; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { opacity: 1; color: var(--accent); }
+
+        /* Search */
+        .search-container { display: flex; align-items: center; position: relative; }
+        .search-bar {
+            width: 0; opacity: 0; padding: 8px 0; background: transparent;
+            border: none; border-bottom: 1px solid var(--accent);
+            color: var(--text-main); font-size: 14px; outline: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+        .search-container:hover .search-bar, .search-bar:focus {
+            width: 160px; opacity: 1; padding: 8px 10px; margin-right: 10px; pointer-events: all;
+        }
+        .search-trigger { background: none; border: none; color: var(--text-main); opacity: 0.7; }
+
+        /* Layout */
+        .container { 
+            max-width: 1100px; margin: 0 auto; padding: 130px 24px 60px;
+            height: 100vh; overflow-y: auto; position: relative; z-index: 1;
+        }
+        .container::-webkit-scrollbar { display: none; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 30px; }
+        
+        .card-wrapper { display: flex; flex-direction: column; align-items: center; animation: slideUp 0.5s ease forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            position: relative; width: 100%; aspect-ratio: 1;
+            background: var(--glass-bg); border-radius: 28%;
+            border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(30px) brightness(1.1);
+            -webkit-backdrop-filter: blur(30px) brightness(1.1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card:hover { transform: scale(1.08) translateY(-10px); border: 1px solid rgba(var(--glow-color-rgb), 0.4); }
+        .card i { width: 40px; height: 40px; stroke-width: 1.5; color: var(--text-main); opacity: 0.5; transition: 0.3s; }
+        .card:hover i { color: var(--accent); opacity: 1; }
+        .card-title { margin-top: 12px; font-size: 13px; font-weight: 600; opacity: 0.6; }
+
+        /* Stats */
+        .stats-header { margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .stat-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            padding: 20px; border-radius: 24px; backdrop-filter: blur(40px);
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
+
+        /* Error View */
+        .error-container {
+            height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; gap: 20px;
+        }
+        .error-code { font-size: 80px; font-weight: 900; opacity: 0.1; position: absolute; z-index: -1; }
+
+        /* Modal */
         .modal {
             position: fixed; inset: 0; z-index: 2000;
-            display: none; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(60px);
+            display: none; align-items: center; justify-content: center; padding: 20px;
         }
         .modal.active { display: flex; }
-        
         .modal-content {
-            width: 90%; height: 85vh; max-width: 1200px;
-            background: var(--bg);
-            border-radius: 12px;
-            box-shadow: 0 24px 48px rgba(0,0,0,0.2);
-            position: relative; display: flex; flex-direction: column; overflow: hidden;
-            transform: scale(0.98); transition: transform 0.2s;
-            border: 1px solid var(--border-light);
+            width: 100%; max-width: 1200px; height: 85vh;
+            background: #000; border-radius: 40px; overflow: hidden;
+            position: relative; border: 1px solid rgba(255,255,255,0.1);
         }
-        .modal.active .modal-content { transform: scale(1); }
+        .close-modal {
+            position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
+            background: rgba(255,255,255,0.1); border-radius: 50%; border: none;
+            color: white; display: flex; align-items: center; justify-content: center;
+            z-index: 2100;
+        }
 
-        .modal-titlebar {
-            height: 38px; background: var(--surface-solid);
-            border-bottom: 1px solid var(--border-light);
-            display: flex; align-items: center; padding: 0 16px;
-        }
-        .modal-traffic-lights { display: flex; gap: 8px; }
-        .traffic-light {
-            width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            position: relative; overflow: hidden;
-        }
-        .traffic-light::before {
-            content: ''; position: absolute; font-size: 9px; font-weight: bold; color: rgba(0,0,0,0.6);
-            opacity: 0; transition: opacity 0.1s; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
-        }
-        .modal-traffic-lights:hover .traffic-light::before { opacity: 1; }
-        .traffic-light.close { background: #FF5F56; }
-        .traffic-light.close::before { content: '✕'; }
-        .traffic-light.fullscreen { background: #28C840; }
-        .traffic-light.fullscreen::before { content: '⤢'; }
-        
-        #gameIframe { width: 100%; flex: 1; border: none; background: #000; }
+        .view { display: none; }
+        .view.active { display: block; }
 
-        /* ===== ESTADÍSTIQUES ===== */
-        .stats-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
-        }
-        .hero {
-            background: linear-gradient(135deg, var(--accent), #5E5CE6);
-            border-radius: 24px; padding: 32px; color: white; margin-bottom: 24px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .hero h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-        .level-circle {
-            width: 70px; height: 70px; border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; font-weight: 700; border: 2px solid rgba(255,255,255,0.2);
-        }
-        .dashboard-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 32px;
-        }
-        .kpi-card {
-            background: var(--surface-solid);
-            padding: 20px; border-radius: 20px; border: 1px solid var(--border-light);
-            display: flex; flex-direction: column; gap: 8px;
-        }
-        .kpi-card i { font-size: 20px; color: var(--accent); }
-        .kpi-value { font-size: 24px; font-weight: 700; }
-        .kpi-card small { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-        
-        .games-table {
-            background: var(--surface-solid);
-            border-radius: 20px; border: 1px solid var(--border-light); padding: 20px;
-        }
-        .games-table h3 { font-size: 18px; margin-bottom: 16px; font-weight: 600; }
-        .game-row {
-            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
-            padding: 12px 8px; border-bottom: 1px solid var(--border-light);
-            font-size: 14px; align-items: center;
-        }
-        .game-row:last-child { border-bottom: none; }
-
-        /* Missatge mòbil */
-        .mobile-block {
-            position: fixed; inset: 0; z-index: 9999;
-            background: var(--bg); color: var(--text-main);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; padding: 32px; gap: 24px;
-        }
-        .mobile-block i { font-size: 64px; color: var(--accent); }
-        .mobile-block h1 { font-size: 24px; font-weight: 600; }
-        .mobile-block p { font-size: 16px; color: var(--text-muted); max-width: 300px; }
-        body.mobile .mobile-block { display: flex; }
-        body.mobile nav, body.mobile .container { display: none; }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            .grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 16px 12px; }
-            .search-wrapper { display: none; }
-            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
-            .game-row { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .game-row span:nth-child(n+3) { display: none; }
-        }
+        .theme-btn { background: none; border: none; color: var(--text-main); opacity: 0.7; }
     </style>
 </head>
-<body>
-    <!-- Bloqueig mòbil -->
-    <div class="mobile-block" style="display: none;">
-        <i class="fa-solid fa-mobile-screen-button"></i>
-        <h1>ulaGames no està disponible en mòbils</h1>
-        <p>Estem treballant per oferir una experiència òptima en dispositius mòbils. Si us plau, accedeix des d'un ordinador.</p>
-    </div>
+<body class="dark-theme">
 
-    <div class="ambient-bg"></div>
+    <div id="custom-cursor"><i data-lucide="target" id="cursor-icon"></i></div>
+    <canvas id="ambient-canvas"></canvas>
 
     <nav>
         <div class="nav-left">
-            <div class="logo-box" onclick="spaNavigate('view-arcade')">
-                <i class="fa-solid fa-gamepad"></i>
+            <div class="logo" onclick="showView('arcade')">
+                <i data-lucide="layers"></i>
                 <span>ulaGames</span>
             </div>
-            <div class="dropdown-menu">
-                <a class="menu-link" onclick="spaNavigate('view-arcade')"><i class="fa-solid fa-border-all"></i> Arcade</a>
-                <a class="menu-link" onclick="spaNavigate('view-stats')"><i class="fa-solid fa-chart-pie"></i> Estadístiques</a>
-                <div style="height: 1px; background: var(--border-light); margin: 4px 0;"></div>
-                <a class="menu-link" id="clearStatsBtn"><i class="fa-solid fa-trash" style="color: #FF5F56;"></i> Netejar Dades</a>
+            <div class="nav-links">
+                <span class="nav-link active" id="link-arcade" onclick="showView('arcade')">Arcade</span>
+                <span class="nav-link" id="link-stats" onclick="showView('stats')">Perfil</span>
             </div>
         </div>
-
-        <div class="search-wrapper">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" placeholder="Cerca jocs..." autocomplete="off">
+        
+        <div class="nav-right">
+            <div class="search-container">
+                <input type="text" class="search-bar" placeholder="Cerca un joc..." id="gameSearch">
+                <button class="search-trigger"><i data-lucide="search"></i></button>
+            </div>
+            <button class="theme-btn" id="themeBtn"><i data-lucide="sun" id="themeIcon"></i></button>
         </div>
-
-        <button class="theme-toggle" id="themeToggle" aria-label="Canviar tema">
-            <div class="theme-toggle-thumb"></div>
-        </button>
     </nav>
 
-    <!-- Vista Arcade -->
-    <main id="view-arcade" class="view active container">
-        <div class="grid" id="gamesGrid"></div>
-    </main>
+    <div class="container">
+        <!-- ARCADE VIEW -->
+        <section id="view-arcade" class="view active">
+            <div class="grid" id="gameGrid"></div>
+        </section>
 
-    <!-- Vista Estadístiques -->
-    <main id="view-stats" class="view container">
-        <div class="stats-header"><h2>El Teu Progrés</h2></div>
-        <div id="statsContent">Carregant...</div>
-    </main>
-
-    <!-- Modal -->
-    <div id="gameModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-titlebar">
-                <div class="modal-traffic-lights">
-                    <button class="traffic-light close" id="modalCloseBtn" aria-label="Tancar"></button>
-                    <button class="traffic-light fullscreen" id="modalFullscreenBtn" aria-label="Pantalla completa"></button>
-                </div>
-                <div style="flex:1; text-align:center; font-size:13px; font-weight:600; color:var(--text-muted);" id="modalGameTitle">Carregant...</div>
+        <!-- STATS VIEW -->
+        <section id="view-stats" class="view">
+            <div class="stats-header">
+                <h1 style="font-size: 32px;">El teu historial</h1>
+                <p style="opacity: 0.5;">Resum de la teva activitat a la plataforma.</p>
             </div>
-            <iframe id="gameIframe" src="" frameborder="0" allowfullscreen allow="autoplay; fullscreen; gamepad;"></iframe>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Partides totals</div>
+                    <div class="stat-value" id="stat-plays">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Punts acumulats</div>
+                    <div class="stat-value" id="stat-points">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Temps de joc</div>
+                    <div class="stat-value" id="stat-time">0m</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Rantxa actual</div>
+                    <div class="stat-value" id="stat-streak">1 d.</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-rank">Bronze</div>
+                    <div class="stat-label">Rànquing de Jugador</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-last">Avui</div>
+                    <div class="stat-label">Última sessió</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 404 VIEW -->
+        <section id="view-404" class="view">
+            <div class="error-container">
+                <div class="error-code">404</div>
+                <i data-lucide="alert-circle" style="width: 64px; height: 64px; color: var(--accent);"></i>
+                <h2>Ups! Aquest joc no s'ha trobat</h2>
+                <p style="opacity: 0.6; max-width: 400px;">Sembla que l'asset que busques no existeix o ha estat mogut temporalment.</p>
+                <button class="stat-card" style="align-items: center; cursor: pointer;" onclick="showView('arcade')">Torna a l'Arcade</button>
+            </div>
+        </section>
+    </div>
+
+    <div id="gameModal" class="modal">
+        <button class="close-modal" id="closeModal"><i data-lucide="x"></i></button>
+        <div class="modal-content">
+            <iframe id="gameIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
         </div>
     </div>
 
-    <script src="assets/js/gameList.js"></script>
-    <script src="assets/js/levelList.js"></script>
+    <!-- Càrrega de la llista de jocs -->
+    <script src="assets/js/gameList.js" onerror="handleGameListError()"></script>
+
     <script>
-        /*****************************************************
-         * ulaGames - Codi Ultra Optimitzat (INP < 200ms)
-         *****************************************************/
-        (function(){
-            // Detecció mòbil
-            if (/Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                document.body.classList.add('mobile');
-                document.querySelector('.mobile-block').style.display = 'flex';
+        // Fallback si gameList.js no es carrega
+        let GAMES_LIST = typeof GAMES !== 'undefined' ? GAMES : [];
+        function handleGameListError() {
+            console.warn("No s'ha pogut carregar gameList.js. Utilitzant llista buida.");
+            if(GAMES_LIST.length === 0) showView('404');
+        }
+
+        // --- ESTADÍSTIQUES ---
+        const initialStats = {
+            plays: 0,
+            points: 0,
+            timeMinutes: 0,
+            streak: 1,
+            lastDate: new Date().toLocaleDateString(),
+            rank: 'Novell'
+        };
+        let userStats = JSON.parse(localStorage.getItem('ulaStats')) || initialStats;
+
+        function saveStats() {
+            localStorage.setItem('ulaStats', JSON.stringify(userStats));
+        }
+
+        function calculateRank(pts) {
+            if (pts > 1000) return 'Llegenda';
+            if (pts > 500) return 'Expert';
+            if (pts > 200) return 'Plata';
+            if (pts > 50) return 'Bronze';
+            return 'Novell';
+        }
+
+        function updateStatsUI() {
+            document.getElementById('stat-plays').innerText = userStats.plays;
+            document.getElementById('stat-points').innerText = userStats.points;
+            document.getElementById('stat-time').innerText = userStats.timeMinutes + 'm';
+            document.getElementById('stat-streak').innerText = userStats.streak + ' d.';
+            document.getElementById('stat-rank').innerText = calculateRank(userStats.points);
+            document.getElementById('stat-last').innerText = userStats.lastDate === new Date().toLocaleDateString() ? 'Avui' : userStats.lastDate;
+        }
+
+        // --- GESTIÓ DE TEMPS ---
+        let sessionStart = null;
+        function startSessionTimer() { sessionStart = Date.now(); }
+        function endSessionTimer() {
+            if (!sessionStart) return;
+            const elapsedMs = Date.now() - sessionStart;
+            const elapsedMin = Math.round(elapsedMs / 60000);
+            if (elapsedMin > 0) {
+                userStats.timeMinutes += elapsedMin;
+                saveStats();
+            }
+            sessionStart = null;
+        }
+
+        // --- CURSOR ---
+        const cursor = document.getElementById('custom-cursor');
+        const cursorIcon = document.getElementById('cursor-icon');
+        let mX = 0, mY = 0, curX = 0, curY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mX = e.clientX; mY = e.clientY;
+            const isClickable = e.target.closest('button, .card-wrapper, .logo, .nav-link, input');
+            if (isClickable) {
+                document.body.classList.add('pointer-active');
+                if(cursorIcon.getAttribute('data-lucide') !== 'crosshair') {
+                    cursorIcon.setAttribute('data-lucide', 'crosshair');
+                    lucide.createIcons();
+                }
+            } else {
+                document.body.classList.remove('pointer-active');
+                if(cursorIcon.getAttribute('data-lucide') !== 'target') {
+                    cursorIcon.setAttribute('data-lucide', 'target');
+                    lucide.createIcons();
+                }
+            }
+        });
+
+        function animateCursor() {
+            curX += (mX - curX) * 0.15;
+            curY += (mY - curY) * 0.15;
+            cursor.style.transform = `translate3d(${curX - 7}px, ${curY - 7}px, 0)`;
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // --- BACKGROUND CANVAS ---
+        const canvas = document.getElementById('ambient-canvas');
+        const ctx = canvas.getContext('2d');
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        window.onresize();
+
+        function drawAmbient() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            const isDark = document.body.classList.contains('dark-theme');
+            const color = isDark ? '10, 132, 255' : '0, 122, 255';
+            const grad = ctx.createRadialGradient(curX, curY, 0, curX, curY, 400);
+            grad.addColorStop(0, `rgba(${color}, ${isDark ? 0.35 : 0.25})`);
+            grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0,0, canvas.width, canvas.height);
+            requestAnimationFrame(drawAmbient);
+        }
+        drawAmbient();
+
+        // --- NAVEGACIÓ I RENDER ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            
+            const target = document.getElementById(`view-${viewId}`);
+            if (target) {
+                target.classList.add('active');
+                const link = document.getElementById(`link-${viewId}`);
+                if (link) link.classList.add('active');
+            } else {
+                document.getElementById('view-404').classList.add('active');
+            }
+            if (viewId === 'stats') updateStatsUI();
+        }
+
+        function renderGrid(games = GAMES_LIST) {
+            const grid = document.getElementById('gameGrid');
+            if (!games || games.length === 0) {
+                grid.innerHTML = `<p style="opacity:0.5; grid-column: 1/-1; text-align:center;">No hi ha jocs disponibles.</p>`;
+                return;
+            }
+            grid.innerHTML = games.map(g => `
+                <div class="card-wrapper" onclick="launchGame('${g.url}')">
+                    <div class="card"><i data-lucide="${g.icon || 'gamepad-2'}"></i></div>
+                    <div class="card-title">${g.name}</div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function launchGame(url) {
+            // Verificació d'existència simple (simulada o per URL)
+            const exists = GAMES_LIST.some(g => g.url === url);
+            if (!exists) {
+                showView('404');
                 return;
             }
 
-            // ---------- CONFIGURACIÓ ----------
-            const STATS_KEY = 'ulaStats_v3';
-            const THEME_KEY = 'ula-theme';
-            const allGames = (typeof GAMES !== 'undefined') ? GAMES : [];
-            const allLevels = (typeof LEVELS !== 'undefined') ? LEVELS : [
-                { lvl: 1, title: 'Novell', threshold: 0 },
-                { lvl: 2, title: 'Aprenent', threshold: 300 },
-                { lvl: 3, title: 'Aficionat', threshold: 1800 },
-                { lvl: 4, title: 'Expert', threshold: 7200 }
-            ];
-
-            // Colors predefinits per hash
-            const COLOR_PALETTE = ['#007AFF','#FF2D55','#FF9500','#32D74B','#5E5CE6','#FF3B30','#5856D6','#34C759'];
-            const colorCache = new Map();
-            function getGameColor(game) {
-                if (colorCache.has(game.url)) return colorCache.get(game.url);
-                const hash = game.url.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-                const color = COLOR_PALETTE[hash % COLOR_PALETTE.length];
-                colorCache.set(game.url, color);
-                return color;
-            }
-
-            // ---------- ESTADÍSTIQUES (sense bloqueig) ----------
-            const Stats = {
-                load() {
-                    try {
-                        const data = localStorage.getItem(STATS_KEY);
-                        return data ? JSON.parse(data) : { totalTime: 0, totalSessions: 0, games: {} };
-                    } catch { return { totalTime: 0, totalSessions: 0, games: {} }; }
-                },
-                save(stats) { 
-                    try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch {}
-                },
-                record(game, seconds) {
-                    if (seconds < 1) return;
-                    const stats = this.load();
-                    const key = game.url;
-                    if (!stats.games[key]) stats.games[key] = { name: game.name, time: 0, sessions: 0, lastPlayed: '' };
-                    stats.games[key].time += seconds;
-                    stats.games[key].sessions += 1;
-                    stats.games[key].lastPlayed = new Date().toLocaleString('ca-ES');
-                    stats.totalTime += seconds;
-                    stats.totalSessions += 1;
-                    this.save(stats);
-                },
-                clear() { localStorage.removeItem(STATS_KEY); }
-            };
-
-            // ---------- SPA ROUTER ----------
-            window.spaNavigate = function(viewId) {
-                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                document.getElementById(viewId).classList.add('active');
-                if (viewId === 'view-stats') renderStats();
-                window.scrollTo({ top: 0, behavior: 'instant' });
-            };
-
-            // ---------- RENDERITZAT DE TARGETES (Canvas eficient) ----------
-            const grid = document.getElementById('gamesGrid');
-            const searchInput = document.getElementById('searchInput');
-            let filteredGames = [...allGames];
+            userStats.plays++;
+            userStats.points += 15;
+            saveStats();
+            startSessionTimer();
             
-            // Mapa per reutilitzar canvas
-            const cardCanvasCache = new Map();
+            document.getElementById('gameIframe').src = `assets/games/${url}/index.html`;
+            document.getElementById('gameModal').classList.add('active');
+        }
 
-			function drawCardOnce(canvas, color, initial) {
-				const ctx = canvas.getContext('2d', { alpha: true });
-				const w = canvas.width, h = canvas.height;
-				const centerX = w / 2, centerY = h / 2;
-				const radius = w * 0.45; // radi per al gradient radial
-				
-				// Netejar
-				ctx.clearRect(0, 0, w, h);
-				
-				// 1. Fons base amb gradient radial suau (3 colors)
-				const gradient = ctx.createRadialGradient(
-					centerX - 5, centerY - 8, radius * 0.2,  // desplaçat per donar sensació de llum
-					centerX, centerY, radius * 1.2
-				);
-				gradient.addColorStop(0, color);                      // color principal al centre
-				gradient.addColorStop(0.5, adjustColor(color, 15));   // lleugerament més clar
-				gradient.addColorStop(1, adjustColor(color, -20));    // més fosc a les vores
-				
-				ctx.fillStyle = gradient;
-				ctx.fillRect(0, 0, w, h);
-				
-				// 2. Reflex superior (efecte vidre) - gradient lineal de blanc a transparent
-				const glassGradient = ctx.createLinearGradient(0, 0, 0, h * 0.6);
-				glassGradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-				glassGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.1)');
-				glassGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-				
-				ctx.fillStyle = glassGradient;
-				ctx.fillRect(0, 0, w, h * 0.7);
-				
-				// 3. Ombres interiors simulades (per donar profunditat)
-				ctx.save();
-				ctx.globalCompositeOperation = 'overlay';
-				const shadowGrad = ctx.createRadialGradient(centerX-3, centerY-5, 2, centerX, centerY, radius);
-				shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
-				shadowGrad.addColorStop(1, 'rgba(0,0,0,0.1)');
-				ctx.fillStyle = shadowGrad;
-				ctx.fillRect(0, 0, w, h);
-				ctx.restore();
-				
-				// 4. Lletra inicial (amb ombra suau perquè ressalti)
-				ctx.font = `600 ${w * 0.45}px -apple-system, 'SF Pro Text', sans-serif`;
-				ctx.textAlign = 'center';
-				ctx.textBaseline = 'middle';
-				ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-				ctx.shadowBlur = 8;
-				ctx.shadowOffsetY = 1;
-				ctx.fillStyle = '#ffffff';
-				ctx.fillText(initial, centerX, centerY);
-				ctx.shadowColor = 'transparent';
-				ctx.shadowBlur = 0;
-				
-				// 5. Lleu contorn per definir la forma
-				ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-				ctx.lineWidth = 1.5;
-				ctx.strokeRect(0.5, 0.5, w-1, h-1);
-			}
+        document.getElementById('closeModal').onclick = () => {
+            document.getElementById('gameModal').classList.remove('active');
+            document.getElementById('gameIframe').src = "";
+            endSessionTimer();
+        };
 
-            function adjustColor(color, amount) {
-                return '#' + color.replace(/^#/, '').replace(/../g, col => 
-                    ('0' + Math.min(255, Math.max(0, parseInt(col, 16) + amount)).toString(16)).slice(-2)
-                );
+        // --- EVENT LISTENERS ---
+        document.getElementById('themeBtn').onclick = () => {
+            const isDark = document.body.classList.toggle('dark-theme');
+            document.getElementById('themeIcon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+        };
+
+        document.getElementById('gameSearch').oninput = (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = GAMES_LIST.filter(g => g.name.toLowerCase().includes(term));
+            renderGrid(filtered);
+        };
+
+        // Inicialització
+        window.onload = () => {
+            renderGrid();
+            updateStatsUI();
+            
+            // Verificar ràntxa
+            const today = new Date().toLocaleDateString();
+            if (userStats.lastDate !== today) {
+                userStats.lastDate = today;
+                userStats.streak++;
+                saveStats();
             }
-
-            function createCard(game) {
-                const cardDiv = document.createElement('div');
-                cardDiv.className = 'card';
-                
-                const wrapper = document.createElement('div');
-                wrapper.className = 'canvas-wrapper';
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = 140; canvas.height = 140; // Mida òptima
-                
-                const title = document.createElement('div');
-                title.className = 'card-title';
-                title.textContent = game.name;
-                
-                cardDiv.appendChild(wrapper);
-                wrapper.appendChild(canvas);
-                cardDiv.appendChild(title);
-                
-                const color = getGameColor(game);
-                const initial = game.name.charAt(0).toUpperCase();
-                drawCardOnce(canvas, color, initial);
-                
-                // Guardar referència per si cal redibuixar (no en aquesta versió)
-                cardCanvasCache.set(game.url, { canvas, color, initial });
-                
-                cardDiv.addEventListener('click', () => openModal(game));
-                return cardDiv;
-            }
-
-            function renderGrid(games) {
-                grid.innerHTML = '';
-                const fragment = document.createDocumentFragment();
-                games.sort((a,b) => a.name.localeCompare(b.name));
-                games.forEach(game => fragment.appendChild(createCard(game)));
-                grid.appendChild(fragment);
-            }
-
-            // Filtre amb debounce implícit (input event)
-            searchInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                filteredGames = term ? allGames.filter(g => g.name.toLowerCase().includes(term)) : [...allGames];
-                renderGrid(filteredGames);
-            });
-
-            // ---------- MODAL (sense bloquejos) ----------
-            const modal = document.getElementById('gameModal');
-            const iframe = document.getElementById('gameIframe');
-            const modalTitle = document.getElementById('modalGameTitle');
-            let activeGame = null;
-            let sessionStart = 0;
-
-            function openModal(game) {
-                activeGame = game;
-                sessionStart = Date.now();
-                iframe.src = `assets/games/${game.url}`;
-                modalTitle.textContent = game.name;
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeModal() {
-                if (activeGame && sessionStart) {
-                    const seconds = Math.floor((Date.now() - sessionStart) / 1000);
-                    Stats.record(activeGame, seconds);
-                }
-                modal.classList.remove('active');
-                // Netejar iframe després de l'animació per alliberar memòria
-                setTimeout(() => { iframe.src = ''; }, 200);
-                document.body.style.overflow = '';
-                activeGame = null;
-            }
-
-            document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
-            document.getElementById('modalFullscreenBtn').addEventListener('click', () => {
-                if (iframe.requestFullscreen) iframe.requestFullscreen();
-                else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
-            });
-            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-            // ---------- ESTADÍSTIQUES RENDER ----------
-            function formatTime(s) {
-                if (s < 60) return s+'s';
-                const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
-                return h>0 ? h+'h '+m+'m' : m+'m';
-            }
-
-            function renderStats() {
-                const stats = Stats.load();
-                let currentLevel = allLevels[0];
-                for (let i=0; i<allLevels.length; i++) {
-                    if (stats.totalTime >= allLevels[i].threshold) currentLevel = allLevels[i];
-                    else break;
-                }
-                const gamesArr = Object.entries(stats.games).map(([k,v])=> ({key:k, ...v})).sort((a,b)=> b.time - a.time);
-                const favGame = gamesArr[0]?.name || '-';
-                const avg = stats.totalSessions ? Math.floor(stats.totalTime/stats.totalSessions) : 0;
-                
-                document.getElementById('statsContent').innerHTML = `
-                    <div class="hero">
-                        <div><h2>${currentLevel.title}</h2><p>Nivell de Jugador ${currentLevel.lvl}</p></div>
-                        <div class="level-circle">${currentLevel.lvl}</div>
-                    </div>
-                    <div class="dashboard-grid">
-                        <div class="kpi-card"><i class="fa-solid fa-clock"></i><div class="kpi-value">${formatTime(stats.totalTime)}</div><small>Temps total</small></div>
-                        <div class="kpi-card"><i class="fa-solid fa-play"></i><div class="kpi-value">${stats.totalSessions}</div><small>Partides jugades</small></div>
-                        <div class="kpi-card"><i class="fa-solid fa-hourglass-half"></i><div class="kpi-value">${formatTime(avg)}</div><small>Mitjana per partida</small></div>
-                        <div class="kpi-card"><i class="fa-solid fa-trophy"></i><div class="kpi-value">${favGame}</div><small>Joc Preferit</small></div>
-                    </div>
-                    <div class="games-table">
-                        <h3>Historial de partides</h3>
-                        ${gamesArr.length ? gamesArr.map((g,i)=> `
-                            <div class="game-row">
-                                <span><strong>${i+1}. ${g.name}</strong></span>
-                                <span style="color:var(--text-muted)"><i class="fa-regular fa-clock"></i> ${formatTime(g.time)}</span>
-                                <span style="color:var(--text-muted)"><i class="fa-solid fa-hashtag"></i> ${g.sessions}</span>
-                                <span style="color:var(--text-muted); text-align:right;">${g.lastPlayed?.split(' ')[0] || '-'}</span>
-                            </div>`).join('') : '<p style="color:var(--text-muted);">Encara no has jugat a cap joc.</p>'}
-                    </div>`;
-            }
-
-            // ---------- INICIALITZACIÓ ----------
-            function init() {
-                renderGrid(filteredGames);
-                
-                // Tema
-                const themeToggle = document.getElementById('themeToggle');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-                const savedTheme = localStorage.getItem(THEME_KEY);
-                if (savedTheme === 'dark' || (!savedTheme && prefersDark.matches)) {
-                    document.body.classList.add('dark-theme');
-                }
-                themeToggle.addEventListener('click', () => {
-                    const isDark = document.body.classList.toggle('dark-theme');
-                    localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
-                });
-                
-                // Netejar stats
-                document.getElementById('clearStatsBtn').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (confirm('Esborrar totes les estadístiques?')) {
-                        Stats.clear();
-                        if (document.getElementById('view-stats').classList.contains('active')) renderStats();
-                    }
-                });
-
-                // Precarregar colors per evitar càlculs durant scroll
-                allGames.forEach(g => getGameColor(g));
-            }
-
-            document.addEventListener('DOMContentLoaded', init);
-        })();
+        };
     </script>
 </body>
 </html>
