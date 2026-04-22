@@ -14,7 +14,6 @@
             --bg-base: #fbfbfd;
             --glass-bg: rgba(255, 255, 255, 0.01); 
             --glass-border: rgba(0, 0, 0, 0.08);
-            --cursor-size: 14px;
         }
 
         .dark-theme {
@@ -29,8 +28,9 @@
         * {
             margin: 0; padding: 0; box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            cursor: none !important;
             user-select: none;
+            /* Tornem al cursor natiu per millorar la sensibilitat i resposta */
+            cursor: auto;
         }
 
         body {
@@ -38,26 +38,14 @@
             color: var(--text-main);
             min-height: 100vh;
             overflow: hidden;
-            transition: background 0.5s ease;
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #ambient-canvas {
             position: fixed; inset: 0; z-index: -1;
             pointer-events: none;
+            will-change: transform; /* Optimització per a la GPU */
         }
-
-        /* Cursor Custom */
-        #custom-cursor {
-            position: fixed; top: 0; left: 0;
-            width: var(--cursor-size); height: var(--cursor-size);
-            pointer-events: none; z-index: 10000;
-            display: flex; align-items: center; justify-content: center;
-            mix-blend-mode: difference;
-            transition: transform 0.1s ease-out;
-        }
-
-        #custom-cursor svg { width: 100%; height: 100%; color: white; stroke-width: 3px; }
-        body.pointer-active #custom-cursor { transform: scale(2.2) rotate(45deg); }
 
         /* Nav */
         nav {
@@ -74,11 +62,11 @@
 
         .nav-left, .nav-right { display: flex; align-items: center; gap: 20px; }
         
-        .logo { font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+        .logo { font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
         .logo i { color: var(--accent); }
 
         .nav-links { display: flex; gap: 20px; }
-        .nav-link { font-size: 13px; font-weight: 600; opacity: 0.5; transition: 0.2s; }
+        .nav-link { font-size: 13px; font-weight: 600; opacity: 0.5; transition: 0.2s; cursor: pointer; }
         .nav-link:hover, .nav-link.active { opacity: 1; color: var(--accent); }
 
         /* Search */
@@ -93,19 +81,19 @@
         .search-container:hover .search-bar, .search-bar:focus {
             width: 160px; opacity: 1; padding: 8px 10px; margin-right: 10px; pointer-events: all;
         }
-        .search-trigger { background: none; border: none; color: var(--text-main); opacity: 0.7; }
+        .search-trigger { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
 
         /* Layout */
         .container { 
             max-width: 1100px; margin: 0 auto; padding: 130px 24px 60px;
             height: 100vh; overflow-y: auto; position: relative; z-index: 1;
+            scrollbar-width: none;
         }
         .container::-webkit-scrollbar { display: none; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 30px; }
         
-        .card-wrapper { display: flex; flex-direction: column; align-items: center; animation: slideUp 0.5s ease forwards; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card-wrapper { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.3s; }
 
         .card {
             position: relative; width: 100%; aspect-ratio: 1;
@@ -115,58 +103,61 @@
             backdrop-filter: blur(30px) brightness(1.1);
             -webkit-backdrop-filter: blur(30px) brightness(1.1);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
         }
-        .card:hover { transform: scale(1.08) translateY(-10px); border: 1px solid rgba(var(--glow-color-rgb), 0.4); }
-        .card i { width: 40px; height: 40px; stroke-width: 1.5; color: var(--text-main); opacity: 0.5; transition: 0.3s; }
-        .card:hover i { color: var(--accent); opacity: 1; }
-        .card-title { margin-top: 12px; font-size: 13px; font-weight: 600; opacity: 0.6; }
+        .card:hover { transform: scale(1.05) translateY(-8px); border: 1px solid rgba(var(--glow-color-rgb), 0.5); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .card i { width: 45px; height: 45px; stroke-width: 1.2; color: var(--text-main); opacity: 0.4; transition: 0.3s; }
+        .card:hover i { color: var(--accent); opacity: 1; transform: scale(1.1); }
+        .card-title { margin-top: 14px; font-size: 13px; font-weight: 600; opacity: 0.7; text-align: center; }
 
         /* Stats */
         .stats-header { margin-bottom: 30px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
         .stat-card {
             background: var(--glass-bg); border: 1px solid var(--glass-border);
-            padding: 20px; border-radius: 24px; backdrop-filter: blur(40px);
-            display: flex; flex-direction: column; gap: 5px;
+            padding: 24px; border-radius: 24px; backdrop-filter: blur(40px);
+            display: flex; flex-direction: column; gap: 8px;
         }
-        .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); }
-        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
+        .stat-value { font-size: 32px; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
 
         /* Error View */
         .error-container {
-            height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; gap: 20px;
         }
-        .error-code { font-size: 80px; font-weight: 900; opacity: 0.1; position: absolute; z-index: -1; }
+        .error-code { font-size: 120px; font-weight: 900; opacity: 0.05; position: absolute; z-index: -1; }
 
         /* Modal */
         .modal {
             position: fixed; inset: 0; z-index: 2000;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(60px);
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(40px);
             display: none; align-items: center; justify-content: center; padding: 20px;
         }
         .modal.active { display: flex; }
         .modal-content {
-            width: 100%; max-width: 1200px; height: 85vh;
-            background: #000; border-radius: 40px; overflow: hidden;
+            width: 100%; max-width: 1280px; height: 90vh;
+            background: #000; border-radius: 32px; overflow: hidden;
             position: relative; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
         }
         .close-modal {
-            position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
+            position: absolute; top: 20px; right: 20px; width: 44px; height: 44px;
             background: rgba(255,255,255,0.1); border-radius: 50%; border: none;
             color: white; display: flex; align-items: center; justify-content: center;
-            z-index: 2100;
+            z-index: 2100; cursor: pointer; transition: 0.2s;
         }
+        .close-modal:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
 
         .view { display: none; }
-        .view.active { display: block; }
+        .view.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .theme-btn { background: none; border: none; color: var(--text-main); opacity: 0.7; }
+        .theme-btn { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
     </style>
 </head>
 <body class="dark-theme">
 
-    <div id="custom-cursor"><i data-lucide="target" id="cursor-icon"></i></div>
     <canvas id="ambient-canvas"></canvas>
 
     <nav>
@@ -236,8 +227,8 @@
                 <div class="error-code">404</div>
                 <i data-lucide="alert-circle" style="width: 64px; height: 64px; color: var(--accent);"></i>
                 <h2>Ups! Aquest joc no s'ha trobat</h2>
-                <p style="opacity: 0.6; max-width: 400px;">Sembla que l'asset que busques no existeix o ha estat mogut temporalment.</p>
-                <button class="stat-card" style="align-items: center; cursor: pointer;" onclick="showView('arcade')">Torna a l'Arcade</button>
+                <p style="opacity: 0.6; max-width: 400px;">Sembla que el fitxer que busques no existeix o la ruta és incorrecta.</p>
+                <button class="stat-card" style="align-items: center; cursor: pointer; margin-top: 20px;" onclick="showView('arcade')">Torna a l'Arcade</button>
             </div>
         </section>
     </div>
@@ -249,16 +240,27 @@
         </div>
     </div>
 
-    <!-- Càrrega de la llista de jocs -->
-    <script src="assets/js/gameList.js" onerror="handleGameListError()"></script>
-
     <script>
-        // Fallback si gameList.js no es carrega
-        let GAMES_LIST = typeof GAMES !== 'undefined' ? GAMES : [];
-        function handleGameListError() {
-            console.warn("No s'ha pogut carregar gameList.js. Utilitzant llista buida.");
-            if(GAMES_LIST.length === 0) showView('404');
-        }
+        // INTEGRACIÓ AMB gameList.js
+        // Definició interna per si el fitxer extern triga a carregar
+        let GAMES_LIST = [
+           { name: "Crossbar Challenge", url: "crossbarchallenge.html", icon: "target" },
+           { name: "Penalty Kicks", url: "penaltykicks.html", icon: "shield" },
+           { name: "Tony Hawk's Nightmare", url: "tonyhawks.html", icon: "skull" },
+           { name: "Combat Reload", url: "clcombatreload.html", icon: "crosshair" },
+           { name: "10 Minutes Till Dawn", url: "cl10minutestildawn.html", icon: "clock" },
+           { name: "10-103 Null Kevin", url: "clnullkevin.html", icon: "ghost" },
+           { name: "12 Mini Battles", url: "cl12minibattles.html", icon: "sword" },
+           { name: "1v1.lol", url: "cl1v1lol.html", icon: "box" }
+        ];
+
+        // Intentar sobreescriure amb la variable global si gameList.js la defineix
+        window.addEventListener('load', () => {
+            if (typeof GAMES !== 'undefined') {
+                GAMES_LIST = GAMES;
+                renderGrid();
+            }
+        });
 
         // --- ESTADÍSTIQUES ---
         const initialStats = {
@@ -306,55 +308,38 @@
             sessionStart = null;
         }
 
-        // --- CURSOR ---
-        const cursor = document.getElementById('custom-cursor');
-        const cursorIcon = document.getElementById('cursor-icon');
-        let mX = 0, mY = 0, curX = 0, curY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mX = e.clientX; mY = e.clientY;
-            const isClickable = e.target.closest('button, .card-wrapper, .logo, .nav-link, input');
-            if (isClickable) {
-                document.body.classList.add('pointer-active');
-                if(cursorIcon.getAttribute('data-lucide') !== 'crosshair') {
-                    cursorIcon.setAttribute('data-lucide', 'crosshair');
-                    lucide.createIcons();
-                }
-            } else {
-                document.body.classList.remove('pointer-active');
-                if(cursorIcon.getAttribute('data-lucide') !== 'target') {
-                    cursorIcon.setAttribute('data-lucide', 'target');
-                    lucide.createIcons();
-                }
-            }
-        });
-
-        function animateCursor() {
-            curX += (mX - curX) * 0.15;
-            curY += (mY - curY) * 0.15;
-            cursor.style.transform = `translate3d(${curX - 7}px, ${curY - 7}px, 0)`;
-            requestAnimationFrame(animateCursor);
-        }
-        animateCursor();
-
-        // --- BACKGROUND CANVAS ---
+        // --- OPTIMITZACIÓ CANVAS (FPS MAX) ---
         const canvas = document.getElementById('ambient-canvas');
-        const ctx = canvas.getContext('2d');
-        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        const ctx = canvas.getContext('2d', { alpha: false }); // Optimitza render sense transparència de fons
+        let mX = 0, mY = 0;
+
+        window.onresize = () => { 
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight; 
+        };
         window.onresize();
 
+        document.addEventListener('mousemove', (e) => {
+            mX = e.clientX;
+            mY = e.clientY;
+        });
+
         function drawAmbient() {
-            ctx.clearRect(0,0, canvas.width, canvas.height);
             const isDark = document.body.classList.contains('dark-theme');
+            // Background sòlid per evitar overdraw de transparència
+            ctx.fillStyle = isDark ? '#000000' : '#fbfbfd';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
             const color = isDark ? '10, 132, 255' : '0, 122, 255';
-            const grad = ctx.createRadialGradient(curX, curY, 0, curX, curY, 400);
-            grad.addColorStop(0, `rgba(${color}, ${isDark ? 0.35 : 0.25})`);
-            grad.addColorStop(1, 'transparent');
+            const grad = ctx.createRadialGradient(mX, mY, 0, mX, mY, 450);
+            grad.addColorStop(0, `rgba(${color}, ${isDark ? 0.3 : 0.15})`);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            
             ctx.fillStyle = grad;
-            ctx.fillRect(0,0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             requestAnimationFrame(drawAmbient);
         }
-        drawAmbient();
+        requestAnimationFrame(drawAmbient);
 
         // --- NAVEGACIÓ I RENDER ---
         function showView(viewId) {
@@ -374,10 +359,6 @@
 
         function renderGrid(games = GAMES_LIST) {
             const grid = document.getElementById('gameGrid');
-            if (!games || games.length === 0) {
-                grid.innerHTML = `<p style="opacity:0.5; grid-column: 1/-1; text-align:center;">No hi ha jocs disponibles.</p>`;
-                return;
-            }
             grid.innerHTML = games.map(g => `
                 <div class="card-wrapper" onclick="launchGame('${g.url}')">
                     <div class="card"><i data-lucide="${g.icon || 'gamepad-2'}"></i></div>
@@ -388,19 +369,23 @@
         }
 
         function launchGame(url) {
-            // Verificació d'existència simple (simulada o per URL)
-            const exists = GAMES_LIST.some(g => g.url === url);
-            if (!exists) {
-                showView('404');
-                return;
-            }
-
             userStats.plays++;
             userStats.points += 15;
             saveStats();
             startSessionTimer();
             
-            document.getElementById('gameIframe').src = `assets/games/${url}/index.html`;
+            // Si el url ja acaba en .html el fem servir, si no, assumim que és una carpeta
+            const path = url.includes('.html') ? `assets/games/${url}` : `assets/games/${url}/index.html`;
+            
+            const iframe = document.getElementById('gameIframe');
+            iframe.src = path;
+            
+            // Verificació bàsica de càrrega
+            iframe.onerror = () => {
+                showView('404');
+                document.getElementById('gameModal').classList.remove('active');
+            };
+
             document.getElementById('gameModal').classList.add('active');
         }
 
@@ -427,8 +412,8 @@
         window.onload = () => {
             renderGrid();
             updateStatsUI();
+            lucide.createIcons();
             
-            // Verificar ràntxa
             const today = new Date().toLocaleDateString();
             if (userStats.lastDate !== today) {
                 userStats.lastDate = today;
