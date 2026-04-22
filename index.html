@@ -14,6 +14,7 @@
             --bg-base: #fbfbfd;
             --glass-bg: rgba(255, 255, 255, 0.01); 
             --glass-border: rgba(0, 0, 0, 0.08);
+            --table-hover: rgba(0, 0, 0, 0.02);
         }
 
         .dark-theme {
@@ -23,13 +24,13 @@
             --bg-base: #000000;
             --glass-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.15);
+            --table-hover: rgba(255, 255, 255, 0.05);
         }
 
         * {
             margin: 0; padding: 0; box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             user-select: none;
-            /* Tornem al cursor natiu per millorar la sensibilitat i resposta */
             cursor: auto;
         }
 
@@ -44,7 +45,7 @@
         #ambient-canvas {
             position: fixed; inset: 0; z-index: -1;
             pointer-events: none;
-            will-change: transform; /* Optimització per a la GPU */
+            will-change: transform;
         }
 
         /* Nav */
@@ -93,7 +94,9 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 30px; }
         
-        .card-wrapper { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.3s; }
+        /* Cards */
+        .card-wrapper { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.3s; opacity: 0; transform: translateY(10px); }
+        .card-wrapper.visible { opacity: 1; transform: translateY(0); }
 
         .card {
             position: relative; width: 100%; aspect-ratio: 1;
@@ -105,30 +108,39 @@
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
         }
+        .card img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
+        .card i { width: 45px; height: 45px; stroke-width: 1.2; color: var(--text-main); opacity: 0.4; position: absolute; }
         .card:hover { transform: scale(1.05) translateY(-8px); border: 1px solid rgba(var(--glow-color-rgb), 0.5); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .card i { width: 45px; height: 45px; stroke-width: 1.2; color: var(--text-main); opacity: 0.4; transition: 0.3s; }
-        .card:hover i { color: var(--accent); opacity: 1; transform: scale(1.1); }
+        .card:hover img { transform: scale(1.15); }
         .card-title { margin-top: 14px; font-size: 13px; font-weight: 600; opacity: 0.7; text-align: center; }
 
         /* Stats */
         .stats-header { margin-bottom: 30px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 40px; }
         .stat-card {
             background: var(--glass-bg); border: 1px solid var(--glass-border);
-            padding: 24px; border-radius: 24px; backdrop-filter: blur(40px);
-            display: flex; flex-direction: column; gap: 8px;
+            padding: 20px; border-radius: 24px; backdrop-filter: blur(40px);
+            display: flex; flex-direction: column; gap: 5px;
         }
-        .stat-value { font-size: 32px; font-weight: 800; color: var(--accent); }
-        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
 
-        /* Error View */
-        .error-container {
-            height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; gap: 20px;
+        /* History Table */
+        .history-section {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            border-radius: 24px; backdrop-filter: blur(40px);
+            overflow: hidden; padding: 20px;
         }
-        .error-code { font-size: 120px; font-weight: 900; opacity: 0.05; position: absolute; z-index: -1; }
+        .history-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; opacity: 0.9; display: flex; align-items: center; gap: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 12px 15px; font-weight: 600; opacity: 0.4; border-bottom: 1px solid var(--glass-border); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+        td { padding: 15px; border-bottom: 1px solid var(--glass-border); opacity: 0.8; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--table-hover); }
+        .game-tag { font-weight: 600; color: var(--accent); }
 
-        /* Modal */
+        /* Modal & Adaptive Iframe */
         .modal {
             position: fixed; inset: 0; z-index: 2000;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(40px);
@@ -136,23 +148,28 @@
         }
         .modal.active { display: flex; }
         .modal-content {
-            width: 100%; max-width: 1280px; height: 90vh;
+            width: 100%; height: 100%;
+            max-width: 1200px;
+            max-height: 85vh;
             background: #000; border-radius: 32px; overflow: hidden;
             position: relative; border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
         }
         .close-modal {
-            position: absolute; top: 20px; right: 20px; width: 44px; height: 44px;
-            background: rgba(255,255,255,0.1); border-radius: 50%; border: none;
+            position: absolute; top: 15px; right: 15px; width: 36px; height: 36px;
+            background: rgba(255,255,255,0.2); border-radius: 50%; border: none;
             color: white; display: flex; align-items: center; justify-content: center;
             z-index: 2100; cursor: pointer; transition: 0.2s;
         }
-        .close-modal:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
+        .close-modal:hover { background: rgba(255,255,255,0.4); transform: rotate(90deg); }
+        #gameIframe { flex: 1; width: 100%; height: 100%; border: none; }
 
         .view { display: none; }
         .view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        #loadMoreTrigger { height: 50px; width: 100%; margin-top: 20px; }
         .theme-btn { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
     </style>
 </head>
@@ -181,18 +198,20 @@
         </div>
     </nav>
 
-    <div class="container">
+    <div class="container" id="scrollContainer">
         <!-- ARCADE VIEW -->
         <section id="view-arcade" class="view active">
             <div class="grid" id="gameGrid"></div>
+            <div id="loadMoreTrigger"></div>
         </section>
 
         <!-- STATS VIEW -->
         <section id="view-stats" class="view">
             <div class="stats-header">
                 <h1 style="font-size: 32px;">El teu historial</h1>
-                <p style="opacity: 0.5;">Resum de la teva activitat a la plataforma.</p>
+                <p style="opacity: 0.5;">Resum de la teva activitat local.</p>
             </div>
+            
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-label">Partides totals</div>
@@ -210,216 +229,220 @@
                     <div class="stat-label">Rantxa actual</div>
                     <div class="stat-value" id="stat-streak">1 d.</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-rank">Bronze</div>
-                    <div class="stat-label">Rànquing de Jugador</div>
+            </div>
+
+            <div class="history-section">
+                <div class="history-title">
+                    <i data-lucide="history" style="width: 20px;"></i>
+                    Jocs jugats recentment
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-last">Avui</div>
-                    <div class="stat-label">Última sessió</div>
-                </div>
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Joc</th>
+                            <th>Última sessió</th>
+                            <th>Partides</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <!-- Generat dinàmicament -->
+                    </tbody>
+                </table>
             </div>
         </section>
 
         <!-- 404 VIEW -->
         <section id="view-404" class="view">
             <div class="error-container">
-                <div class="error-code">404</div>
-                <i data-lucide="alert-circle" style="width: 64px; height: 64px; color: var(--accent);"></i>
-                <h2>Ups! Aquest joc no s'ha trobat</h2>
-                <p style="opacity: 0.6; max-width: 400px;">Sembla que el fitxer que busques no existeix o la ruta és incorrecta.</p>
-                <button class="stat-card" style="align-items: center; cursor: pointer; margin-top: 20px;" onclick="showView('arcade')">Torna a l'Arcade</button>
+                <h2>No s'han trobat resultats</h2>
+                <button class="stat-card" style="margin-top:20px; cursor:pointer;" onclick="resetSearch()">Mostra-ho tot</button>
             </div>
         </section>
     </div>
 
     <div id="gameModal" class="modal">
-        <button class="close-modal" id="closeModal"><i data-lucide="x"></i></button>
         <div class="modal-content">
-            <iframe id="gameIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+            <button class="close-modal" id="closeModal"><i data-lucide="x"></i></button>
+            <iframe id="gameIframe" src="" allow="autoplay; fullscreen; keyboard"></iframe>
         </div>
     </div>
 
-    <script>
-        // INTEGRACIÓ AMB gameList.js
-        // Definició interna per si el fitxer extern triga a carregar
-        let GAMES_LIST = [
-           { name: "Crossbar Challenge", url: "crossbarchallenge.html", icon: "target" },
-           { name: "Penalty Kicks", url: "penaltykicks.html", icon: "shield" },
-           { name: "Tony Hawk's Nightmare", url: "tonyhawks.html", icon: "skull" },
-           { name: "Combat Reload", url: "clcombatreload.html", icon: "crosshair" },
-           { name: "10 Minutes Till Dawn", url: "cl10minutestildawn.html", icon: "clock" },
-           { name: "10-103 Null Kevin", url: "clnullkevin.html", icon: "ghost" },
-           { name: "12 Mini Battles", url: "cl12minibattles.html", icon: "sword" },
-           { name: "1v1.lol", url: "cl1v1lol.html", icon: "box" }
-        ];
+    <!-- Càrrega del fitxer extern de jocs -->
+    <script src="assets/js/gameList.js"></script>
 
-        // Intentar sobreescriure amb la variable global si gameList.js la defineix
+    <script>
+        // CONFIGURACIÓ DE LA LLISTA I LAZY LOADING
+        let ALL_GAMES = [];
+        let FILTERED_GAMES = [];
+        let itemsShown = 0;
+        const CHUNK_SIZE = 40;
+
         window.addEventListener('load', () => {
             if (typeof GAMES !== 'undefined') {
-                GAMES_LIST = GAMES;
-                renderGrid();
+                ALL_GAMES = GAMES;
+                FILTERED_GAMES = [...ALL_GAMES];
+                renderInitial();
             }
         });
 
+        const grid = document.getElementById('gameGrid');
+        const scrollContainer = document.getElementById('scrollContainer');
+        const trigger = document.getElementById('loadMoreTrigger');
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && itemsShown < FILTERED_GAMES.length) {
+                loadMore();
+            }
+        }, { root: scrollContainer, threshold: 0.1 });
+
+        observer.observe(trigger);
+
+        function renderInitial() {
+            grid.innerHTML = "";
+            itemsShown = 0;
+            loadMore();
+        }
+
+        function loadMore() {
+            const nextBatch = FILTERED_GAMES.slice(itemsShown, itemsShown + CHUNK_SIZE);
+            nextBatch.forEach((g, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'card-wrapper';
+                wrapper.onclick = () => launchGame(g);
+                
+                const mediaContent = g.image ? `<img src="${g.image}" loading="lazy">` : `<i data-lucide="gamepad-2"></i>`;
+                
+                wrapper.innerHTML = `
+                    <div class="card">${mediaContent}</div>
+                    <div class="card-title">${g.name}</div>
+                `;
+                grid.appendChild(wrapper);
+                setTimeout(() => wrapper.classList.add('visible'), index * 30);
+            });
+            itemsShown += nextBatch.length;
+            lucide.createIcons();
+        }
+
+        function resetSearch() {
+            document.getElementById('gameSearch').value = "";
+            FILTERED_GAMES = [...ALL_GAMES];
+            showView('arcade');
+            renderInitial();
+        }
+
         // --- ESTADÍSTIQUES ---
-        const initialStats = {
-            plays: 0,
-            points: 0,
-            timeMinutes: 0,
-            streak: 1,
+        const initialStats = { 
+            plays: 0, 
+            points: 0, 
+            timeMinutes: 0, 
+            streak: 1, 
             lastDate: new Date().toLocaleDateString(),
-            rank: 'Novell'
+            gameHistory: {} // Estructura: { "Nom del joc": { count: 0, lastPlayed: "" } }
         };
         let userStats = JSON.parse(localStorage.getItem('ulaStats')) || initialStats;
-
-        function saveStats() {
-            localStorage.setItem('ulaStats', JSON.stringify(userStats));
-        }
-
-        function calculateRank(pts) {
-            if (pts > 1000) return 'Llegenda';
-            if (pts > 500) return 'Expert';
-            if (pts > 200) return 'Plata';
-            if (pts > 50) return 'Bronze';
-            return 'Novell';
-        }
 
         function updateStatsUI() {
             document.getElementById('stat-plays').innerText = userStats.plays;
             document.getElementById('stat-points').innerText = userStats.points;
             document.getElementById('stat-time').innerText = userStats.timeMinutes + 'm';
             document.getElementById('stat-streak').innerText = userStats.streak + ' d.';
-            document.getElementById('stat-rank').innerText = calculateRank(userStats.points);
-            document.getElementById('stat-last').innerText = userStats.lastDate === new Date().toLocaleDateString() ? 'Avui' : userStats.lastDate;
-        }
+            
+            // Renderitzar taula
+            const historyBody = document.getElementById('historyBody');
+            const history = userStats.gameHistory || {};
+            const sortedGames = Object.keys(history).sort((a, b) => 
+                new Date(history[b].lastPlayed) - new Date(history[a].lastPlayed)
+            );
 
-        // --- GESTIÓ DE TEMPS ---
-        let sessionStart = null;
-        function startSessionTimer() { sessionStart = Date.now(); }
-        function endSessionTimer() {
-            if (!sessionStart) return;
-            const elapsedMs = Date.now() - sessionStart;
-            const elapsedMin = Math.round(elapsedMs / 60000);
-            if (elapsedMin > 0) {
-                userStats.timeMinutes += elapsedMin;
-                saveStats();
+            if (sortedGames.length === 0) {
+                historyBody.innerHTML = `<tr><td colspan="3" style="text-align:center; opacity:0.5;">Encara no has jugat a cap joc.</td></tr>`;
+            } else {
+                historyBody.innerHTML = sortedGames.map(name => `
+                    <tr>
+                        <td class="game-tag">${name}</td>
+                        <td>${new Date(history[name].lastPlayed).toLocaleString('ca-ES', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                        <td>${history[name].count}</td>
+                    </tr>
+                `).join('');
             }
-            sessionStart = null;
         }
 
-        // --- OPTIMITZACIÓ CANVAS (FPS MAX) ---
+        // --- AMBIENT CANVAS (MAX FPS) ---
         const canvas = document.getElementById('ambient-canvas');
-        const ctx = canvas.getContext('2d', { alpha: false }); // Optimitza render sense transparència de fons
+        const ctx = canvas.getContext('2d', { alpha: false });
         let mX = 0, mY = 0;
 
-        window.onresize = () => { 
-            canvas.width = window.innerWidth; 
-            canvas.height = window.innerHeight; 
-        };
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
         window.onresize();
+        document.addEventListener('mousemove', (e) => { mX = e.clientX; mY = e.clientY; });
 
-        document.addEventListener('mousemove', (e) => {
-            mX = e.clientX;
-            mY = e.clientY;
-        });
-
-        function drawAmbient() {
+        function draw() {
             const isDark = document.body.classList.contains('dark-theme');
-            // Background sòlid per evitar overdraw de transparència
-            ctx.fillStyle = isDark ? '#000000' : '#fbfbfd';
+            ctx.fillStyle = isDark ? '#000' : '#fbfbfd';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const color = isDark ? '10, 132, 255' : '0, 122, 255';
-            const grad = ctx.createRadialGradient(mX, mY, 0, mX, mY, 450);
-            grad.addColorStop(0, `rgba(${color}, ${isDark ? 0.3 : 0.15})`);
+            const grad = ctx.createRadialGradient(mX, mY, 0, mX, mY, 500);
+            grad.addColorStop(0, isDark ? 'rgba(10,132,255,0.25)' : 'rgba(0,122,255,0.15)');
             grad.addColorStop(1, 'rgba(0,0,0,0)');
-            
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            requestAnimationFrame(drawAmbient);
+            requestAnimationFrame(draw);
         }
-        requestAnimationFrame(drawAmbient);
+        draw();
 
-        // --- NAVEGACIÓ I RENDER ---
+        // --- NAVEGACIÓ I MODAL ---
         function showView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            
-            const target = document.getElementById(`view-${viewId}`);
-            if (target) {
-                target.classList.add('active');
-                const link = document.getElementById(`link-${viewId}`);
-                if (link) link.classList.add('active');
-            } else {
-                document.getElementById('view-404').classList.add('active');
-            }
-            if (viewId === 'stats') updateStatsUI();
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            document.getElementById(`link-${viewId}`)?.classList.add('active');
+            if(viewId === 'stats') updateStatsUI();
         }
 
-        function renderGrid(games = GAMES_LIST) {
-            const grid = document.getElementById('gameGrid');
-            grid.innerHTML = games.map(g => `
-                <div class="card-wrapper" onclick="launchGame('${g.url}')">
-                    <div class="card"><i data-lucide="${g.icon || 'gamepad-2'}"></i></div>
-                    <div class="card-title">${g.name}</div>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        function launchGame(url) {
+        function launchGame(gameObj) {
+            // Actualitzar Stats
             userStats.plays++;
-            userStats.points += 15;
-            saveStats();
-            startSessionTimer();
+            userStats.points += 5;
             
-            // Si el url ja acaba en .html el fem servir, si no, assumim que és una carpeta
-            const path = url.includes('.html') ? `assets/games/${url}` : `assets/games/${url}/index.html`;
+            if (!userStats.gameHistory) userStats.gameHistory = {};
+            if (!userStats.gameHistory[gameObj.name]) {
+                userStats.gameHistory[gameObj.name] = { count: 0, lastPlayed: "" };
+            }
+            userStats.gameHistory[gameObj.name].count++;
+            userStats.gameHistory[gameObj.name].lastPlayed = new Date().toISOString();
+            
+            localStorage.setItem('ulaStats', JSON.stringify(userStats));
             
             const iframe = document.getElementById('gameIframe');
-            iframe.src = path;
-            
-            // Verificació bàsica de càrrega
-            iframe.onerror = () => {
-                showView('404');
-                document.getElementById('gameModal').classList.remove('active');
-            };
-
+            iframe.src = gameObj.url;
             document.getElementById('gameModal').classList.add('active');
         }
 
         document.getElementById('closeModal').onclick = () => {
             document.getElementById('gameModal').classList.remove('active');
             document.getElementById('gameIframe').src = "";
-            endSessionTimer();
         };
 
-        // --- EVENT LISTENERS ---
+        // Cerca
+        let searchTimeout;
+        document.getElementById('gameSearch').oninput = (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const term = e.target.value.toLowerCase();
+                FILTERED_GAMES = ALL_GAMES.filter(g => g.name.toLowerCase().includes(term));
+                if (FILTERED_GAMES.length === 0) showView('404');
+                else { showView('arcade'); renderInitial(); }
+            }, 300);
+        };
+
         document.getElementById('themeBtn').onclick = () => {
             const isDark = document.body.classList.toggle('dark-theme');
             document.getElementById('themeIcon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
             lucide.createIcons();
         };
 
-        document.getElementById('gameSearch').oninput = (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = GAMES_LIST.filter(g => g.name.toLowerCase().includes(term));
-            renderGrid(filtered);
-        };
-
-        // Inicialització
         window.onload = () => {
-            renderGrid();
             updateStatsUI();
             lucide.createIcons();
-            
-            const today = new Date().toLocaleDateString();
-            if (userStats.lastDate !== today) {
-                userStats.lastDate = today;
-                userStats.streak++;
-                saveStats();
-            }
         };
     </script>
 </body>
