@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>ulaGames v6.8</title>
+    <title>ulaGames</title>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -268,6 +268,7 @@
                         <tr>
                             <th>Joc</th>
                             <th>Última sessió</th>
+                            <th>Temps</th>
                             <th>Partides</th>
                         </tr>
                     </thead>
@@ -384,7 +385,7 @@
             renderInitial();
         }
 
-        // --- ESTADÍSTIQUES ---
+        // --- ESTADÍSTIQUES I SEGUIMENT DE TEMPS ---
         const initialStats = { 
             plays: 0, 
             points: 0, 
@@ -395,6 +396,25 @@
         };
         
         let userStats = JSON.parse(localStorage.getItem('ulaStats')) || initialStats;
+
+        // Variables per la sessió actual
+        let currentSession = {
+            gameName: null,
+            startTime: null,
+            lastActivity: null,
+            totalActiveMs: 0
+        };
+
+        // Detectar activitat (teclat o ratolí)
+        function registerActivity() {
+            if (currentSession.gameName) {
+                currentSession.lastActivity = Date.now();
+            }
+        }
+
+        document.addEventListener('mousemove', registerActivity);
+        document.addEventListener('keydown', registerActivity);
+        document.addEventListener('mousedown', registerActivity);
 
         function checkStreak() {
             const now = new Date();
@@ -411,9 +431,8 @@
                     yesterday.setDate(now.getDate() - 1);
                     
                     if (lastDayString === yesterday.toDateString()) {
-                        // És el dia següent exactament (no fem res aquí, s'incrementarà al jugar)
+                        // Es manté la ratxa (s'actualitzarà al jugar)
                     } else {
-                        // Ha passat més d'un dia
                         userStats.streak = 0;
                     }
                 }
@@ -425,11 +444,22 @@
             localStorage.setItem('ulaStats', JSON.stringify(userStats));
         }
 
+        function formatDuration(totalSeconds) {
+            if (!totalSeconds || totalSeconds < 1) return "< 1m";
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = Math.floor(totalSeconds % 60);
+            if (mins === 0) return `${secs}s`;
+            return `${mins}m ${secs}s`;
+        }
+
         function updateStatsUI() {
             checkStreak();
             document.getElementById('stat-plays').innerText = userStats.plays || 0;
             document.getElementById('stat-points').innerText = userStats.points || 0;
-            document.getElementById('stat-time').innerText = (userStats.timeMinutes || 0) + 'm';
+            
+            // Mostrar temps total (convertit de segons a minuts per la targeta principal)
+            const totalSeconds = userStats.timeSeconds || (userStats.timeMinutes * 60) || 0;
+            document.getElementById('stat-time').innerText = Math.floor(totalSeconds / 60) + 'm';
             
             const streakContainer = document.getElementById('stat-streak-container');
             if (userStats.streak > 0) {
@@ -448,12 +478,13 @@
             );
 
             if (sortedGames.length === 0) {
-                historyBody.innerHTML = `<tr><td colspan="3" style="text-align:center; opacity:0.5; padding: 20px;">Encara no has jugat a cap joc.</td></tr>`;
+                historyBody.innerHTML = `<tr><td colspan="4" style="text-align:center; opacity:0.5; padding: 20px;">Encara no has jugat a cap joc.</td></tr>`;
             } else {
                 historyBody.innerHTML = sortedGames.map(name => `
                     <tr>
                         <td class="game-tag">${name}</td>
                         <td>${new Date(history[name].lastPlayed).toLocaleString('ca-ES', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                        <td>${formatDuration(history[name].totalSeconds || 0)}</td>
                         <td>${history[name].count}</td>
                     </tr>
                 `).join('');
@@ -496,7 +527,7 @@
             const now = new Date();
             const today = now.toDateString();
             
-            // Lògica de ratxa quan es juga
+            // Lògica de ratxa
             if (userStats.lastDate) {
                 const lastDateObj = new Date(userStats.lastDate);
                 const lastDayString = lastDateObj.toDateString();
@@ -504,7 +535,6 @@
                 if (lastDayString !== today) {
                     const yesterday = new Date(now);
                     yesterday.setDate(now.getDate() - 1);
-                    
                     if (lastDayString === yesterday.toDateString()) {
                         userStats.streak++;
                     } else {
@@ -521,11 +551,17 @@
             
             if (!userStats.gameHistory) userStats.gameHistory = {};
             if (!userStats.gameHistory[gameObj.name]) {
-                userStats.gameHistory[gameObj.name] = { count: 0, lastPlayed: "" };
+                userStats.gameHistory[gameObj.name] = { count: 0, lastPlayed: "", totalSeconds: 0 };
             }
             userStats.gameHistory[gameObj.name].count++;
             userStats.gameHistory[gameObj.name].lastPlayed = now.toISOString();
             
+            // Iniciar sessió de seguiment de temps
+            currentSession.gameName = gameObj.name;
+            currentSession.startTime = Date.now();
+            currentSession.lastActivity = Date.now();
+            currentSession.totalActiveMs = 0;
+
             saveStats();
             
             const iframe = document.getElementById('gameIframe');
@@ -534,12 +570,43 @@
             
             iframe.src = finalUrl;
             document.getElementById('gameModal').classList.add('active');
+
+            // Interval de comprovació d'activitat cada segon mentre el joc està obert
+            currentSession.timer = setInterval(() => {
+                const nowMs = Date.now();
+                // Si hi ha hagut activitat en els últims 60 segons, sumem el segon actual
+                if (nowMs - currentSession.lastActivity < 60000) {
+                    currentSession.totalActiveMs += 1000;
+                }
+            }, 1000);
         }
 
         document.getElementById('closeModal').onclick = () => {
-            document.getElementById('gameModal').classList.remove('active');
+            const modal = document.getElementById('gameModal');
+            if (!modal.classList.contains('active')) return;
+
+            // Aturar el cronòmetre i desar el temps
+            clearInterval(currentSession.timer);
+            
+            const activeSeconds = Math.floor(currentSession.totalActiveMs / 1000);
+            if (activeSeconds > 0) {
+                // Actualitzar històric del joc
+                if (userStats.gameHistory[currentSession.gameName]) {
+                    userStats.gameHistory[currentSession.gameName].totalSeconds = (userStats.gameHistory[currentSession.gameName].totalSeconds || 0) + activeSeconds;
+                }
+                // Actualitzar total global (mantenim compatibilitat amb timeMinutes vell)
+                if (!userStats.timeSeconds) userStats.timeSeconds = (userStats.timeMinutes || 0) * 60;
+                userStats.timeSeconds += activeSeconds;
+                userStats.timeMinutes = Math.floor(userStats.timeSeconds / 60);
+                
+                saveStats();
+            }
+
+            // Reset sessió
+            currentSession.gameName = null;
+            modal.classList.remove('active');
             document.getElementById('gameIframe').src = "";
-            // Si estem a la vista de stats, actualitzem en tancar el joc
+            
             if (document.getElementById('view-stats').classList.contains('active')) updateStatsUI();
         };
 
@@ -562,6 +629,10 @@
         };
 
         window.onload = () => {
+            // Migració inicial si cal
+            if (userStats.timeMinutes && !userStats.timeSeconds) {
+                userStats.timeSeconds = userStats.timeMinutes * 60;
+            }
             updateStatsUI();
             lucide.createIcons();
         };
