@@ -95,7 +95,7 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 30px; }
         
         /* Cards */
-        .card-wrapper { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.3s; opacity: 0; transform: translateY(10px); }
+        .card-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.3s; opacity: 0; transform: translateY(10px); }
         .card-wrapper.visible { opacity: 1; transform: translateY(0); }
 
         .card {
@@ -109,7 +109,20 @@
             overflow: hidden;
         }
         .card img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
-        .card i { width: 45px; height: 45px; stroke-width: 1.2; color: var(--text-main); opacity: 0.4; position: absolute; }
+        .card i.game-icon { width: 45px; height: 45px; stroke-width: 1.2; color: var(--text-main); opacity: 0.4; position: absolute; }
+        
+        /* Fav System */
+        .fav-btn {
+            position: absolute; top: 10px; right: 10px; z-index: 10;
+            background: rgba(0,0,0,0.3); backdrop-filter: blur(5px);
+            border: none; color: white; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: 0.3s; cursor: pointer;
+        }
+        .card-wrapper:hover .fav-btn, .fav-btn.active { opacity: 1; }
+        .fav-btn.active { color: #FFD60A; background: rgba(0,0,0,0.5); }
+        .fav-btn:hover { transform: scale(1.15); }
+
         .card:hover { transform: scale(1.05) translateY(-8px); border: 1px solid rgba(var(--glow-color-rgb), 0.5); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         .card:hover img { transform: scale(1.15); }
         .card-title { margin-top: 14px; font-size: 13px; font-weight: 600; opacity: 0.7; text-align: center; }
@@ -122,8 +135,20 @@
             padding: 20px; border-radius: 24px; backdrop-filter: blur(40px);
             display: flex; flex-direction: column; gap: 5px;
         }
-        .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
         .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
+
+        /* Flame Animation */
+        .flame-icon {
+            display: inline-block;
+            animation: flicker 1.5s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 5px rgba(255, 69, 0, 0.5));
+        }
+        @keyframes flicker {
+            0% { transform: scale(1) translateY(0); color: #FF4500; }
+            50% { transform: scale(1.1) translateY(-2px); color: #FF8C00; }
+            100% { transform: scale(1) translateY(0); color: #FFD700; }
+        }
 
         /* History Table */
         .history-section {
@@ -227,7 +252,9 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Rantxa actual</div>
-                    <div class="stat-value" id="stat-streak">1 d.</div>
+                    <div class="stat-value" id="stat-streak-container">
+                        <span id="stat-streak">-</span>
+                    </div>
                 </div>
             </div>
 
@@ -278,6 +305,26 @@
         let itemsShown = 0;
         const CHUNK_SIZE = 40;
 
+        // --- SISTEMA FAVORITS ---
+        let favorites = JSON.parse(localStorage.getItem('ulaFavorites')) || [];
+
+        function toggleFavorite(e, gameId) {
+            e.stopPropagation();
+            const index = favorites.indexOf(gameId);
+            if (index > -1) favorites.splice(index, 1);
+            else favorites.push(gameId);
+            
+            localStorage.setItem('ulaFavorites', JSON.stringify(favorites));
+            
+            // Actualitzar el botó visualment
+            const btn = e.currentTarget;
+            btn.classList.toggle('active');
+            btn.innerHTML = btn.classList.contains('active') ? 
+                '<i data-lucide="star" style="fill: #FFD60A"></i>' : 
+                '<i data-lucide="star"></i>';
+            lucide.createIcons();
+        }
+
         window.addEventListener('load', () => {
             if (typeof GAMES !== 'undefined') {
                 ALL_GAMES = GAMES;
@@ -311,11 +358,15 @@
                 wrapper.className = 'card-wrapper';
                 wrapper.onclick = () => launchGame(g);
                 
+                const isFav = favorites.includes(g.id || g.url);
+                const favIcon = isFav ? '<i data-lucide="star" style="fill: #FFD60A"></i>' : '<i data-lucide="star"></i>';
+                
                 // Fallback d'imatge
                 const mediaContent = g.image && g.image !== "" ? `<img src="${g.image}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">` : "";
-                const iconContent = `<i data-lucide="gamepad-2" style="${g.image ? 'display:none;' : 'display:block;'}"></i>`;
+                const iconContent = `<i data-lucide="gamepad-2" class="game-icon" style="${g.image ? 'display:none;' : 'display:block;'}"></i>`;
                 
                 wrapper.innerHTML = `
+                    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${g.id || g.url}')">${favIcon}</button>
                     <div class="card">${mediaContent}${iconContent}</div>
                     <div class="card-title">${g.name}</div>
                 `;
@@ -338,17 +389,41 @@
             plays: 0, 
             points: 0, 
             timeMinutes: 0, 
-            streak: 1, 
-            lastDate: new Date().toLocaleDateString(),
+            streak: 0, 
+            lastDate: null,
             gameHistory: {} 
         };
         let userStats = JSON.parse(localStorage.getItem('ulaStats')) || initialStats;
+
+        function checkStreak() {
+            const today = new Date().toLocaleDateString();
+            if (!userStats.lastDate) {
+                userStats.streak = 0; // Nou usuari, encara no té ratxa de dies
+            } else if (userStats.lastDate !== today) {
+                const last = new Date(userStats.lastDate);
+                const now = new Date();
+                const diffTime = Math.abs(now - last);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 1) userStats.streak++;
+                else if (diffDays > 1) userStats.streak = 1;
+            }
+        }
 
         function updateStatsUI() {
             document.getElementById('stat-plays').innerText = userStats.plays;
             document.getElementById('stat-points').innerText = userStats.points;
             document.getElementById('stat-time').innerText = userStats.timeMinutes + 'm';
-            document.getElementById('stat-streak').innerText = userStats.streak + ' d.';
+            
+            const streakVal = document.getElementById('stat-streak');
+            if (userStats.streak > 0) {
+                document.getElementById('stat-streak-container').innerHTML = `
+                    <span id="stat-streak">${userStats.streak} d.</span>
+                    <i data-lucide="flame" class="flame-icon"></i>
+                `;
+            } else {
+                document.getElementById('stat-streak-container').innerHTML = `<span id="stat-streak">-</span>`;
+            }
             
             const historyBody = document.getElementById('historyBody');
             const history = userStats.gameHistory || {};
@@ -367,6 +442,7 @@
                     </tr>
                 `).join('');
             }
+            lucide.createIcons();
         }
 
         // --- AMBIENT CANVAS ---
@@ -401,9 +477,10 @@
         }
 
         function launchGame(gameObj) {
-            // Actualitzar Stats
+            checkStreak();
             userStats.plays++;
             userStats.points += 5;
+            userStats.lastDate = new Date().toLocaleDateString();
             
             if (!userStats.gameHistory) userStats.gameHistory = {};
             if (!userStats.gameHistory[gameObj.name]) {
@@ -415,8 +492,6 @@
             localStorage.setItem('ulaStats', JSON.stringify(userStats));
             
             const iframe = document.getElementById('gameIframe');
-            
-            // CORRECCIÓ DE RUTA: Estructura assets/games/[id].html
             let gameId = gameObj.url.includes('.html') ? gameObj.url : `${gameObj.url}.html`;
             let finalUrl = `assets/games/${gameId}`;
             
