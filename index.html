@@ -393,36 +393,52 @@
             lastDate: null,
             gameHistory: {} 
         };
+        
         let userStats = JSON.parse(localStorage.getItem('ulaStats')) || initialStats;
 
         function checkStreak() {
-            const today = new Date().toLocaleDateString();
+            const now = new Date();
+            const today = now.toDateString();
+            
             if (!userStats.lastDate) {
-                userStats.streak = 0; // Nou usuari, encara no té ratxa de dies
-            } else if (userStats.lastDate !== today) {
-                const last = new Date(userStats.lastDate);
-                const now = new Date();
-                const diffTime = Math.abs(now - last);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                userStats.streak = 0; 
+            } else {
+                const lastDateObj = new Date(userStats.lastDate);
+                const lastDayString = lastDateObj.toDateString();
                 
-                if (diffDays === 1) userStats.streak++;
-                else if (diffDays > 1) userStats.streak = 1;
+                if (lastDayString !== today) {
+                    const yesterday = new Date(now);
+                    yesterday.setDate(now.getDate() - 1);
+                    
+                    if (lastDayString === yesterday.toDateString()) {
+                        // És el dia següent exactament (no fem res aquí, s'incrementarà al jugar)
+                    } else {
+                        // Ha passat més d'un dia
+                        userStats.streak = 0;
+                    }
+                }
             }
+            saveStats();
+        }
+
+        function saveStats() {
+            localStorage.setItem('ulaStats', JSON.stringify(userStats));
         }
 
         function updateStatsUI() {
-            document.getElementById('stat-plays').innerText = userStats.plays;
-            document.getElementById('stat-points').innerText = userStats.points;
-            document.getElementById('stat-time').innerText = userStats.timeMinutes + 'm';
+            checkStreak();
+            document.getElementById('stat-plays').innerText = userStats.plays || 0;
+            document.getElementById('stat-points').innerText = userStats.points || 0;
+            document.getElementById('stat-time').innerText = (userStats.timeMinutes || 0) + 'm';
             
-            const streakVal = document.getElementById('stat-streak');
+            const streakContainer = document.getElementById('stat-streak-container');
             if (userStats.streak > 0) {
-                document.getElementById('stat-streak-container').innerHTML = `
+                streakContainer.innerHTML = `
                     <span id="stat-streak">${userStats.streak} d.</span>
                     <i data-lucide="flame" class="flame-icon"></i>
                 `;
             } else {
-                document.getElementById('stat-streak-container').innerHTML = `<span id="stat-streak">-</span>`;
+                streakContainer.innerHTML = `<span id="stat-streak">-</span>`;
             }
             
             const historyBody = document.getElementById('historyBody');
@@ -477,19 +493,40 @@
         }
 
         function launchGame(gameObj) {
-            checkStreak();
+            const now = new Date();
+            const today = now.toDateString();
+            
+            // Lògica de ratxa quan es juga
+            if (userStats.lastDate) {
+                const lastDateObj = new Date(userStats.lastDate);
+                const lastDayString = lastDateObj.toDateString();
+                
+                if (lastDayString !== today) {
+                    const yesterday = new Date(now);
+                    yesterday.setDate(now.getDate() - 1);
+                    
+                    if (lastDayString === yesterday.toDateString()) {
+                        userStats.streak++;
+                    } else {
+                        userStats.streak = 1;
+                    }
+                }
+            } else {
+                userStats.streak = 1;
+            }
+
             userStats.plays++;
             userStats.points += 5;
-            userStats.lastDate = new Date().toLocaleDateString();
+            userStats.lastDate = now.toISOString();
             
             if (!userStats.gameHistory) userStats.gameHistory = {};
             if (!userStats.gameHistory[gameObj.name]) {
                 userStats.gameHistory[gameObj.name] = { count: 0, lastPlayed: "" };
             }
             userStats.gameHistory[gameObj.name].count++;
-            userStats.gameHistory[gameObj.name].lastPlayed = new Date().toISOString();
+            userStats.gameHistory[gameObj.name].lastPlayed = now.toISOString();
             
-            localStorage.setItem('ulaStats', JSON.stringify(userStats));
+            saveStats();
             
             const iframe = document.getElementById('gameIframe');
             let gameId = gameObj.url.includes('.html') ? gameObj.url : `${gameObj.url}.html`;
@@ -502,6 +539,8 @@
         document.getElementById('closeModal').onclick = () => {
             document.getElementById('gameModal').classList.remove('active');
             document.getElementById('gameIframe').src = "";
+            // Si estem a la vista de stats, actualitzem en tancar el joc
+            if (document.getElementById('view-stats').classList.contains('active')) updateStatsUI();
         };
 
         // Cerca
