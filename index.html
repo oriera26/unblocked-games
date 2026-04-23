@@ -199,13 +199,13 @@
     </nav>
 
     <div class="container" id="scrollContainer">
-        <!-- ARCADE VIEW -->
+        <!-- VISTA ARCADE -->
         <section id="view-arcade" class="view active">
             <div class="grid" id="gameGrid"></div>
             <div id="loadMoreTrigger"></div>
         </section>
 
-        <!-- STATS VIEW -->
+        <!-- VISTA STATS -->
         <section id="view-stats" class="view">
             <div class="stats-header">
                 <h1 style="font-size: 32px;">El teu historial</h1>
@@ -251,11 +251,12 @@
             </div>
         </section>
 
-        <!-- 404 VIEW -->
+        <!-- VISTA 404 -->
         <section id="view-404" class="view">
-            <div class="error-container">
+            <div class="error-container" style="text-align: center; padding-top: 50px;">
+                <i data-lucide="frown" style="width: 60px; height: 60px; opacity: 0.5; margin-bottom: 20px;"></i>
                 <h2>No s'han trobat resultats</h2>
-                <button class="stat-card" style="margin-top:20px; cursor:pointer;" onclick="resetSearch()">Mostra-ho tot</button>
+                <button class="stat-card" style="margin: 20px auto; cursor:pointer; width: fit-content;" onclick="resetSearch()">Mostra-ho tot</button>
             </div>
         </section>
     </div>
@@ -263,7 +264,7 @@
     <div id="gameModal" class="modal">
         <div class="modal-content">
             <button class="close-modal" id="closeModal"><i data-lucide="x"></i></button>
-            <iframe id="gameIframe" src="" allow="autoplay; fullscreen; keyboard"></iframe>
+            <iframe id="gameIframe" src="" allow="autoplay; fullscreen; keyboard; gamepad" allowfullscreen></iframe>
         </div>
     </div>
 
@@ -310,10 +311,12 @@
                 wrapper.className = 'card-wrapper';
                 wrapper.onclick = () => launchGame(g);
                 
-                const mediaContent = g.image ? `<img src="${g.image}" loading="lazy">` : `<i data-lucide="gamepad-2"></i>`;
+                // Fallback d'imatge
+                const mediaContent = g.image && g.image !== "" ? `<img src="${g.image}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">` : "";
+                const iconContent = `<i data-lucide="gamepad-2" style="${g.image ? 'display:none;' : 'display:block;'}"></i>`;
                 
                 wrapper.innerHTML = `
-                    <div class="card">${mediaContent}</div>
+                    <div class="card">${mediaContent}${iconContent}</div>
                     <div class="card-title">${g.name}</div>
                 `;
                 grid.appendChild(wrapper);
@@ -337,7 +340,7 @@
             timeMinutes: 0, 
             streak: 1, 
             lastDate: new Date().toLocaleDateString(),
-            gameHistory: {} // Estructura: { "Nom del joc": { count: 0, lastPlayed: "" } }
+            gameHistory: {} 
         };
         let userStats = JSON.parse(localStorage.getItem('ulaStats')) || initialStats;
 
@@ -347,7 +350,6 @@
             document.getElementById('stat-time').innerText = userStats.timeMinutes + 'm';
             document.getElementById('stat-streak').innerText = userStats.streak + ' d.';
             
-            // Renderitzar taula
             const historyBody = document.getElementById('historyBody');
             const history = userStats.gameHistory || {};
             const sortedGames = Object.keys(history).sort((a, b) => 
@@ -355,7 +357,7 @@
             );
 
             if (sortedGames.length === 0) {
-                historyBody.innerHTML = `<tr><td colspan="3" style="text-align:center; opacity:0.5;">Encara no has jugat a cap joc.</td></tr>`;
+                historyBody.innerHTML = `<tr><td colspan="3" style="text-align:center; opacity:0.5; padding: 20px;">Encara no has jugat a cap joc.</td></tr>`;
             } else {
                 historyBody.innerHTML = sortedGames.map(name => `
                     <tr>
@@ -367,7 +369,7 @@
             }
         }
 
-        // --- AMBIENT CANVAS (MAX FPS) ---
+        // --- AMBIENT CANVAS ---
         const canvas = document.getElementById('ambient-canvas');
         const ctx = canvas.getContext('2d', { alpha: false });
         let mX = 0, mY = 0;
@@ -413,7 +415,14 @@
             localStorage.setItem('ulaStats', JSON.stringify(userStats));
             
             const iframe = document.getElementById('gameIframe');
-            iframe.src = gameObj.url;
+            
+            // CORRECCIÓ DE RUTA DINÀMICA:
+            // Basat en l'estructura: assets/games/[id]/[id].html
+            // Suposem que gameObj.url ja és l'ID o el nom del fitxer sense .html
+            let gameId = gameObj.url.replace('.html', '');
+            let finalUrl = `assets/games/${gameId}/${gameId}.html`;
+            
+            iframe.src = finalUrl;
             document.getElementById('gameModal').classList.add('active');
         }
 
