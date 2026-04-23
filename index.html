@@ -416,11 +416,9 @@
             
             const iframe = document.getElementById('gameIframe');
             
-            // CORRECCIÓ DE RUTA DINÀMICA:
-            // Basat en l'estructura: assets/games/[id]/[id].html
-            // Suposem que gameObj.url ja és l'ID o el nom del fitxer sense .html
-            let gameId = gameObj.url.replace('.html', '');
-            let finalUrl = `assets/games/${gameId}/${gameId}.html`;
+            // CORRECCIÓ DE RUTA: Estructura assets/games/[id].html
+            let gameId = gameObj.url.includes('.html') ? gameObj.url : `${gameObj.url}.html`;
+            let finalUrl = `assets/games/${gameId}`;
             
             iframe.src = finalUrl;
             document.getElementById('gameModal').classList.add('active');
