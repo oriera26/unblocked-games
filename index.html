@@ -564,17 +564,23 @@
         }
 
         document.getElementById('closeModal').onclick = () => {
-            if (sessionStart && currentGame) {
-                const diff = Math.floor((Date.now() - sessionStart) / 1000);
-                userStats.timeSeconds = (userStats.timeSeconds || 0) + diff;
-                if(!userStats.gameHistory) userStats.gameHistory = {};
-                if(!userStats.gameHistory[currentGame.name]) {
-                    userStats.gameHistory[currentGame.name] = { count: 0, lastPlayed: "", timePlayed: 0 };
+            // Dins de l'event del botó closeModal
+            if (sTime && cGame) {
+                const d = Math.floor((Date.now() - sTime) / 1000);
+                userStats.timeSeconds = (userStats.timeSeconds || 0) + d;
+                
+                // Inicialització segura de l'historial del joc
+                if (!userStats.gameHistory) userStats.gameHistory = {};
+                if (!userStats.gameHistory[cGame.name]) {
+                    userStats.gameHistory[cGame.name] = { count: 0, timePlayed: 0, last: "" };
                 }
-                userStats.gameHistory[currentGame.name].count++;
-                userStats.gameHistory[currentGame.name].timePlayed += diff;
-                userStats.gameHistory[currentGame.name].lastPlayed = new Date().toISOString();
-                saveStats();
+                
+                // Increment segur (fent servir || 0 per evitar el NaN)
+                userStats.gameHistory[cGame.name].count = (userStats.gameHistory[cGame.name].count || 0) + 1;
+                userStats.gameHistory[cGame.name].timePlayed = (userStats.gameHistory[cGame.name].timePlayed || 0) + d;
+                userStats.gameHistory[cGame.name].last = new Date().toISOString();
+                
+                save();
             }
             document.getElementById('gameModal').classList.remove('active');
             document.getElementById('gameIframe').src = "";
@@ -583,11 +589,13 @@
         function saveStats() { localStorage.setItem('ulaStats', JSON.stringify(userStats)); }
         
         function updateStatsUI() {
+            
             document.getElementById('stat-streak').innerText = userStats.streak || 0;
             document.getElementById('stat-points').innerText = userStats.points || 0;
             document.getElementById('stat-time').innerText = Math.floor((userStats.timeSeconds || 0) / 60) + 'm';
 
             // Nivells
+            
             const points = userStats.points || 0;
             const levelEl = document.getElementById('stat-level');
             const progressEl = document.getElementById('level-progress');
@@ -607,9 +615,11 @@
                 historyBody.innerHTML = '<tr><td colspan="4" style="opacity:0.5; padding:40px; text-align:center">Encara no has jugat a cap joc. Comença la teva aventura!</td></tr>';
             } else {
                 historyBody.innerHTML = sorted.map(name => {
-                    const g = history[name];
-                    const mins = Math.floor(g.timePlayed / 60);
-                    const secs = g.timePlayed % 60;
+                    const g = h[k];
+                    const totalSeconds = g.timePlayed || 0; // Força el 0 si és NaN
+                    const m = Math.floor(totalSeconds / 60);
+                    const s = totalSeconds % 60;
+                    const count = g.count || 0; // Força el 0 si és NaN
                     const date = new Date(g.lastPlayed).toLocaleDateString('ca-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
                     return `
                         <tr>
