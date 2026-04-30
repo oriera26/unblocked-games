@@ -17,6 +17,7 @@
             --pill-bg: rgba(0, 0, 0, 0.03);
             --table-hover: rgba(0, 0, 0, 0.02);
             --nav-blur: 20px;
+            --fire-color: #ff4d00;
         }
 
         .dark-theme {
@@ -117,11 +118,7 @@
         }
 
         .category-item i { width: 13px; height: 13px; }
-
-        .category-item.active {
-            opacity: 1;
-            color: #fff;
-        }
+        .category-item.active { opacity: 1; color: #fff; }
 
         .category-active-bg {
             position: absolute;
@@ -191,14 +188,42 @@
 
         /* Stats & History */
         .stats-header { margin-bottom: 25px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
         .stat-card {
             background: var(--glass-bg); border: 1px solid var(--glass-border);
-            padding: 18px; border-radius: 20px; backdrop-filter: blur(40px);
-            display: flex; flex-direction: column; gap: 4px;
+            padding: 20px; border-radius: 24px; backdrop-filter: blur(40px);
+            display: flex; flex-direction: column; gap: 8px;
+            position: relative; overflow: hidden;
         }
-        .stat-value { font-size: 24px; font-weight: 800; color: var(--accent); }
-        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; font-weight: 700; }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; font-weight: 700; }
+        
+        /* Animació flama */
+        .streak-flame {
+            color: var(--fire-color);
+            filter: drop-shadow(0 0 8px rgba(255, 77, 0, 0.6));
+            animation: flamePulse 1.5s infinite alternate ease-in-out;
+        }
+        @keyframes flamePulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Taula detallada */
+        .history-section {
+            background: var(--glass-bg); 
+            padding: 24px; 
+            border-radius: 28px; 
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(40px);
+        }
+        .table-container { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        th { text-align: left; padding: 12px; font-size: 11px; text-transform: uppercase; opacity: 0.4; letter-spacing: 0.5px; }
+        td { padding: 14px 12px; background: var(--table-hover); font-size: 14px; }
+        td:first-child { border-radius: 12px 0 0 12px; font-weight: 600; }
+        td:last-child { border-radius: 0 12px 12px 0; text-align: right; opacity: 0.6; font-size: 12px; }
+        .game-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; margin-left: 8px; vertical-align: middle; }
 
         /* Modal */
         .modal {
@@ -267,35 +292,49 @@
         <!-- VISTA STATS -->
         <section id="view-stats" class="view">
             <div class="stats-header">
-                <h1 style="font-size: 28px;">El teu historial</h1>
-                <p style="opacity: 0.5; font-size: 14px;">Resum de la teva activitat local.</p>
+                <h1 style="font-size: 32px; font-weight: 800; letter-spacing: -0.5px;">El teu Perfil</h1>
+                <p style="opacity: 0.5; font-size: 15px;">Dades d'activitat i fites assolides.</p>
             </div>
             
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Partides</div>
-                    <div class="stat-value" id="stat-plays">0</div>
+                    <div class="stat-label">Ratxa Actual</div>
+                    <div class="stat-value">
+                        <span id="stat-streak">0</span>
+                        <i data-lucide="flame" class="streak-flame"></i>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Punts</div>
+                    <div class="stat-label">Puntuació Total</div>
                     <div class="stat-value" id="stat-points">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Temps total</div>
-                    <div class="stat-value" id="stat-time">0m</div>
+                    <div class="stat-label">Nivell</div>
+                    <div class="stat-value" id="stat-level">Bronce</div>
+                    <div style="width: 100%; height: 4px; background: var(--pill-bg); border-radius: 2px; margin-top: 4px;">
+                        <div id="level-progress" style="width: 30%; height: 100%; background: var(--accent); border-radius: 2px;"></div>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Ratxa (dies)</div>
-                    <div class="stat-value" id="stat-streak">0</div>
+                    <div class="stat-label">Temps Jugat</div>
+                    <div class="stat-value" id="stat-time">0m</div>
                 </div>
             </div>
 
-            <div class="history-section" style="background: var(--glass-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border);">
-                <div style="font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                    <i data-lucide="history" style="width:18px;"></i> Recents
+            <div class="history-section">
+                <div style="font-weight: 700; font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="activity" style="width:20px; color: var(--accent);"></i> Historial Detallat de Jocs
                 </div>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;" id="historyTable">
+                <div class="table-container">
+                    <table id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Joc</th>
+                                <th style="text-align: center;">Partides</th>
+                                <th style="text-align: center;">Temps</th>
+                                <th style="text-align: right;">Última sessió</th>
+                            </tr>
+                        </thead>
                         <tbody id="historyBody"></tbody>
                     </table>
                 </div>
@@ -312,11 +351,10 @@
         </section>
     </div>
 
-    <!-- Barra de Categories Inferior Estil Dock (Molt Compacta) -->
+    <!-- Barra de Categories Inferior -->
     <div class="category-container" id="categoryContainer">
         <div class="category-pill-wrapper" id="pillWrapper">
             <div class="category-active-bg" id="activePill"></div>
-            <!-- El JS omplirà això -->
         </div>
     </div>
 
@@ -376,7 +414,6 @@
             }
         });
 
-        // Lògica de ratxa original
         function checkStreak() {
             const today = new Date().toDateString();
             if (userStats.lastDate) {
@@ -385,12 +422,10 @@
                 yesterday.setDate(yesterday.getDate() - 1);
 
                 if (last.toDateString() === yesterday.toDateString()) {
-                    // Seguim la ratxa si avui és nou dia
                     if (userStats.lastDate !== today) {
                         userStats.streak++;
                     }
                 } else if (last.toDateString() !== today) {
-                    // S'ha trencat la ratxa (no jugat ahir ni avui)
                     userStats.streak = 1;
                 }
             } else {
@@ -419,19 +454,13 @@
 
         function applyFilters() {
             const searchTerm = document.getElementById('gameSearch').value.toLowerCase();
-            
             FILTERED_GAMES = ALL_GAMES.filter(g => {
                 const matchesSearch = g.name.toLowerCase().includes(searchTerm);
                 const matchesCat = currentCategory === 'tots' || (g.type && g.type.toLowerCase() === currentCategory);
                 return matchesSearch && matchesCat;
             });
-
-            if (FILTERED_GAMES.length === 0) {
-                showView('404');
-            } else {
-                showView('arcade');
-                renderInitial();
-            }
+            if (FILTERED_GAMES.length === 0) showView('404');
+            else { showView('arcade'); renderInitial(); }
         }
 
         function resetFilters() {
@@ -444,18 +473,11 @@
         const trigger = document.getElementById('loadMoreTrigger');
 
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && itemsShown < FILTERED_GAMES.length) {
-                loadMore();
-            }
+            if (entries[0].isIntersecting && itemsShown < FILTERED_GAMES.length) loadMore();
         }, { root: scrollContainer, threshold: 0.1 });
-
         observer.observe(trigger);
 
-        function renderInitial() {
-            grid.innerHTML = "";
-            itemsShown = 0;
-            loadMore();
-        }
+        function renderInitial() { grid.innerHTML = ""; itemsShown = 0; loadMore(); }
 
         function loadMore() {
             const nextBatch = FILTERED_GAMES.slice(itemsShown, itemsShown + CHUNK_SIZE);
@@ -463,18 +485,13 @@
                 const wrapper = document.createElement('div');
                 wrapper.className = 'card-wrapper';
                 wrapper.onclick = () => launchGame(g);
-                
                 const isFav = favorites.includes(g.id || g.url);
                 const mediaContent = g.image ? `<img src="${g.image}" loading="lazy" onerror="this.style.display='none';">` : "";
-                
                 wrapper.innerHTML = `
                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${g.id || g.url}')">
                         <i data-lucide="star" style="${isFav ? 'fill: #FFD60A' : ''}"></i>
                     </button>
-                    <div class="card">
-                        ${mediaContent}
-                        <i data-lucide="gamepad-2" class="game-icon"></i>
-                    </div>
+                    <div class="card">${mediaContent}<i data-lucide="gamepad-2" class="game-icon"></i></div>
                     <div class="card-title">${g.name}</div>
                 `;
                 grid.appendChild(wrapper);
@@ -489,15 +506,11 @@
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             document.getElementById(`view-${viewId}`).classList.add('active');
             document.getElementById(`link-${viewId}`)?.classList.add('active');
-            
             const catContainer = document.getElementById('categoryContainer');
             if (viewId === 'arcade' || viewId === '404') {
                 catContainer.style.display = 'block';
                 setTimeout(updateActivePillPosition, 50);
-            } else {
-                catContainer.style.display = 'none';
-            }
-            
+            } else catContainer.style.display = 'none';
             if(viewId === 'stats') updateStatsUI();
         }
 
@@ -525,8 +538,7 @@
             const grad = ctx.createRadialGradient(mX, mY, 0, mX, mY, 600);
             grad.addColorStop(0, isDark ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.08)');
             grad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
             requestAnimationFrame(draw);
         }
         draw();
@@ -546,9 +558,8 @@
             const iframe = document.getElementById('gameIframe');
             iframe.src = `assets/games/${game.url.endsWith('.html') ? game.url : game.url + '.html'}`;
             document.getElementById('gameModal').classList.add('active');
-            
             userStats.plays = (userStats.plays || 0) + 1;
-            userStats.points = (userStats.points || 0) + 5;
+            userStats.points = (userStats.points || 0) + 15; // Més punts per cada partida
             saveStats();
         }
 
@@ -556,45 +567,59 @@
             if (sessionStart && currentGame) {
                 const diff = Math.floor((Date.now() - sessionStart) / 1000);
                 userStats.timeSeconds = (userStats.timeSeconds || 0) + diff;
-                
                 if(!userStats.gameHistory) userStats.gameHistory = {};
                 if(!userStats.gameHistory[currentGame.name]) {
-                    userStats.gameHistory[currentGame.name] = { count: 0, lastPlayed: "" };
+                    userStats.gameHistory[currentGame.name] = { count: 0, lastPlayed: "", timePlayed: 0 };
                 }
-                
                 userStats.gameHistory[currentGame.name].count++;
+                userStats.gameHistory[currentGame.name].timePlayed += diff;
                 userStats.gameHistory[currentGame.name].lastPlayed = new Date().toISOString();
                 saveStats();
             }
             document.getElementById('gameModal').classList.remove('active');
             document.getElementById('gameIframe').src = "";
-            sessionStart = null;
-            currentGame = null;
         };
 
-        function saveStats() { 
-            localStorage.setItem('ulaStats', JSON.stringify(userStats)); 
-        }
+        function saveStats() { localStorage.setItem('ulaStats', JSON.stringify(userStats)); }
         
         function updateStatsUI() {
-            document.getElementById('stat-plays').innerText = userStats.plays || 0;
+            document.getElementById('stat-streak').innerText = userStats.streak || 0;
             document.getElementById('stat-points').innerText = userStats.points || 0;
             document.getElementById('stat-time').innerText = Math.floor((userStats.timeSeconds || 0) / 60) + 'm';
-            document.getElementById('stat-streak').innerText = userStats.streak || 0;
+
+            // Nivells
+            const points = userStats.points || 0;
+            const levelEl = document.getElementById('stat-level');
+            const progressEl = document.getElementById('level-progress');
+            let level = "Novell"; let progress = (points % 500) / 500 * 100;
+            if(points > 2000) level = "Llegenda";
+            else if(points > 1000) level = "Expert";
+            else if(points > 500) level = "Pro";
+            else if(points > 100) level = "Aficionat";
+            levelEl.innerText = level;
+            progressEl.style.width = `${progress}%`;
 
             const historyBody = document.getElementById('historyBody');
             const history = userStats.gameHistory || {};
-            const sorted = Object.keys(history).sort((a,b) => new Date(history[b].lastPlayed) - new Date(history[a].lastPlayed)).slice(0, 10);
+            const sorted = Object.keys(history).sort((a,b) => new Date(history[b].lastPlayed) - new Date(history[a].lastPlayed));
             
             if(sorted.length === 0) {
-                historyBody.innerHTML = '<tr><td colspan="2" style="opacity:0.5; padding:20px; text-align:center">Sense activitat</td></tr>';
+                historyBody.innerHTML = '<tr><td colspan="4" style="opacity:0.5; padding:40px; text-align:center">Encara no has jugat a cap joc. Comença la teva aventura!</td></tr>';
             } else {
-                historyBody.innerHTML = sorted.map(name => `
-                    <tr>
-                        <td style="padding: 12px 0; font-weight:600; color:var(--accent)">${name}</td>
-                        <td style="text-align:right; opacity:0.5">${new Date(history[name].lastPlayed).toLocaleDateString()}</td>
-                    </tr>
-                `).join('');
+                historyBody.innerHTML = sorted.map(name => {
+                    const g = history[name];
+                    const mins = Math.floor(g.timePlayed / 60);
+                    const secs = g.timePlayed % 60;
+                    const date = new Date(g.lastPlayed).toLocaleDateString('ca-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    return `
+                        <tr>
+                            <td>${name}</td>
+                            <td style="text-align: center;"><span class="game-badge">${g.count}</span></td>
+                            <td style="text-align: center;">${mins}m ${secs}s</td>
+                            <td>${date}</td>
+                        </tr>
+                    `;
+                }).join('');
             }
         }
 
