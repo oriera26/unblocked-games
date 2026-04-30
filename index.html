@@ -281,12 +281,12 @@
                     <div class="stat-value" id="stat-points">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Temps</div>
+                    <div class="stat-label">Temps total</div>
                     <div class="stat-value" id="stat-time">0m</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Ratxa</div>
-                    <div class="stat-value" id="stat-streak-container">-</div>
+                    <div class="stat-label">Ratxa (dies)</div>
+                    <div class="stat-value" id="stat-streak">0</div>
                 </div>
             </div>
 
@@ -346,7 +346,14 @@
         const CHUNK_SIZE = 30;
 
         let favorites = JSON.parse(localStorage.getItem('ulaFavorites')) || [];
-        let userStats = JSON.parse(localStorage.getItem('ulaStats')) || { plays: 0, points: 0, timeSeconds: 0, streak: 0, lastDate: null, gameHistory: {} };
+        let userStats = JSON.parse(localStorage.getItem('ulaStats')) || { 
+            plays: 0, 
+            points: 0, 
+            timeSeconds: 0, 
+            streak: 0, 
+            lastDate: null, 
+            gameHistory: {} 
+        };
 
         window.addEventListener('load', () => {
             const pillWrapper = document.getElementById('pillWrapper');
@@ -359,6 +366,7 @@
                 pillWrapper.appendChild(item);
             });
             
+            checkStreak();
             lucide.createIcons();
             setTimeout(updateActivePillPosition, 100);
 
@@ -367,6 +375,30 @@
                 applyFilters();
             }
         });
+
+        // Lògica de ratxa original
+        function checkStreak() {
+            const today = new Date().toDateString();
+            if (userStats.lastDate) {
+                const last = new Date(userStats.lastDate);
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                if (last.toDateString() === yesterday.toDateString()) {
+                    // Seguim la ratxa si avui és nou dia
+                    if (userStats.lastDate !== today) {
+                        userStats.streak++;
+                    }
+                } else if (last.toDateString() !== today) {
+                    // S'ha trencat la ratxa (no jugat ahir ni avui)
+                    userStats.streak = 1;
+                }
+            } else {
+                userStats.streak = 1;
+            }
+            userStats.lastDate = today;
+            saveStats();
+        }
 
         function selectCategory(catId) {
             currentCategory = catId;
@@ -514,40 +546,56 @@
             const iframe = document.getElementById('gameIframe');
             iframe.src = `assets/games/${game.url.endsWith('.html') ? game.url : game.url + '.html'}`;
             document.getElementById('gameModal').classList.add('active');
-            userStats.plays++;
-            userStats.points += 5;
+            
+            userStats.plays = (userStats.plays || 0) + 1;
+            userStats.points = (userStats.points || 0) + 5;
             saveStats();
         }
 
         document.getElementById('closeModal').onclick = () => {
             if (sessionStart && currentGame) {
                 const diff = Math.floor((Date.now() - sessionStart) / 1000);
-                userStats.timeSeconds += diff;
-                if(!userStats.gameHistory[currentGame.name]) userStats.gameHistory[currentGame.name] = { count: 0, lastPlayed: "" };
+                userStats.timeSeconds = (userStats.timeSeconds || 0) + diff;
+                
+                if(!userStats.gameHistory) userStats.gameHistory = {};
+                if(!userStats.gameHistory[currentGame.name]) {
+                    userStats.gameHistory[currentGame.name] = { count: 0, lastPlayed: "" };
+                }
+                
                 userStats.gameHistory[currentGame.name].count++;
                 userStats.gameHistory[currentGame.name].lastPlayed = new Date().toISOString();
                 saveStats();
             }
             document.getElementById('gameModal').classList.remove('active');
             document.getElementById('gameIframe').src = "";
+            sessionStart = null;
+            currentGame = null;
         };
 
-        function saveStats() { localStorage.setItem('ulaStats', JSON.stringify(userStats)); }
+        function saveStats() { 
+            localStorage.setItem('ulaStats', JSON.stringify(userStats)); 
+        }
         
         function updateStatsUI() {
-            document.getElementById('stat-plays').innerText = userStats.plays;
-            document.getElementById('stat-points').innerText = userStats.points;
-            document.getElementById('stat-time').innerText = Math.floor(userStats.timeSeconds / 60) + 'm';
+            document.getElementById('stat-plays').innerText = userStats.plays || 0;
+            document.getElementById('stat-points').innerText = userStats.points || 0;
+            document.getElementById('stat-time').innerText = Math.floor((userStats.timeSeconds || 0) / 60) + 'm';
+            document.getElementById('stat-streak').innerText = userStats.streak || 0;
+
             const historyBody = document.getElementById('historyBody');
             const history = userStats.gameHistory || {};
-            const sorted = Object.keys(history).sort((a,b) => new Date(history[b].lastPlayed) - new Date(history[a].lastPlayed)).slice(0, 5);
-            historyBody.innerHTML = sorted.map(name => `
-                <tr>
-                    <td style="padding: 12px 0; font-weight:600; color:var(--accent)">${name}</td>
-                    <td style="text-align:right; opacity:0.5">${new Date(history[name].lastPlayed).toLocaleDateString()}</td>
-                </tr>
-            `).join('');
-            if(sorted.length === 0) historyBody.innerHTML = '<tr><td style="opacity:0.5; padding:20px; text-align:center">Cap partida registrada</td></tr>';
+            const sorted = Object.keys(history).sort((a,b) => new Date(history[b].lastPlayed) - new Date(history[a].lastPlayed)).slice(0, 10);
+            
+            if(sorted.length === 0) {
+                historyBody.innerHTML = '<tr><td colspan="2" style="opacity:0.5; padding:20px; text-align:center">Sense activitat</td></tr>';
+            } else {
+                historyBody.innerHTML = sorted.map(name => `
+                    <tr>
+                        <td style="padding: 12px 0; font-weight:600; color:var(--accent)">${name}</td>
+                        <td style="text-align:right; opacity:0.5">${new Date(history[name].lastPlayed).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+            }
         }
 
         document.getElementById('gameSearch').oninput = applyFilters;
