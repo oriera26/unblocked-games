@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>ulaGames</title>
+    <title>ulaGames - El teu Arcade</title>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -12,9 +12,11 @@
             --text-main: #1d1d1f;
             --accent: #007AFF;
             --bg-base: #fbfbfd;
-            --glass-bg: rgba(255, 255, 255, 0.01); 
+            --glass-bg: rgba(255, 255, 255, 0.4); 
             --glass-border: rgba(0, 0, 0, 0.08);
+            --pill-bg: rgba(0, 0, 0, 0.03);
             --table-hover: rgba(0, 0, 0, 0.02);
+            --nav-blur: 20px;
         }
 
         .dark-theme {
@@ -22,8 +24,9 @@
             --text-main: #f5f5f7;
             --accent: #0A84FF;
             --bg-base: #000000;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-bg: rgba(20, 20, 20, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --pill-bg: rgba(255, 255, 255, 0.08);
             --table-hover: rgba(255, 255, 255, 0.05);
         }
 
@@ -31,7 +34,7 @@
             margin: 0; padding: 0; box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             user-select: none;
-            cursor: auto;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -39,60 +42,123 @@
             color: var(--text-main);
             min-height: 100vh;
             overflow: hidden;
-            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: background 0.4s ease;
         }
 
         #ambient-canvas {
             position: fixed; inset: 0; z-index: -1;
             pointer-events: none;
-            will-change: transform;
         }
 
-        /* Nav */
+        /* Nav Principal (Superior) */
         nav {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            width: calc(100% - 40px); max-width: 1000px; height: 64px;
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 30px); max-width: 900px; height: 54px;
             background: var(--glass-bg);
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
             border: 1px solid var(--glass-border);
-            border-radius: 32px; z-index: 1000;
+            border-radius: 27px; z-index: 1000;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 24px;
+            padding: 0 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
         }
 
-        .nav-left, .nav-right { display: flex; align-items: center; gap: 20px; }
-        
-        .logo { font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .logo i { color: var(--accent); }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 15px; }
+        .logo { font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .logo i { color: var(--accent); width: 18px; }
 
-        .nav-links { display: flex; gap: 20px; }
+        .nav-links { display: flex; gap: 15px; }
         .nav-link { font-size: 13px; font-weight: 600; opacity: 0.5; transition: 0.2s; cursor: pointer; }
         .nav-link:hover, .nav-link.active { opacity: 1; color: var(--accent); }
+
+        /* Categorització: Barra Inferior Central (Compacta) */
+        .category-container {
+            position: fixed; 
+            bottom: 25px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            z-index: 1000; 
+            width: auto; 
+            max-width: 95vw;
+        }
+
+        .category-pill-wrapper {
+            position: relative;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            padding: 4px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            gap: 2px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .category-pill-wrapper::-webkit-scrollbar { display: none; }
+
+        .category-item {
+            position: relative;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-main);
+            opacity: 0.5;
+            z-index: 2;
+        }
+
+        .category-item i { width: 13px; height: 13px; }
+
+        .category-item.active {
+            opacity: 1;
+            color: #fff;
+        }
+
+        .category-active-bg {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            height: calc(100% - 8px);
+            background: var(--accent);
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 10px rgba(var(--glow-color-rgb), 0.25);
+            z-index: 1;
+            pointer-events: none;
+        }
 
         /* Search */
         .search-container { display: flex; align-items: center; position: relative; }
         .search-bar {
-            width: 0; opacity: 0; padding: 8px 0; background: transparent;
-            border: none; border-bottom: 1px solid var(--accent);
-            color: var(--text-main); font-size: 14px; outline: none;
+            width: 0; opacity: 0; padding: 6px 0; background: transparent;
+            border: none; border-bottom: 1.5px solid var(--accent);
+            color: var(--text-main); font-size: 13px; outline: none;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: none;
         }
         .search-container:hover .search-bar, .search-bar:focus {
-            width: 160px; opacity: 1; padding: 8px 10px; margin-right: 10px; pointer-events: all;
+            width: 140px; opacity: 1; padding: 6px 8px; margin-right: 8px; pointer-events: all;
         }
         .search-trigger { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
 
         /* Layout */
         .container { 
-            max-width: 1100px; margin: 0 auto; padding: 130px 24px 60px;
+            max-width: 1100px; margin: 0 auto; padding: 90px 24px 100px; 
             height: 100vh; overflow-y: auto; position: relative; z-index: 1;
             scrollbar-width: none;
         }
         .container::-webkit-scrollbar { display: none; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
         
         /* Cards */
         .card-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.3s; opacity: 0; transform: translateY(10px); }
@@ -100,102 +166,70 @@
 
         .card {
             position: relative; width: 100%; aspect-ratio: 1;
-            background: var(--glass-bg); border-radius: 28%;
+            background: var(--glass-bg); border-radius: 22%;
             border: 1px solid var(--glass-border);
             display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(30px) brightness(1.1);
-            -webkit-backdrop-filter: blur(30px) brightness(1.1);
+            backdrop-filter: blur(10px) brightness(1.1);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
         }
         .card img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
-        .card i.game-icon { width: 45px; height: 45px; stroke-width: 1.2; color: var(--text-main); opacity: 0.4; position: absolute; }
+        .card i.game-icon { width: 40px; height: 40px; stroke-width: 1.2; color: var(--text-main); opacity: 0.3; position: absolute; }
         
-        /* Fav System */
         .fav-btn {
-            position: absolute; top: 10px; right: 10px; z-index: 10;
+            position: absolute; top: 8px; right: 8px; z-index: 10;
             background: rgba(0,0,0,0.3); backdrop-filter: blur(5px);
-            border: none; color: white; width: 32px; height: 32px;
+            border: none; color: white; width: 28px; height: 28px;
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             opacity: 0; transition: 0.3s; cursor: pointer;
         }
         .card-wrapper:hover .fav-btn, .fav-btn.active { opacity: 1; }
         .fav-btn.active { color: #FFD60A; background: rgba(0,0,0,0.5); }
-        .fav-btn:hover { transform: scale(1.15); }
 
-        .card:hover { transform: scale(1.05) translateY(-8px); border: 1px solid rgba(var(--glow-color-rgb), 0.5); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .card:hover img { transform: scale(1.15); }
-        .card-title { margin-top: 14px; font-size: 13px; font-weight: 600; opacity: 0.7; text-align: center; }
+        .card:hover { transform: scale(1.05) translateY(-5px); border: 1px solid rgba(var(--glow-color-rgb), 0.5); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+        .card-title { margin-top: 10px; font-size: 11px; font-weight: 600; opacity: 0.8; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* Stats */
-        .stats-header { margin-bottom: 30px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 40px; }
+        /* Stats & History */
+        .stats-header { margin-bottom: 25px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 30px; }
         .stat-card {
             background: var(--glass-bg); border: 1px solid var(--glass-border);
-            padding: 20px; border-radius: 24px; backdrop-filter: blur(40px);
-            display: flex; flex-direction: column; gap: 5px;
+            padding: 18px; border-radius: 20px; backdrop-filter: blur(40px);
+            display: flex; flex-direction: column; gap: 4px;
         }
-        .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
+        .stat-value { font-size: 24px; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; font-weight: 700; }
 
-        /* Flame Animation */
-        .flame-icon {
-            display: inline-block;
-            animation: flicker 1.5s ease-in-out infinite alternate;
-            filter: drop-shadow(0 0 5px rgba(255, 69, 0, 0.5));
-        }
-        @keyframes flicker {
-            0% { transform: scale(1) translateY(0); color: #FF4500; }
-            50% { transform: scale(1.1) translateY(-2px); color: #FF8C00; }
-            100% { transform: scale(1) translateY(0); color: #FFD700; }
-        }
-
-        /* History Table */
-        .history-section {
-            background: var(--glass-bg); border: 1px solid var(--glass-border);
-            border-radius: 24px; backdrop-filter: blur(40px);
-            overflow: hidden; padding: 20px;
-        }
-        .history-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; opacity: 0.9; display: flex; align-items: center; gap: 10px; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { text-align: left; padding: 12px 15px; font-weight: 600; opacity: 0.4; border-bottom: 1px solid var(--glass-border); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
-        td { padding: 15px; border-bottom: 1px solid var(--glass-border); opacity: 0.8; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: var(--table-hover); }
-        .game-tag { font-weight: 600; color: var(--accent); }
-
-        /* Modal & Adaptive Iframe */
+        /* Modal */
         .modal {
             position: fixed; inset: 0; z-index: 2000;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(40px);
-            display: none; align-items: center; justify-content: center; padding: 20px;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(30px);
+            display: none; align-items: center; justify-content: center; padding: 15px;
         }
         .modal.active { display: flex; }
         .modal-content {
-            width: 100%; height: 100%;
-            max-width: 1200px;
-            max-height: 85vh;
-            background: #000; border-radius: 32px; overflow: hidden;
+            width: 100%; height: 100%; max-width: 1200px; max-height: 88vh;
+            background: #000; border-radius: 24px; overflow: hidden;
             position: relative; border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
             display: flex; flex-direction: column;
         }
         .close-modal {
-            position: absolute; top: 15px; right: 15px; width: 36px; height: 36px;
+            position: absolute; top: 12px; right: 12px; width: 32px; height: 32px;
             background: rgba(255,255,255,0.2); border-radius: 50%; border: none;
             color: white; display: flex; align-items: center; justify-content: center;
-            z-index: 2100; cursor: pointer; transition: 0.2s;
+            z-index: 2100; cursor: pointer;
         }
-        .close-modal:hover { background: rgba(255,255,255,0.4); transform: rotate(90deg); }
         #gameIframe { flex: 1; width: 100%; height: 100%; border: none; }
 
         .view { display: none; }
         .view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        #loadMoreTrigger { height: 50px; width: 100%; margin-top: 20px; }
         .theme-btn { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
+        
+        /* 404 */
+        .error-container { padding-top: 80px; text-align: center; }
+        .reset-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; margin-top: 20px; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body class="dark-theme">
@@ -217,9 +251,9 @@
         <div class="nav-right">
             <div class="search-container">
                 <input type="text" class="search-bar" placeholder="Cerca un joc..." id="gameSearch">
-                <button class="search-trigger"><i data-lucide="search"></i></button>
+                <button class="search-trigger"><i data-lucide="search" style="width:18px;"></i></button>
             </div>
-            <button class="theme-btn" id="themeBtn"><i data-lucide="sun" id="themeIcon"></i></button>
+            <button class="theme-btn" id="themeBtn"><i data-lucide="sun" id="themeIcon" style="width:18px;"></i></button>
         </div>
     </nav>
 
@@ -227,112 +261,151 @@
         <!-- VISTA ARCADE -->
         <section id="view-arcade" class="view active">
             <div class="grid" id="gameGrid"></div>
-            <div id="loadMoreTrigger"></div>
+            <div id="loadMoreTrigger" style="height: 60px;"></div>
         </section>
 
         <!-- VISTA STATS -->
         <section id="view-stats" class="view">
             <div class="stats-header">
-                <h1 style="font-size: 32px;">El teu historial</h1>
-                <p style="opacity: 0.5;">Resum de la teva activitat local.</p>
+                <h1 style="font-size: 28px;">El teu historial</h1>
+                <p style="opacity: 0.5; font-size: 14px;">Resum de la teva activitat local.</p>
             </div>
             
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Partides totals</div>
+                    <div class="stat-label">Partides</div>
                     <div class="stat-value" id="stat-plays">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Punts acumulats</div>
+                    <div class="stat-label">Punts</div>
                     <div class="stat-value" id="stat-points">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Temps de joc</div>
+                    <div class="stat-label">Temps</div>
                     <div class="stat-value" id="stat-time">0m</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Rantxa actual</div>
-                    <div class="stat-value" id="stat-streak-container">
-                        <span id="stat-streak">-</span>
-                    </div>
+                    <div class="stat-label">Ratxa</div>
+                    <div class="stat-value" id="stat-streak-container">-</div>
                 </div>
             </div>
 
-            <div class="history-section">
-                <div class="history-title">
-                    <i data-lucide="history" style="width: 20px;"></i>
-                    Jocs jugats recentment
+            <div class="history-section" style="background: var(--glass-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border);">
+                <div style="font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="history" style="width:18px;"></i> Recents
                 </div>
-                <table id="historyTable">
-                    <thead>
-                        <tr>
-                            <th>Joc</th>
-                            <th>Última sessió</th>
-                            <th>Temps</th>
-                            <th>Partides</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyBody">
-                        <!-- Generat dinàmicament -->
-                    </tbody>
-                </table>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;" id="historyTable">
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
         <!-- VISTA 404 -->
         <section id="view-404" class="view">
-            <div class="error-container" style="text-align: center; padding-top: 50px;">
-                <i data-lucide="frown" style="width: 60px; height: 60px; opacity: 0.5; margin-bottom: 20px;"></i>
-                <h2>No s'han trobat resultats</h2>
-                <button class="stat-card" style="margin: 20px auto; cursor:pointer; width: fit-content;" onclick="resetSearch()">Mostra-ho tot</button>
+            <div class="error-container">
+                <i data-lucide="frown" style="width: 48px; height: 48px; opacity: 0.3;"></i>
+                <h2 style="margin-top:15px; opacity: 0.8;">Sense resultats</h2>
+                <button class="reset-btn" onclick="resetFilters()">Neteja la cerca</button>
             </div>
         </section>
+    </div>
+
+    <!-- Barra de Categories Inferior Estil Dock (Molt Compacta) -->
+    <div class="category-container" id="categoryContainer">
+        <div class="category-pill-wrapper" id="pillWrapper">
+            <div class="category-active-bg" id="activePill"></div>
+            <!-- El JS omplirà això -->
+        </div>
     </div>
 
     <div id="gameModal" class="modal">
         <div class="modal-content">
             <button class="close-modal" id="closeModal"><i data-lucide="x"></i></button>
-            <iframe id="gameIframe" src="" allow="autoplay; fullscreen; keyboard; gamepad" allowfullscreen></iframe>
+            <iframe id="gameIframe" src="" allow="autoplay; fullscreen; keyboard; gamepad"></iframe>
         </div>
     </div>
 
-    <!-- Càrrega del fitxer extern de jocs -->
     <script src="assets/js/gameList.js"></script>
 
     <script>
-        // CONFIGURACIÓ DE LA LLISTA I LAZY LOADING
+        const ALLOWED_CATEGORIES = [
+            { id: 'tots', label: 'Tots', icon: 'layout-grid' },
+            { id: 'accio', label: 'Acció', icon: 'zap' },
+            { id: 'puzle', label: 'Puzle', icon: 'brain' },
+            { id: 'esports', label: 'Esports', icon: 'trophy' },
+            { id: 'retro', label: 'Retro', icon: 'joystick' },
+            { id: 'altres', label: 'Altres', icon: 'more-horizontal' }
+        ];
+
         let ALL_GAMES = [];
         let FILTERED_GAMES = [];
+        let currentCategory = 'tots';
         let itemsShown = 0;
-        const CHUNK_SIZE = 40;
+        const CHUNK_SIZE = 30;
 
-        // --- SISTEMA FAVORITS ---
         let favorites = JSON.parse(localStorage.getItem('ulaFavorites')) || [];
-
-        function toggleFavorite(e, gameId) {
-            e.stopPropagation();
-            const index = favorites.indexOf(gameId);
-            if (index > -1) favorites.splice(index, 1);
-            else favorites.push(gameId);
-            
-            localStorage.setItem('ulaFavorites', JSON.stringify(favorites));
-            
-            // Actualitzar el botó visualment
-            const btn = e.currentTarget;
-            btn.classList.toggle('active');
-            btn.innerHTML = btn.classList.contains('active') ? 
-                '<i data-lucide="star" style="fill: #FFD60A"></i>' : 
-                '<i data-lucide="star"></i>';
-            lucide.createIcons();
-        }
+        let userStats = JSON.parse(localStorage.getItem('ulaStats')) || { plays: 0, points: 0, timeSeconds: 0, streak: 0, lastDate: null, gameHistory: {} };
 
         window.addEventListener('load', () => {
+            const pillWrapper = document.getElementById('pillWrapper');
+            ALLOWED_CATEGORIES.forEach(cat => {
+                const item = document.createElement('div');
+                item.className = `category-item ${cat.id === 'tots' ? 'active' : ''}`;
+                item.id = `cat-${cat.id}`;
+                item.innerHTML = `<i data-lucide="${cat.icon}"></i> ${cat.label}`;
+                item.onclick = () => selectCategory(cat.id);
+                pillWrapper.appendChild(item);
+            });
+            
+            lucide.createIcons();
+            setTimeout(updateActivePillPosition, 100);
+
             if (typeof GAMES !== 'undefined') {
                 ALL_GAMES = GAMES;
-                FILTERED_GAMES = [...ALL_GAMES];
-                renderInitial();
+                applyFilters();
             }
         });
+
+        function selectCategory(catId) {
+            currentCategory = catId;
+            document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`cat-${catId}`).classList.add('active');
+            updateActivePillPosition();
+            applyFilters();
+        }
+
+        function updateActivePillPosition() {
+            const activeEl = document.querySelector('.category-item.active');
+            const pill = document.getElementById('activePill');
+            if (activeEl && pill) {
+                pill.style.width = `${activeEl.offsetWidth}px`;
+                pill.style.left = `${activeEl.offsetLeft}px`;
+            }
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('gameSearch').value.toLowerCase();
+            
+            FILTERED_GAMES = ALL_GAMES.filter(g => {
+                const matchesSearch = g.name.toLowerCase().includes(searchTerm);
+                const matchesCat = currentCategory === 'tots' || (g.type && g.type.toLowerCase() === currentCategory);
+                return matchesSearch && matchesCat;
+            });
+
+            if (FILTERED_GAMES.length === 0) {
+                showView('404');
+            } else {
+                showView('arcade');
+                renderInitial();
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('gameSearch').value = "";
+            selectCategory('tots');
+        }
 
         const grid = document.getElementById('gameGrid');
         const scrollContainer = document.getElementById('scrollContainer');
@@ -360,153 +433,65 @@
                 wrapper.onclick = () => launchGame(g);
                 
                 const isFav = favorites.includes(g.id || g.url);
-                const favIcon = isFav ? '<i data-lucide="star" style="fill: #FFD60A"></i>' : '<i data-lucide="star"></i>';
-                
-                // Fallback d'imatge
-                const mediaContent = g.image && g.image !== "" ? `<img src="${g.image}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">` : "";
-                const iconContent = `<i data-lucide="gamepad-2" class="game-icon" style="${g.image ? 'display:none;' : 'display:block;'}"></i>`;
+                const mediaContent = g.image ? `<img src="${g.image}" loading="lazy" onerror="this.style.display='none';">` : "";
                 
                 wrapper.innerHTML = `
-                    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${g.id || g.url}')">${favIcon}</button>
-                    <div class="card">${mediaContent}${iconContent}</div>
+                    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${g.id || g.url}')">
+                        <i data-lucide="star" style="${isFav ? 'fill: #FFD60A' : ''}"></i>
+                    </button>
+                    <div class="card">
+                        ${mediaContent}
+                        <i data-lucide="gamepad-2" class="game-icon"></i>
+                    </div>
                     <div class="card-title">${g.name}</div>
                 `;
                 grid.appendChild(wrapper);
-                setTimeout(() => wrapper.classList.add('visible'), index * 30);
+                setTimeout(() => wrapper.classList.add('visible'), index * 20);
             });
             itemsShown += nextBatch.length;
             lucide.createIcons();
         }
 
-        function resetSearch() {
-            document.getElementById('gameSearch').value = "";
-            FILTERED_GAMES = [...ALL_GAMES];
-            showView('arcade');
-            renderInitial();
-        }
-
-        // --- ESTADÍSTIQUES I SEGUIMENT DE TEMPS ---
-        const initialStats = { 
-            plays: 0, 
-            points: 0, 
-            timeMinutes: 0, 
-            streak: 0, 
-            lastDate: null,
-            gameHistory: {} 
-        };
-        
-        let userStats = JSON.parse(localStorage.getItem('ulaStats')) || initialStats;
-
-        // Variables per la sessió actual
-        let currentSession = {
-            gameName: null,
-            startTime: null,
-            lastActivity: null,
-            totalActiveMs: 0
-        };
-
-        // Detectar activitat (teclat o ratolí)
-        function registerActivity() {
-            if (currentSession.gameName) {
-                currentSession.lastActivity = Date.now();
-            }
-        }
-
-        document.addEventListener('mousemove', registerActivity);
-        document.addEventListener('keydown', registerActivity);
-        document.addEventListener('mousedown', registerActivity);
-
-        function checkStreak() {
-            const now = new Date();
-            const today = now.toDateString();
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            document.getElementById(`link-${viewId}`)?.classList.add('active');
             
-            if (!userStats.lastDate) {
-                userStats.streak = 0; 
+            const catContainer = document.getElementById('categoryContainer');
+            if (viewId === 'arcade' || viewId === '404') {
+                catContainer.style.display = 'block';
+                setTimeout(updateActivePillPosition, 50);
             } else {
-                const lastDateObj = new Date(userStats.lastDate);
-                const lastDayString = lastDateObj.toDateString();
-                
-                if (lastDayString !== today) {
-                    const yesterday = new Date(now);
-                    yesterday.setDate(now.getDate() - 1);
-                    
-                    if (lastDayString === yesterday.toDateString()) {
-                        // Es manté la ratxa (s'actualitzarà al jugar)
-                    } else {
-                        userStats.streak = 0;
-                    }
-                }
-            }
-            saveStats();
-        }
-
-        function saveStats() {
-            localStorage.setItem('ulaStats', JSON.stringify(userStats));
-        }
-
-        function formatDuration(totalSeconds) {
-            if (!totalSeconds || totalSeconds < 1) return "< 1m";
-            const mins = Math.floor(totalSeconds / 60);
-            const secs = Math.floor(totalSeconds % 60);
-            if (mins === 0) return `${secs}s`;
-            return `${mins}m ${secs}s`;
-        }
-
-        function updateStatsUI() {
-            checkStreak();
-            document.getElementById('stat-plays').innerText = userStats.plays || 0;
-            document.getElementById('stat-points').innerText = userStats.points || 0;
-            
-            // Mostrar temps total (convertit de segons a minuts per la targeta principal)
-            const totalSeconds = userStats.timeSeconds || (userStats.timeMinutes * 60) || 0;
-            document.getElementById('stat-time').innerText = Math.floor(totalSeconds / 60) + 'm';
-            
-            const streakContainer = document.getElementById('stat-streak-container');
-            if (userStats.streak > 0) {
-                streakContainer.innerHTML = `
-                    <span id="stat-streak">${userStats.streak} d.</span>
-                    <i data-lucide="flame" class="flame-icon"></i>
-                `;
-            } else {
-                streakContainer.innerHTML = `<span id="stat-streak">-</span>`;
+                catContainer.style.display = 'none';
             }
             
-            const historyBody = document.getElementById('historyBody');
-            const history = userStats.gameHistory || {};
-            const sortedGames = Object.keys(history).sort((a, b) => 
-                new Date(history[b].lastPlayed) - new Date(history[a].lastPlayed)
-            );
+            if(viewId === 'stats') updateStatsUI();
+        }
 
-            if (sortedGames.length === 0) {
-                historyBody.innerHTML = `<tr><td colspan="4" style="text-align:center; opacity:0.5; padding: 20px;">Encara no has jugat a cap joc.</td></tr>`;
-            } else {
-                historyBody.innerHTML = sortedGames.map(name => `
-                    <tr>
-                        <td class="game-tag">${name}</td>
-                        <td>${new Date(history[name].lastPlayed).toLocaleString('ca-ES', { dateStyle: 'medium', timeStyle: 'short' })}</td>
-                        <td>${formatDuration(history[name].totalSeconds || 0)}</td>
-                        <td>${history[name].count}</td>
-                    </tr>
-                `).join('');
-            }
+        function toggleFavorite(e, id) {
+            e.stopPropagation();
+            const idx = favorites.indexOf(id);
+            if(idx > -1) favorites.splice(idx, 1);
+            else favorites.push(id);
+            localStorage.setItem('ulaFavorites', JSON.stringify(favorites));
+            e.currentTarget.classList.toggle('active');
             lucide.createIcons();
         }
 
-        // --- AMBIENT CANVAS ---
         const canvas = document.getElementById('ambient-canvas');
-        const ctx = canvas.getContext('2d', { alpha: false });
+        const ctx = canvas.getContext('2d');
         let mX = 0, mY = 0;
-
         window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
         window.onresize();
-        document.addEventListener('mousemove', (e) => { mX = e.clientX; mY = e.clientY; });
+        document.addEventListener('mousemove', e => { mX = e.clientX; mY = e.clientY; });
 
         function draw() {
             const isDark = document.body.classList.contains('dark-theme');
             ctx.fillStyle = isDark ? '#000' : '#fbfbfd';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const grad = ctx.createRadialGradient(mX, mY, 0, mX, mY, 500);
-            grad.addColorStop(0, isDark ? 'rgba(10,132,255,0.25)' : 'rgba(0,122,255,0.15)');
+            const grad = ctx.createRadialGradient(mX, mY, 0, mX, mY, 600);
+            grad.addColorStop(0, isDark ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.08)');
             grad.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -514,128 +499,58 @@
         }
         draw();
 
-        // --- NAVEGACIÓ I MODAL ---
-        function showView(viewId) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById(`view-${viewId}`).classList.add('active');
-            document.getElementById(`link-${viewId}`)?.classList.add('active');
-            if(viewId === 'stats') updateStatsUI();
-        }
-
-        function launchGame(gameObj) {
-            const now = new Date();
-            const today = now.toDateString();
-            
-            // Lògica de ratxa
-            if (userStats.lastDate) {
-                const lastDateObj = new Date(userStats.lastDate);
-                const lastDayString = lastDateObj.toDateString();
-                
-                if (lastDayString !== today) {
-                    const yesterday = new Date(now);
-                    yesterday.setDate(now.getDate() - 1);
-                    if (lastDayString === yesterday.toDateString()) {
-                        userStats.streak++;
-                    } else {
-                        userStats.streak = 1;
-                    }
-                }
-            } else {
-                userStats.streak = 1;
-            }
-
-            userStats.plays++;
-            userStats.points += 5;
-            userStats.lastDate = now.toISOString();
-            
-            if (!userStats.gameHistory) userStats.gameHistory = {};
-            if (!userStats.gameHistory[gameObj.name]) {
-                userStats.gameHistory[gameObj.name] = { count: 0, lastPlayed: "", totalSeconds: 0 };
-            }
-            userStats.gameHistory[gameObj.name].count++;
-            userStats.gameHistory[gameObj.name].lastPlayed = now.toISOString();
-            
-            // Iniciar sessió de seguiment de temps
-            currentSession.gameName = gameObj.name;
-            currentSession.startTime = Date.now();
-            currentSession.lastActivity = Date.now();
-            currentSession.totalActiveMs = 0;
-
-            saveStats();
-            
-            const iframe = document.getElementById('gameIframe');
-            let gameId = gameObj.url.includes('.html') ? gameObj.url : `${gameObj.url}.html`;
-            let finalUrl = `assets/games/${gameId}`;
-            
-            iframe.src = finalUrl;
-            document.getElementById('gameModal').classList.add('active');
-
-            // Interval de comprovació d'activitat cada segon mentre el joc està obert
-            currentSession.timer = setInterval(() => {
-                const nowMs = Date.now();
-                // Si hi ha hagut activitat en els últims 60 segons, sumem el segon actual
-                if (nowMs - currentSession.lastActivity < 60000) {
-                    currentSession.totalActiveMs += 1000;
-                }
-            }, 1000);
-        }
-
-        document.getElementById('closeModal').onclick = () => {
-            const modal = document.getElementById('gameModal');
-            if (!modal.classList.contains('active')) return;
-
-            // Aturar el cronòmetre i desar el temps
-            clearInterval(currentSession.timer);
-            
-            const activeSeconds = Math.floor(currentSession.totalActiveMs / 1000);
-            if (activeSeconds > 0) {
-                // Actualitzar històric del joc
-                if (userStats.gameHistory[currentSession.gameName]) {
-                    userStats.gameHistory[currentSession.gameName].totalSeconds = (userStats.gameHistory[currentSession.gameName].totalSeconds || 0) + activeSeconds;
-                }
-                // Actualitzar total global (mantenim compatibilitat amb timeMinutes vell)
-                if (!userStats.timeSeconds) userStats.timeSeconds = (userStats.timeMinutes || 0) * 60;
-                userStats.timeSeconds += activeSeconds;
-                userStats.timeMinutes = Math.floor(userStats.timeSeconds / 60);
-                
-                saveStats();
-            }
-
-            // Reset sessió
-            currentSession.gameName = null;
-            modal.classList.remove('active');
-            document.getElementById('gameIframe').src = "";
-            
-            if (document.getElementById('view-stats').classList.contains('active')) updateStatsUI();
-        };
-
-        // Cerca
-        let searchTimeout;
-        document.getElementById('gameSearch').oninput = (e) => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                const term = e.target.value.toLowerCase();
-                FILTERED_GAMES = ALL_GAMES.filter(g => g.name.toLowerCase().includes(term));
-                if (FILTERED_GAMES.length === 0) showView('404');
-                else { showView('arcade'); renderInitial(); }
-            }, 300);
-        };
-
         document.getElementById('themeBtn').onclick = () => {
             const isDark = document.body.classList.toggle('dark-theme');
             document.getElementById('themeIcon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
             lucide.createIcons();
         };
 
-        window.onload = () => {
-            // Migració inicial si cal
-            if (userStats.timeMinutes && !userStats.timeSeconds) {
-                userStats.timeSeconds = userStats.timeMinutes * 60;
+        let sessionStart = null;
+        let currentGame = null;
+
+        function launchGame(game) {
+            currentGame = game;
+            sessionStart = Date.now();
+            const iframe = document.getElementById('gameIframe');
+            iframe.src = `assets/games/${game.url.endsWith('.html') ? game.url : game.url + '.html'}`;
+            document.getElementById('gameModal').classList.add('active');
+            userStats.plays++;
+            userStats.points += 5;
+            saveStats();
+        }
+
+        document.getElementById('closeModal').onclick = () => {
+            if (sessionStart && currentGame) {
+                const diff = Math.floor((Date.now() - sessionStart) / 1000);
+                userStats.timeSeconds += diff;
+                if(!userStats.gameHistory[currentGame.name]) userStats.gameHistory[currentGame.name] = { count: 0, lastPlayed: "" };
+                userStats.gameHistory[currentGame.name].count++;
+                userStats.gameHistory[currentGame.name].lastPlayed = new Date().toISOString();
+                saveStats();
             }
-            updateStatsUI();
-            lucide.createIcons();
+            document.getElementById('gameModal').classList.remove('active');
+            document.getElementById('gameIframe').src = "";
         };
+
+        function saveStats() { localStorage.setItem('ulaStats', JSON.stringify(userStats)); }
+        
+        function updateStatsUI() {
+            document.getElementById('stat-plays').innerText = userStats.plays;
+            document.getElementById('stat-points').innerText = userStats.points;
+            document.getElementById('stat-time').innerText = Math.floor(userStats.timeSeconds / 60) + 'm';
+            const historyBody = document.getElementById('historyBody');
+            const history = userStats.gameHistory || {};
+            const sorted = Object.keys(history).sort((a,b) => new Date(history[b].lastPlayed) - new Date(history[a].lastPlayed)).slice(0, 5);
+            historyBody.innerHTML = sorted.map(name => `
+                <tr>
+                    <td style="padding: 12px 0; font-weight:600; color:var(--accent)">${name}</td>
+                    <td style="text-align:right; opacity:0.5">${new Date(history[name].lastPlayed).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+            if(sorted.length === 0) historyBody.innerHTML = '<tr><td style="opacity:0.5; padding:20px; text-align:center">Cap partida registrada</td></tr>';
+        }
+
+        document.getElementById('gameSearch').oninput = applyFilters;
     </script>
 </body>
 </html>
