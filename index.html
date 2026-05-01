@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>ulaGames</title>
+    <title>ulaGames - El teu Arcade</title>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -246,6 +246,34 @@
         }
         #gameIframe { flex: 1; width: 100%; height: 100%; border: none; }
 
+        /* === LOADER OVERLAY === */
+        .game-loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2099; /* just per sota del botó de tancar */
+            transition: opacity 0.5s ease;
+            pointer-events: none; /* permet clicar el botó de tancar */
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(128, 128, 128, 0.2);
+            border-top-color: var(--text-main);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* fi loader */
+
         .view { display: none; }
         .view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -362,12 +390,19 @@
         <div class="modal-content">
             <button class="close-modal" id="closeModal"><i data-lucide="x"></i></button>
             <iframe id="gameIframe" src="" allow="autoplay; fullscreen; gamepad"></iframe>
+            <!-- Loader overlay (inicialment amagat) -->
+            <div id="loaderOverlay" class="game-loader-overlay" style="display: none;">
+                <div class="spinner"></div>
+            </div>
         </div>
     </div>
 
     <script src="assets/js/gameList.js"></script>
 
     <script>
+        // Constants
+        const LOADER_DURATION = 7000; // 7 segons (uniforme per tots els jocs)
+        
         const ALLOWED_CATEGORIES = [
             { id: 'tots', label: 'Tots', icon: 'layout-grid' },
             { id: 'accio', label: 'Acció', icon: 'zap' },
@@ -392,6 +427,9 @@
             lastDate: null, 
             gameHistory: {} 
         };
+
+        // Variables per controlar el loader
+        let loaderTimeout = null;
 
         window.addEventListener('load', () => {
             const pillWrapper = document.getElementById('pillWrapper');
@@ -552,19 +590,70 @@
         let sessionStart = null;
         let currentGame = null;
 
+        function hideLoaderOverlayImmediate() {
+            const overlay = document.getElementById('loaderOverlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    overlay.style.opacity = ''; // reset
+                }, 500); // coincidir amb transition duration
+            }
+        }
+
+        function showLoaderOverlay() {
+            const overlay = document.getElementById('loaderOverlay');
+            if (overlay) {
+                // Reiniciar estils
+                overlay.style.display = 'flex';
+                overlay.style.opacity = '1';
+                // Forçar reflow per assegurar transició
+                void overlay.offsetHeight;
+            }
+        }
+
+        function cancelLoaderTimer() {
+            if (loaderTimeout) {
+                clearTimeout(loaderTimeout);
+                loaderTimeout = null;
+            }
+        }
+
         function launchGame(game) {
+            // Cancel·lar qualsevol timer anterior i amagar overlay si estigués actiu
+            cancelLoaderTimer();
+            hideLoaderOverlayImmediate();
+            
             currentGame = game;
             sessionStart = Date.now();
             const iframe = document.getElementById('gameIframe');
             iframe.src = `assets/games/${game.url.endsWith('.html') ? game.url : game.url + '.html'}`;
+            
+            // Mostrar modal
             document.getElementById('gameModal').classList.add('active');
+            
+            // Mostrar loader overlay
+            showLoaderOverlay();
+            
+            // Programar l'amagada del loader després del temps definit (LOADER_DURATION)
+            loaderTimeout = setTimeout(() => {
+                hideLoaderOverlayImmediate();
+                loaderTimeout = null;
+            }, LOADER_DURATION);
+            
+            // Actualitzar estadístiques (partida iniciada)
             userStats.plays = (userStats.plays || 0) + 1;
             userStats.points = (userStats.points || 0) + 15;
             saveStats();
         }
 
-        // MODAL CLOSE FIXED
+        // MODAL CLOSE (amb neteja de loader)
         document.getElementById('closeModal').onclick = () => {
+            // Cancel·lar timer del loader
+            cancelLoaderTimer();
+            // Amagar overlay si es veiés
+            hideLoaderOverlayImmediate();
+            
             if (sessionStart && currentGame) {
                 const durationSec = Math.floor((Date.now() - sessionStart) / 1000);
                 userStats.timeSeconds = (userStats.timeSeconds || 0) + durationSec;
@@ -577,7 +666,7 @@
                 const gameEntry = userStats.gameHistory[currentGame.name];
                 gameEntry.count = (gameEntry.count || 0) + 1;
                 gameEntry.timePlayed = (gameEntry.timePlayed || 0) + durationSec;
-                gameEntry.lastPlayed = new Date().toISOString();   // variable BONA 'lastPlayed'
+                gameEntry.lastPlayed = new Date().toISOString();
                 
                 saveStats();
             }
@@ -608,7 +697,7 @@
             levelEl.innerText = level;
             progressEl.style.width = `${progress}%`;
             
-            // HISTORIAL FIX: sense variable 'h' i amb lastPlayed
+            // HISTORIAL
             const history = userStats.gameHistory || {};
             const sorted = Object.keys(history).sort((a,b) => {
                 const dateA = history[a].lastPlayed ? new Date(history[a].lastPlayed) : 0;
