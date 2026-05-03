@@ -53,21 +53,57 @@
             pointer-events: none;
         }
 
-        /* Nav Principal (Superior) */
+        /* Nav Principal (Superior) - Redisseny amb botons centrals */
         nav {
             position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-            width: calc(100% - 30px); max-width: 900px; height: 54px;
+            width: calc(100% - 30px); max-width: 900px; height: 56px;
             background: var(--glass-bg);
             backdrop-filter: blur(var(--nav-blur)) saturate(180%);
             -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
             border: 1px solid var(--glass-border);
-            border-radius: 27px; z-index: 1000;
-            display: flex; align-items: center; justify-content: space-between;
+            border-radius: 28px; z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             padding: 0 20px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.05);
         }
 
         .nav-left, .nav-right { display: flex; align-items: center; gap: 15px; }
+        
+        /* Centre: els enllaços tipus píndola */
+        .nav-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            background: rgba(128, 128, 128, 0.1);
+            padding: 4px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+        .nav-link {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 6px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+            color: var(--text-main);
+            background: transparent;
+            text-align: center;
+        }
+        .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            transform: scale(0.98);
+        }
+        .nav-link.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 2px 8px rgba(var(--glow-color-rgb), 0.3);
+        }
+
         .logo { 
             font-weight: 800; 
             font-size: 16px; 
@@ -89,10 +125,6 @@
         .logo:hover .logo-img {
             transform: scaleX(1.05);
         }
-
-        .nav-links { display: flex; gap: 15px; }
-        .nav-link { font-size: 13px; font-weight: 600; opacity: 0.5; transition: 0.2s; cursor: pointer; }
-        .nav-link:hover, .nav-link.active { opacity: 1; color: var(--accent); }
 
         /* Categorització: Barra Inferior Central (Compacta) */
         .category-container {
@@ -176,6 +208,78 @@
         }
         .container::-webkit-scrollbar { display: none; }
 
+        /* ===== ANIMACIONS DE TRANSICIÓ ENTRE VISTES ===== */
+        .view {
+            display: none;
+            animation-duration: 0.35s;
+            animation-fill-mode: forwards;
+            animation-timing-function: cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .view.active {
+            display: block;
+        }
+        /* Animacions d'entrada */
+        @keyframes slideFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes slideFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        /* Animacions de sortida (per a la vista que es desactiva) */
+        @keyframes slideToRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+        }
+        @keyframes slideToLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+        }
+        /* Classes dinàmiques per a les animacions */
+        .view.animate-out-left {
+            animation-name: slideToLeft;
+            animation-duration: 0.3s;
+            display: block;
+        }
+        .view.animate-out-right {
+            animation-name: slideToRight;
+            animation-duration: 0.3s;
+            display: block;
+        }
+        .view.animate-in-left {
+            animation-name: slideFromLeft;
+            display: block;
+        }
+        .view.animate-in-right {
+            animation-name: slideFromRight;
+            display: block;
+        }
+
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
         
         /* Cards */
@@ -191,7 +295,6 @@
         }
         .card-wrapper.visible { opacity: 1; transform: translateY(0); }
         
-        /* Cards favorites: lleugerament més grans */
         .card-wrapper.favorite-card .card {
             transform: scale(1.02);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -200,7 +303,6 @@
         .card-wrapper.favorite-card .card:hover {
             transform: scale(1.07);
         }
-        /* Per evitar que la card normal també tingui un hover massa agressiu */
         .card-wrapper .card {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
@@ -219,7 +321,7 @@
         .card img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
         .card i.game-icon { width: 40px; height: 40px; stroke-width: 1.2; color: var(--text-main); opacity: 0.3; position: absolute; }
         
-        /* Botó favorit redissenyat: sense transformacions estranyes, només elegant */
+        /* Botó favorit redissenyat */
         .fav-btn {
             position: absolute;
             top: 10px;
@@ -251,7 +353,7 @@
         .fav-btn:hover {
             background: rgba(0, 0, 0, 0.8);
             color: #FFD60A;
-            transform: none; /* sense escala extra */
+            transform: none;
         }
         .fav-btn i {
             width: 18px;
@@ -273,7 +375,6 @@
         .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
         .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; font-weight: 700; }
         
-        /* Animació flama */
         .streak-flame {
             color: var(--fire-color);
             filter: drop-shadow(0 0 8px rgba(255, 77, 0, 0.6));
@@ -284,7 +385,6 @@
             100% { transform: scale(1.2); opacity: 1; }
         }
 
-        /* Taula detallada */
         .history-section {
             background: var(--glass-bg); 
             padding: 24px; 
@@ -384,13 +484,8 @@
             to { transform: rotate(360deg); }
         }
 
-        .view { display: none; }
-        .view.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         .theme-btn { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
         
-        /* 404 */
         .error-container { padding-top: 80px; text-align: center; }
         .reset-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; margin-top: 20px; cursor: pointer; font-weight: 600; }
     </style>
@@ -401,15 +496,16 @@
 
     <nav>
         <div class="nav-left">
-            <div class="logo" onclick="showView('arcade')">
+            <div class="logo" onclick="navigateToView('arcade', 'left')">
                 <img id="logoImg" class="logo-img" src="assets/icons/icon-large-dark.png" alt="ulaGames">
-            </div>
-            <div class="nav-links">
-                <span class="nav-link active" id="link-arcade" onclick="showView('arcade')">Arcade</span>
-                <span class="nav-link" id="link-stats" onclick="showView('stats')">Perfil</span>
             </div>
         </div>
         
+        <div class="nav-center">
+            <span class="nav-link active" id="link-arcade" data-view="arcade">Arcade</span>
+            <span class="nav-link" id="link-stats" data-view="stats">Perfil</span>
+        </div>
+
         <div class="nav-right">
             <div class="search-container">
                 <input type="text" class="search-bar" placeholder="Cerca un joc..." id="gameSearch">
@@ -462,9 +558,7 @@
                 </div>
                 <div class="table-container">
                     <table id="historyTable">
-                        <thead>
-                            <tr><th>Joc</th><th style="text-align: center;">Partides</th><th style="text-align: center;">Temps</th><th style="text-align: right;">Última sessió</th></tr>
-                        </thead>
+                        <thead><tr><th>Joc</th><th style="text-align: center;">Partides</th><th style="text-align: center;">Temps</th><th style="text-align: right;">Última sessió</th></tr></thead>
                         <tbody id="historyBody"></tbody>
                     </table>
                 </div>
@@ -500,7 +594,6 @@
 
     <script>
         const LOADER_DURATION = 7000;
-        
         const ALLOWED_CATEGORIES = [
             { id: 'tots', label: 'Tots', icon: 'layout-grid' },
             { id: 'accio', label: 'Acció', icon: 'zap' },
@@ -522,6 +615,7 @@
         };
 
         let loaderTimeout = null;
+        let isTransitioning = false;
 
         window.addEventListener('load', () => {
             const pillWrapper = document.getElementById('pillWrapper');
@@ -538,6 +632,10 @@
             lucide.createIcons();
             setTimeout(updateActivePillPosition, 100);
             updateLogoByTheme();
+            
+            // Assignar event listeners als botons de navegació
+            document.getElementById('link-arcade').addEventListener('click', () => navigateToView('arcade', 'right'));
+            document.getElementById('link-stats').addEventListener('click', () => navigateToView('stats', 'left'));
             
             if (typeof GAMES !== 'undefined') {
                 ALL_GAMES = GAMES;
@@ -583,7 +681,6 @@
             }
         }
 
-        // Funció per ordenar els jocs: favorits primer
         function sortGamesByFavorites(games) {
             return [...games].sort((a, b) => {
                 const aFav = favorites.includes(a.url);
@@ -601,10 +698,9 @@
                 const matchesCat = currentCategory === 'tots' || (g.type && g.type.toLowerCase() === currentCategory);
                 return matchesSearch && matchesCat;
             });
-            // Ordenar per favorits
             FILTERED_GAMES = sortGamesByFavorites(filtered);
-            if (FILTERED_GAMES.length === 0) showView('404');
-            else { showView('arcade'); renderInitial(); }
+            if (FILTERED_GAMES.length === 0) showView('404', 'none');
+            else { showView('arcade', 'none'); renderInitial(); }
         }
 
         function resetFilters() {
@@ -645,17 +741,86 @@
             lucide.createIcons();
         }
 
-        function showView(viewId) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById(`view-${viewId}`).classList.add('active');
-            document.getElementById(`link-${viewId}`)?.classList.add('active');
+        // Funció central per navegar amb animació
+        function navigateToView(targetViewId, direction) {
+            if (isTransitioning) return;
+            const currentView = document.querySelector('.view.active');
+            if (currentView && currentView.id === `view-${targetViewId}`) return;
+            
+            isTransitioning = true;
+            const nextView = document.getElementById(`view-${targetViewId}`);
+            if (!nextView) return;
+            
+            // Determinar direcció de sortida i entrada
+            let outDirection, inDirection;
+            if (direction === 'left') {
+                outDirection = 'left';
+                inDirection = 'right';
+            } else if (direction === 'right') {
+                outDirection = 'right';
+                inDirection = 'left';
+            } else {
+                // Fallback sense animació
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                nextView.classList.add('active');
+                updateActiveNavButton(targetViewId);
+                isTransitioning = false;
+                return;
+            }
+            
+            // Aplicar animació de sortida a la vista actual
+            if (currentView) {
+                currentView.classList.remove('active');
+                currentView.classList.add(`animate-out-${outDirection}`);
+                setTimeout(() => {
+                    currentView.classList.remove(`animate-out-${outDirection}`);
+                    currentView.style.display = 'none';
+                }, 300);
+            }
+            
+            // Preparar i animar la nova vista
+            nextView.style.display = 'block';
+            nextView.classList.add('active', `animate-in-${inDirection}`);
+            setTimeout(() => {
+                nextView.classList.remove(`animate-in-${inDirection}`);
+                isTransitioning = false;
+            }, 350);
+            
+            updateActiveNavButton(targetViewId);
+            
+            // Gestionar visibilitat de la barra de categories
             const catContainer = document.getElementById('categoryContainer');
-            if (viewId === 'arcade' || viewId === '404') {
+            if (targetViewId === 'arcade' || targetViewId === '404') {
                 catContainer.style.display = 'block';
-                setTimeout(updateActivePillPosition, 50);
-            } else catContainer.style.display = 'none';
-            if(viewId === 'stats') updateStatsUI();
+                setTimeout(updateActivePillPosition, 100);
+            } else {
+                catContainer.style.display = 'none';
+            }
+            
+            if (targetViewId === 'stats') updateStatsUI();
+        }
+        
+        function updateActiveNavButton(viewId) {
+            document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`link-${viewId}`);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+        
+        // Mantenir funció showView per compatibilitat interna
+        function showView(viewId, direction) {
+            if (direction === 'none') {
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                document.getElementById(`view-${viewId}`).classList.add('active');
+                if (viewId === 'arcade' || viewId === '404') {
+                    document.getElementById('categoryContainer').style.display = 'block';
+                    setTimeout(updateActivePillPosition, 50);
+                } else {
+                    document.getElementById('categoryContainer').style.display = 'none';
+                }
+                if(viewId === 'stats') updateStatsUI();
+            } else {
+                navigateToView(viewId, direction);
+            }
         }
 
         function toggleFavorite(e, id) {
@@ -664,8 +829,7 @@
             if(idx > -1) favorites.splice(idx, 1);
             else favorites.push(id);
             localStorage.setItem('ulaFavorites', JSON.stringify(favorites));
-            // Reaplicar filtres per reordenar i refrescar la graella
-            applyFilters();
+            applyFilters(); // refresca la graella amb nou ordre
         }
 
         // Canvas ambient
@@ -813,4 +977,4 @@
         document.getElementById('gameSearch').oninput = applyFilters;
     </script>
 </body>
-    </html>
+                    </html>
