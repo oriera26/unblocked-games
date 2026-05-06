@@ -1,273 +1,140 @@
-// Nom del cache i versions
-const CACHE_NAME = 'ulaGames-v2.6.3';
-const DYNAMIC_CACHE_NAME = 'ulaGames-dynamic-v1';
+// service-worker.js
+// Versió del cache: ha de coincidir amb cada desplegament
+const CACHE_VERSION = 'ula-games-v2.6.3';
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const GAME_CACHE = `${CACHE_VERSION}-games`;
+const GAME_SUB_CACHE = `${CACHE_VERSION}-game-assets`; // Per subrecursos dels jocs
+const FALLBACK_CACHE = `${CACHE_VERSION}-fallback`;
 
-// Recursos a cachejar durant la instal·lació
+// Llista exacta d’actius estàtics que volem pre-cachejar
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/stats.html',
-  '/assets/css/styles.css',
-  '/assets/css/skeleton.css',
-  '/assets/js/scripts.js',
-  '/assets/js/gameList.js',
-  '/icons/favicon.png',
+  '/offline.html',            // Pàgina de fallback
   '/manifest.json',
-  
-  // Fonts de Google
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap',
-  
-  // Font Awesome
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  
-  // Video de loading
-  '/assets/videos/loading.mp4'
+  '/assets/css/styles.css',   // Si existeix
+  '/assets/js/gameList.js',
+  '/assets/js/scripts.js',    // El JS principal
+  '/assets/icons/favicon.png', // Icona de la pestanya
+  // Afegir aquí totes les fonts, icones i CSS que s'utilitzin
+  // Exemples:
+  // 'https://fonts.googleapis.com/css2?family=...',
 ];
 
-// Instal·lació del Service Worker
+// Instal·lació: pre-cachegem els recursos estàtics i la pàgina de fallback
 self.addEventListener('install', event => {
-  console.log('[Service Worker] Instal·lant...');
-  
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[Service Worker] Emmagatzemant recursos estàtics');
-        return cache.addAll(STATIC_ASSETS)
-          .catch(error => {
-            console.warn('[Service Worker] Error afegint alguns recursos:', error);
-          });
-      })
-      .then(() => {
-        console.log('[Service Worker] Instal·lació completada');
-        return self.skipWaiting();
-      })
+    caches.open(STATIC_CACHE)
+      .then(cache => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activació del Service Worker
+// Activació: netejar caches antics
 self.addEventListener('activate', event => {
-  console.log('[Service Worker] Activant...');
-  
-  // Netejar caches antics
+  const validCaches = [STATIC_CACHE, GAME_CACHE, GAME_SUB_CACHE, FALLBACK_CACHE];
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME) {
-            console.log('[Service Worker] Eliminant cache antic:', cacheName);
-            return caches.delete(cacheName);
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.map(key => {
+          if (!validCaches.includes(key)) {
+            return caches.delete(key);
           }
         })
-      );
-    })
-    .then(() => {
-      console.log('[Service Worker] Ara controla tots els clients');
-      return self.clients.claim();
-    })
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// Estratègia de cache: Cache First, després xarxa
-self.addEventListener('fetch', event => {
-  // Excloure les peticions POST i altres mètodes no GET
-  if (event.request.method !== 'GET') return;
-  
-  // Excloure les peticions a jocs (per a que sempre es carreguin frescos)
-  if (event.request.url.includes('/assets/games/')) {
-    event.respondWith(networkFirst(event.request));
-    return;
-  }
-  
-  // Per a la resta, estratègia Cache First
-  event.respondWith(
-    caches.match(event.request)
-      .then(cachedResponse => {
-        if (cachedResponse) {
-          // Actualitzar el cache en segon pla
-          event.waitUntil(
-            updateCache(event.request)
-          );
-          return cachedResponse;
-        }
-        
-        // Si no està al cache, anar a la xarxa
-        return fetch(event.request)
-          .then(networkResponse => {
-            // Cachejar la resposta per a properes vegades
-            if (isCacheable(event.request, networkResponse)) {
-              addToCache(event.request, networkResponse.clone());
-            }
-            return networkResponse;
-          })
-          .catch(error => {
-            console.error('[Service Worker] Error de xarxa:', error);
-            
-            // Si és una pàgina HTML, retornar la pàgina offline
-            if (event.request.destination === 'document') {
-              return caches.match('/index.html');
-            }
-            
-            return new Response('Sense connexió', {
-              status: 503,
-              statusText: 'Service Unavailable',
-              headers: new Headers({
-                'Content-Type': 'text/plain'
-              })
-            });
-          });
-      })
-  );
-});
-
-// Estratègia: Xarxa primer, després cache (per a jocs)
-async function networkFirst(request) {
+// Funció auxiliar: intenta una petició de xarxa i guarda la resposta al cache dinàmic de jocs
+async function networkFirstWithGameCache(request, cacheName) {
   try {
     const networkResponse = await fetch(request);
-    
-    // Si la xarxa funciona, retornar resposta i cachejar
     if (networkResponse.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE_NAME);
+      const cache = await caches.open(cacheName);
       cache.put(request, networkResponse.clone());
     }
-    
     return networkResponse;
   } catch (error) {
-    // Si falla la xarxa, intentar del cache
     const cachedResponse = await caches.match(request);
-    return cachedResponse || new Response('Joc no disponible fora de línia', {
-      status: 503,
-      headers: { 'Content-Type': 'text/plain' }
-    });
+    if (cachedResponse) return cachedResponse;
+    // Si no hi ha res, forcem offline fallback
+    throw error;
   }
 }
 
-// Actualitzar el cache en segon pla
-async function updateCache(request) {
-  const cache = await caches.open(CACHE_NAME);
-  try {
-    const response = await fetch(request);
-    if (isCacheable(request, response)) {
-      cache.put(request, response);
+// Estratègia stale-while-revalidate per a gameList.js
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  const cachedResponse = await cache.match(request);
+  const fetchPromise = fetch(request).then(networkResponse => {
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone());
     }
-  } catch (error) {
-    // No fer res si falla l'actualització
+    return networkResponse;
+  }).catch(() => cachedResponse);
+
+  // Si tenim cache, el retornem immediatament; sinó esperem la xarxa
+  return cachedResponse || fetchPromise;
+}
+
+// Intercepció de peticions
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Només gestionem peticions GET
+  if (request.method !== 'GET') return;
+
+  // --- 1. Peticions a recursos estàtics (cache-first) ---
+  // Comprovar si és un dels assets estàtics (comparant pathname)
+  const isStaticAsset = STATIC_ASSETS.some(asset => url.pathname === asset || url.pathname === '/' + asset);
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(request)
+        .then(cached => cached || fetch(request))
+    );
+    return;
   }
-}
 
-// Afegir al cache dinàmic
-async function addToCache(request, response) {
-  const cache = await caches.open(DYNAMIC_CACHE_NAME);
-  cache.put(request, response);
-}
+  // --- 2. gameList.js: stale-while-revalidate ---
+  if (url.pathname.endsWith('/gameList.js') || url.pathname.endsWith('/assets/js/gameList.js')) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
 
-// Verificar si una resposta es pot cachejar
-function isCacheable(request, response) {
-  // No cachejar respostes no OK
-  if (!response || response.status !== 200) return false;
-  
-  // No cachejar respostes d'imatges de jocs (els jocs necessiten ser sempre frescos)
-  if (request.url.includes('/assets/games/')) return false;
-  
-  // No cachejar respostes no GET
-  if (request.method !== 'GET') return false;
-  
-  // Cachejar recursos estàtics i pàgines
-  const contentType = response.headers.get('content-type');
-  return (
-    contentType &&
-    (contentType.includes('text/html') ||
-     contentType.includes('text/css') ||
-     contentType.includes('application/javascript') ||
-     contentType.includes('image/') ||
-     contentType.includes('font/') ||
-     contentType.includes('application/json'))
-  );
-}
+  // --- 3. HTML dels jocs (/assets/games/*.html) -> network-first ---
+  if (url.pathname.startsWith('/assets/games/') && url.pathname.endsWith('.html')) {
+    event.respondWith(networkFirstWithGameCache(request, GAME_CACHE));
+    return;
+  }
 
-// Event per rebre missatges de l'aplicació
+  // --- 4. Subrecursos dels jocs (imatges, JS, CSS, etc.) -> cache-first amb actualització en segon pla ---
+  if (url.pathname.startsWith('/assets/games/')) {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        const fetchPromise = fetch(request).then(networkResponse => {
+          if (networkResponse.ok) {
+            const cacheCopy = networkResponse.clone();
+            caches.open(GAME_SUB_CACHE).then(cache => cache.put(request, cacheCopy));
+          }
+          return networkResponse;
+        }).catch(() => cached);
+
+        // Si tenim cache, el mostrem immediatament; en cas contrari esperem la xarxa
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
+
+  // --- 5. Altres peticions (fonts, API, etc.) -> network-first ---
+  event.respondWith(networkFirstWithGameCache(request, STATIC_CACHE));
+});
+
+// Opcional: missatge per forçar neteja des de la interfície
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'CLEAR_CACHE') {
-    caches.keys().then(cacheNames => {
-      cacheNames.forEach(cacheName => {
-        caches.delete(cacheName);
-      });
-    });
-  }
-  
-  if (event.data && event.data.type === 'GET_CACHE_STATUS') {
-    caches.keys().then(cacheNames => {
-      const cachePromises = cacheNames.map(cacheName => {
-        return caches.open(cacheName)
-          .then(cache => cache.keys())
-          .then(requests => requests.length);
-      });
-      
-      Promise.all(cachePromises).then(sizes => {
-        const totalSize = sizes.reduce((a, b) => a + b, 0);
-        event.ports[0].postMessage({
-          cacheCount: cacheNames.length,
-          totalItems: totalSize
-        });
-      });
-    });
-  }
-});
-
-// Sincronització en segon pla
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-stats') {
-    console.log('[Service Worker] Sincronitzant estadístiques...');
-    // Aquí pots implementar la sincronització de dades
-  }
-});
-
-// Notificacions push (implementació bàsica)
-self.addEventListener('push', event => {
-  const options = {
-    body: event.data ? event.data.text() : 'Nova notificació d\'ulaGames',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-96x96.png',
-    vibrate: [200, 100, 200],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: '1'
-    },
-    actions: [
-      {
-        action: 'explore',
-        title: 'Obrir jocs',
-        icon: '/icons/action-game.png'
-      },
-      {
-        action: 'close',
-        title: 'Tancar',
-        icon: '/icons/action-close.png'
-      }
-    ]
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification('ulaGames', options)
-  );
-});
-
-// Gestionar clics en notificacions
-self.addEventListener('notificationclick', event => {
-  console.log('[Service Worker] Notificació clicada');
-  
-  event.notification.close();
-  
-  if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/index.html')
-    );
-  } else if (event.action === 'close') {
-    // No fer res
-  } else {
-    // Clic a la notificació (no a una acció)
-    event.waitUntil(
-      clients.openWindow('/index.html')
-    );
+    caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))));
   }
 });

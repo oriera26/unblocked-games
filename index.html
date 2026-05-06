@@ -7,6 +7,14 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" type="image/x-icon" href="assets/icons/icon.ico">
+
+    <!-- ======== PWA ======== -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007AFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+
     <style>
         :root {
             --glow-color-rgb: 0, 122, 255;
@@ -49,18 +57,27 @@
             transition: background 0.4s ease;
         }
 
+        /* ======== LIQUID GLASS SVG FILTER (ALTA DEFINICIÓ) ======== */
+        .liquid-glass {
+            filter: url(#liquid-glass-hd);
+        }
+
+        /* ======== CANVAS DE FONS AMB CERCLES SÒLIDS (SIMPLIFICAT) ======== */
         #ambient-canvas {
-            position: fixed; inset: 0; z-index: -1;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
             pointer-events: none;
         }
 
-        /* Nav Principal (Superior) - Redisseny amb botons centrals */
+        /* ======== NAV PRINCIPAL ======== */
         nav {
             position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
             width: calc(100% - 30px); max-width: 900px; height: 56px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
-            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            background: transparent;
+            backdrop-filter: none;
             border: 1px solid var(--glass-border);
             border-radius: 28px; z-index: 1000;
             display: flex;
@@ -68,11 +85,20 @@
             justify-content: space-between;
             padding: 0 20px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+            filter: url(#liquid-glass-hd);
         }
+
+        .nav-inner {
+            position: absolute; inset: 0; border-radius: inherit;
+            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            z-index: -1;
+        }
+
+        .nav-left, .nav-right, .nav-center { z-index: 1; }
 
         .nav-left, .nav-right { display: flex; align-items: center; gap: 15px; }
         
-        /* Centre: els enllaços tipus píndola */
         .nav-center {
             position: absolute;
             left: 50%;
@@ -127,7 +153,7 @@
             transform: scaleX(1.05);
         }
 
-        /* Categorització: Barra Inferior Central (Compacta) */
+        /* ======== CATEGORIES (LIQUID GLASS) ======== */
         .category-container {
             position: fixed; 
             bottom: 25px; 
@@ -140,9 +166,7 @@
 
         .category-pill-wrapper {
             position: relative;
-            background: var(--glass-bg);
-            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
-            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            background: transparent;
             padding: 4px;
             border-radius: 20px;
             border: 1px solid var(--glass-border);
@@ -152,7 +176,6 @@
             overflow-x: auto;
             scrollbar-width: none;
         }
-        .category-pill-wrapper::-webkit-scrollbar { display: none; }
 
         .category-item {
             position: relative;
@@ -187,7 +210,7 @@
             pointer-events: none;
         }
 
-        /* Search */
+        /* ======== SEARCH ======== */
         .search-container { display: flex; align-items: center; position: relative; }
         .search-bar {
             width: 0; opacity: 0; padding: 6px 0; background: transparent;
@@ -201,7 +224,7 @@
         }
         .search-trigger { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
 
-        /* Layout */
+        /* ======== LAYOUT ======== */
         .container { 
             max-width: 1100px; margin: 0 auto; padding: 90px 24px 100px; 
             height: 100vh; overflow-y: auto; position: relative; z-index: 1;
@@ -209,81 +232,39 @@
         }
         .container::-webkit-scrollbar { display: none; }
 
-        /* ===== ANIMACIONS DE TRANSICIÓ ENTRE VISTES ===== */
+        /* ===== ANIMACIONS DE TRANSICIÓ ===== */
         .view {
             display: none;
             animation-duration: 0.35s;
             animation-fill-mode: forwards;
             animation-timing-function: cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
-        .view.active {
-            display: block;
-        }
-        /* Animacions d'entrada */
+        .view.active { display: block; }
+
         @keyframes slideFromRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
         @keyframes slideFromLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
-        /* Animacions de sortida (per a la vista que es desactiva) */
         @keyframes slideToRight {
-            from {
-                opacity: 1;
-                transform: translateX(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateX(30px);
-            }
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(30px); }
         }
         @keyframes slideToLeft {
-            from {
-                opacity: 1;
-                transform: translateX(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-30px); }
         }
-        /* Classes dinàmiques per a les animacions */
-        .view.animate-out-left {
-            animation-name: slideToLeft;
-            animation-duration: 0.3s;
-            display: block;
-        }
-        .view.animate-out-right {
-            animation-name: slideToRight;
-            animation-duration: 0.3s;
-            display: block;
-        }
-        .view.animate-in-left {
-            animation-name: slideFromLeft;
-            display: block;
-        }
-        .view.animate-in-right {
-            animation-name: slideFromRight;
-            display: block;
-        }
+        .view.animate-out-left { animation-name: slideToLeft; animation-duration: 0.3s; display: block; }
+        .view.animate-out-right { animation-name: slideToRight; animation-duration: 0.3s; display: block; }
+        .view.animate-in-left { animation-name: slideFromLeft; display: block; }
+        .view.animate-in-right { animation-name: slideFromRight; display: block; }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
-        
-        /* Cards */
+
+        /* ======== CARDS AMB LIQUID GLASS ======== */
         .card-wrapper { 
             position: relative; 
             display: flex; 
@@ -295,76 +276,48 @@
             transform: translateY(10px);
         }
         .card-wrapper.visible { opacity: 1; transform: translateY(0); }
-        
+
         .card-wrapper.favorite-card .card {
             transform: scale(1.02);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             box-shadow: 0 0 0 2px var(--accent), 0 8px 20px rgba(0,0,0,0.1);
         }
-        .card-wrapper.favorite-card .card:hover {
-            transform: scale(1.07);
-        }
-        .card-wrapper .card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .card-wrapper .card:hover {
-            transform: scale(1.05);
-        }
+        .card-wrapper.favorite-card .card:hover { transform: scale(1.07); }
+        .card-wrapper .card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .card-wrapper .card:hover { transform: scale(1.05); }
 
         .card {
             position: relative; width: 100%; aspect-ratio: 1;
-            background: var(--glass-bg); border-radius: 22%;
+            background: var(--glass-bg);
+            border-radius: 22%;
             border: 1px solid var(--glass-border);
             display: flex; align-items: center; justify-content: center;
             backdrop-filter: blur(10px) brightness(1.1);
+            -webkit-backdrop-filter: blur(10px) brightness(1.1);
             overflow: hidden;
         }
         .card img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
         .card i.game-icon { width: 40px; height: 40px; stroke-width: 1.2; color: var(--text-main); opacity: 0.3; position: absolute; }
-        
-        /* Botó favorit redissenyat */
+
+        /* Fav btn */
         .fav-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 15;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            border: none;
-            color: rgba(255, 255, 255, 0.9);
-            width: 32px;
-            height: 32px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s, opacity 0.2s;
-            opacity: 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            top: 10px; right: 10px; z-index: 15;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px);
+            border: none; color: rgba(255, 255, 255, 0.9);
+            width: 32px; height: 32px; border-radius: 30px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background 0.2s, color 0.2s, opacity 0.2s;
+            opacity: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        .card-wrapper:hover .fav-btn {
-            opacity: 1;
-        }
-        .fav-btn.active {
-            opacity: 1;
-            color: #FFD60A;
-            background: rgba(0, 0, 0, 0.6);
-        }
-        .fav-btn:hover {
-            background: rgba(0, 0, 0, 0.8);
-            color: #FFD60A;
-            transform: none;
-        }
-        .fav-btn i {
-            width: 18px;
-            height: 18px;
-            stroke-width: 1.5;
-        }
+        .card-wrapper:hover .fav-btn { opacity: 1; }
+        .fav-btn.active { opacity: 1; color: #FFD60A; background: rgba(0, 0, 0, 0.6); }
+        .fav-btn:hover { background: rgba(0, 0, 0, 0.8); color: #FFD60A; }
+        .fav-btn i { width: 18px; height: 18px; stroke-width: 1.5; }
 
         .card-title { margin-top: 10px; font-size: 11px; font-weight: 600; opacity: 0.8; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* Stats & History */
+        /* ======== ESTADÍSTIQUES ======== */
         .stats-header { margin-bottom: 25px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
         .stat-card {
@@ -401,7 +354,7 @@
         td:last-child { border-radius: 0 12px 12px 0; text-align: right; opacity: 0.6; font-size: 12px; }
         .game-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; margin-left: 8px; vertical-align: middle; }
 
-        /* Modal */
+        /* ======== MODAL ======== */
         .modal {
             position: fixed; inset: 0; z-index: 2000;
             background: var(--bg-base);
@@ -410,7 +363,6 @@
             align-items: center;
             justify-content: center;
             padding: 15px;
-            transition: background 0.2s ease;
         }
         .modal.active { display: flex; }
         .modal-content {
@@ -422,91 +374,96 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
         .close-modal {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2150;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            position: absolute; top: 16px; right: 16px;
+            width: 40px; height: 40px;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+            border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.25);
+            color: white; display: flex; align-items: center; justify-content: center;
+            z-index: 2150; cursor: pointer; transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        .close-modal:hover {
-            background: rgba(0, 0, 0, 0.8);
-            transform: scale(1.05);
-        }
-        .close-modal i {
-            width: 20px;
-            height: 20px;
-            stroke-width: 2;
-        }
-        #gameIframe {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #000;
-        }
+        .close-modal:hover { background: rgba(0, 0, 0, 0.8); transform: scale(1.05); }
+        .close-modal i { width: 20px; height: 20px; stroke-width: 2; }
+        #gameIframe { flex: 1; width: 100%; height: 100%; border: none; background: #000; }
 
-        /* Loader overlay */
         .game-loader-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-base);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2100;
-            transition: opacity 0.5s ease;
-            pointer-events: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-base); display: flex; align-items: center; justify-content: center;
+            z-index: 2100; transition: opacity 0.5s ease; pointer-events: none;
             border-radius: 28px;
         }
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 3px solid rgba(128, 128, 128, 0.2);
-            border-top-color: var(--text-main);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        .spinner { width: 48px; height: 48px; border: 3px solid rgba(128, 128, 128, 0.2); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .theme-btn { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
         
+        .nav-bg, .category-bg {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px) brightness(1.1);
+            -webkit-backdrop-filter: blur(10px) brightness(1.1);
+        }
+
+        nav, .category-pill-wrapper {
+            filter: none !important;
+        }
+
+        .nav-bg {
+            z-index: 0;
+            background: var(--glass-bg);
+        }
+        .nav-inner {
+            z-index: -1;
+        }
+
+        .category-pill-wrapper {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            background: transparent;
+        }
+        .category-bg {
+            z-index: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+        }
+
         .error-container { padding-top: 80px; text-align: center; }
         .reset-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; margin-top: 20px; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body class="dark-theme">
 
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+        <filter id="liquid-glass-hd" x="-30%" y="-30%" width="160%" height="160%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="4" result="noise-coarse" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise-fine" />
+            <feComposite in="noise-coarse" in2="noise-fine" operator="arithmetic" k1="0.5" k2="0.5" k3="0" k4="0" result="noise-combined" />
+            <feDisplacementMap in="SourceGraphic" in2="noise-combined" scale="6" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+            <feGaussianBlur in="displaced" stdDeviation="0.8" result="blurred" />
+            <feMerge>
+                <feMergeNode in="blurred" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+    </svg>
+
     <canvas id="ambient-canvas"></canvas>
 
     <nav>
+        <div class="nav-inner"></div>
         <div class="nav-left">
             <div class="logo" onclick="navigateToView('arcade', 'left')">
                 <img id="logoImg" class="logo-img" src="assets/icons/icon-large-dark.png" alt="ulaGames">
             </div>
         </div>
-        
         <div class="nav-center">
             <span class="nav-link active" id="link-arcade" data-view="arcade">Jocs</span>
             <span class="nav-link" id="link-stats" data-view="stats">Estadístiques</span>
         </div>
-
         <div class="nav-right">
             <div class="search-container">
                 <input type="text" class="search-bar" placeholder="Cerca un joc..." id="gameSearch">
@@ -577,6 +534,7 @@
 
     <div class="category-container" id="categoryContainer">
         <div class="category-pill-wrapper" id="pillWrapper">
+            <div class="category-bg liquid-glass"></div>
             <div class="category-active-bg" id="activePill"></div>
         </div>
     </div>
@@ -594,6 +552,20 @@
     <script src="assets/js/gameList.js"></script>
 
     <script>
+        // ============================================
+        // SERVICE WORKER
+        // ============================================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('SW registrat: ', reg.scope))
+                    .catch(err => console.error('Error SW:', err));
+            });
+        }
+
+        // ============================================
+        // CONFIGURACIÓ I VARIABLES GLOBALS
+        // ============================================
         const LOADER_DURATION = 7000;
         const ALLOWED_CATEGORIES = [
             { id: 'tots', label: 'Tots', icon: 'layout-grid' },
@@ -611,13 +583,170 @@
         const CHUNK_SIZE = 30;
 
         let favorites = JSON.parse(localStorage.getItem('ulaFavorites')) || [];
-        let userStats = JSON.parse(localStorage.getItem('ulaStats')) || { 
-            plays: 0, points: 0, timeSeconds: 0, streak: 0, lastDate: null, gameHistory: {} 
+        let userStats = JSON.parse(localStorage.getItem('ulaStats')) || {
+            plays: 0, points: 0, timeSeconds: 0, streak: 0, lastDate: null, gameHistory: {}
         };
 
         let loaderTimeout = null;
         let isTransitioning = false;
+        let fallbackTimeout = null;
 
+        // ============================================
+        // FONS AMB CERCLES AMB BLUR, MOVIMENT LLIURE I COL·LISIONS
+        // ============================================
+        const canvas = document.getElementById('ambient-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        // Configuració de les partícules (cercles amb blur)
+        const PARTICLE_COUNT = 8;
+        const MAX_RADIUS = 80;
+        const MIN_RADIUS = 50;
+        const BLUR_AMOUNT = 90; // píxels de desenfocament
+
+        // Colors sòlids amb una mica d'opacitat per a l'efecte glass
+        const COLORS = [
+            '#007AFF', '#FF4D00', '#FFD60A', '#5E5CE6', '#30B0C0', '#FF2D55',
+            '#0A84FF', '#64D2FF', '#BF5AF2', '#FF9F0A', '#32ADE6', '#E83A59'
+        ];
+
+        function random(min, max) {
+            return min + Math.random() * (max - min);
+        }
+
+        class Particle {
+            constructor(x, y, vx, vy, radius, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.radius = radius;
+                this.color = color;
+                // massa proporcional a l'àrea (per a col·lisions realistes)
+                this.mass = Math.PI * radius * radius;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.filter = `blur(${BLUR_AMOUNT}px)`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 0.75; // transparència suau
+                ctx.fill();
+                ctx.restore();
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                // Rebot contra les vores (amb una mica d'esmorteïment per evitar energia infinita)
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.vx = -this.vx * 0.98;
+                }
+                if (this.x + this.radius > width) {
+                    this.x = width - this.radius;
+                    this.vx = -this.vx * 0.98;
+                }
+                if (this.y - this.radius < 0) {
+                    this.y = this.radius;
+                    this.vy = -this.vy * 0.98;
+                }
+                if (this.y + this.radius > height) {
+                    this.y = height - this.radius;
+                    this.vy = -this.vy * 0.98;
+                }
+            }
+        }
+
+        // Funció de col·lisió elàstica entre dues partícules
+        function resolveCollision(p1, p2) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const distance = Math.hypot(dx, dy);
+            const minDist = p1.radius + p2.radius;
+            if (distance < minDist) {
+                // Separar les partícules per evitar que es quedin enganxades
+                const angle = Math.atan2(dy, dx);
+                const overlap = minDist - distance;
+                const correctionX = Math.cos(angle) * overlap * 0.5;
+                const correctionY = Math.sin(angle) * overlap * 0.5;
+                p1.x -= correctionX;
+                p1.y -= correctionY;
+                p2.x += correctionX;
+                p2.y += correctionY;
+
+                // Calcular noves velocitats (col·lisió elàstica)
+                const nx = dx / distance;
+                const ny = dy / distance;
+                const vrelx = p2.vx - p1.vx;
+                const vrely = p2.vy - p1.vy;
+                const dot = vrelx * nx + vrely * ny;
+                if (dot < 0) {
+                    const e = 0.85; // coeficient de restitució (una mica inelàstic)
+                    const m1 = p1.mass;
+                    const m2 = p2.mass;
+                    const imp = (1 + e) * dot / ( (1/m1) + (1/m2) );
+                    p1.vx += imp * nx / m1;
+                    p1.vy += imp * ny / m1;
+                    p2.vx -= imp * nx / m2;
+                    p2.vy -= imp * ny / m2;
+                }
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                let radius = random(MIN_RADIUS, MAX_RADIUS);
+                let x = random(radius, width - radius);
+                let y = random(radius, height - radius);
+                let vx = random(-1.2, 1.2);
+                let vy = random(-1.2, 1.2);
+                let color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                particles.push(new Particle(x, y, vx, vy, radius, color));
+            }
+        }
+
+        function resizeCanvasBackground() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles(); // reiniciar posicions en canviar mida
+        }
+        window.addEventListener('resize', resizeCanvasBackground);
+
+        function animateBackground() {
+            // Neteja amb esborrat parcial per a efecte d'estela subtil
+            const isDarkTheme = document.body.classList.contains('dark-theme');
+            ctx.fillStyle = isDarkTheme ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Actualitzar posicions i col·lisions
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+            }
+            // Resoldre col·lisions entre totes les parelles
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    resolveCollision(particles[i], particles[j]);
+                }
+            }
+            // Dibuixar totes les partícules
+            for (let p of particles) {
+                p.draw();
+            }
+            requestAnimationFrame(animateBackground);
+        }
+
+        // Inicialitzar i arrencar l'animació
+        resizeCanvasBackground();
+        animateBackground();
+
+        // ============================================
+        // INICIALITZACIÓ DE JOCS I UI
+        // ============================================
         window.addEventListener('load', () => {
             const pillWrapper = document.getElementById('pillWrapper');
             ALLOWED_CATEGORIES.forEach(cat => {
@@ -628,16 +757,15 @@
                 item.onclick = () => selectCategory(cat.id);
                 pillWrapper.appendChild(item);
             });
-            
+
             checkStreak();
             lucide.createIcons();
             setTimeout(updateActivePillPosition, 100);
             updateLogoByTheme();
-            
-            // Assignar event listeners als botons de navegació
+
             document.getElementById('link-arcade').addEventListener('click', () => navigateToView('arcade', 'right'));
             document.getElementById('link-stats').addEventListener('click', () => navigateToView('stats', 'left'));
-            
+
             if (typeof GAMES !== 'undefined') {
                 ALL_GAMES = GAMES;
                 applyFilters();
@@ -664,6 +792,8 @@
             userStats.lastDate = today;
             saveStats();
         }
+
+        function saveStats() { localStorage.setItem('ulaStats', JSON.stringify(userStats)); }
 
         function selectCategory(catId) {
             currentCategory = catId;
@@ -718,7 +848,7 @@
         observer.observe(trigger);
 
         function renderInitial() { grid.innerHTML = ""; itemsShown = 0; loadMore(); }
-        
+
         function loadMore() {
             const nextBatch = FILTERED_GAMES.slice(itemsShown, itemsShown + CHUNK_SIZE);
             nextBatch.forEach((g, index) => {
@@ -732,7 +862,10 @@
                     <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${g.url}')">
                         <i data-lucide="star" style="${isFav ? 'fill: #FFD60A' : ''}"></i>
                     </button>
-                    <div class="card">${mediaContent}<i data-lucide="gamepad-2" class="game-icon"></i></div>
+                    <div class="card">
+                        ${mediaContent}
+                        <i data-lucide="gamepad-2" class="game-icon"></i>
+                    </div>
                     <div class="card-title">${g.name}</div>
                 `;
                 grid.appendChild(wrapper);
@@ -742,34 +875,26 @@
             lucide.createIcons();
         }
 
-        // Funció central per navegar amb animació
         function navigateToView(targetViewId, direction) {
             if (isTransitioning) return;
             const currentView = document.querySelector('.view.active');
             if (currentView && currentView.id === `view-${targetViewId}`) return;
-            
+
             isTransitioning = true;
             const nextView = document.getElementById(`view-${targetViewId}`);
             if (!nextView) return;
-            
-            // Determinar direcció de sortida i entrada
+
             let outDirection, inDirection;
-            if (direction === 'left') {
-                outDirection = 'left';
-                inDirection = 'right';
-            } else if (direction === 'right') {
-                outDirection = 'right';
-                inDirection = 'left';
-            } else {
-                // Fallback sense animació
+            if (direction === 'left') { outDirection = 'left'; inDirection = 'right'; }
+            else if (direction === 'right') { outDirection = 'right'; inDirection = 'left'; }
+            else {
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
                 nextView.classList.add('active');
                 updateActiveNavButton(targetViewId);
                 isTransitioning = false;
                 return;
             }
-            
-            // Aplicar animació de sortida a la vista actual
+
             if (currentView) {
                 currentView.classList.remove('active');
                 currentView.classList.add(`animate-out-${outDirection}`);
@@ -778,18 +903,16 @@
                     currentView.style.display = 'none';
                 }, 300);
             }
-            
-            // Preparar i animar la nova vista
+
             nextView.style.display = 'block';
             nextView.classList.add('active', `animate-in-${inDirection}`);
             setTimeout(() => {
                 nextView.classList.remove(`animate-in-${inDirection}`);
                 isTransitioning = false;
             }, 350);
-            
+
             updateActiveNavButton(targetViewId);
-            
-            // Gestionar visibilitat de la barra de categories
+
             const catContainer = document.getElementById('categoryContainer');
             if (targetViewId === 'arcade' || targetViewId === '404') {
                 catContainer.style.display = 'block';
@@ -797,17 +920,16 @@
             } else {
                 catContainer.style.display = 'none';
             }
-            
+
             if (targetViewId === 'stats') updateStatsUI();
         }
-        
+
         function updateActiveNavButton(viewId) {
             document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById(`link-${viewId}`);
             if (activeBtn) activeBtn.classList.add('active');
         }
-        
-        // Mantenir funció showView per compatibilitat interna
+
         function showView(viewId, direction) {
             if (direction === 'none') {
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -818,49 +940,66 @@
                 } else {
                     document.getElementById('categoryContainer').style.display = 'none';
                 }
-                if(viewId === 'stats') updateStatsUI();
+                if (viewId === 'stats') updateStatsUI();
             } else {
                 navigateToView(viewId, direction);
             }
         }
 
-        function toggleFavorite(e, id) {
+        window.toggleFavorite = function(e, id) {
             e.stopPropagation();
             const idx = favorites.indexOf(id);
-            if(idx > -1) favorites.splice(idx, 1);
+            if (idx > -1) favorites.splice(idx, 1);
             else favorites.push(id);
             localStorage.setItem('ulaFavorites', JSON.stringify(favorites));
-            applyFilters(); // refresca la graella amb nou ordre
-        }
-
-        // Canvas ambient
-        const canvas = document.getElementById('ambient-canvas');
-        const ctx = canvas.getContext('2d');
-        let mX = 0, mY = 0;
-        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-        window.onresize();
-        document.addEventListener('mousemove', e => { mX = e.clientX; mY = e.clientY; });
-        function draw() {
-            const isDark = document.body.classList.contains('dark-theme');
-            ctx.fillStyle = isDark ? '#000' : '#fbfbfd';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const grad = ctx.createRadialGradient(mX, mY, 0, mX, mY, 600);
-            grad.addColorStop(0, isDark ? 'rgba(10,132,255,0.15)' : 'rgba(0,122,255,0.08)');
-            grad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            requestAnimationFrame(draw);
-        }
-        draw();
-
-        document.getElementById('themeBtn').onclick = () => {
-            const isDark = document.body.classList.toggle('dark-theme');
-            const icon = document.getElementById('themeIcon');
-            icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            lucide.createIcons();
-            updateLogoByTheme();
-            const overlay = document.getElementById('loaderOverlay');
-            if (overlay) overlay.style.background = 'var(--bg-base)';
+            applyFilters();
         };
+
+        function launchGame(game) {
+            cancelLoaderTimer();
+            cancelFallbackTimer();
+            hideLoaderOverlayImmediate();
+
+            currentGame = game;
+            sessionStart = Date.now();
+            const iframe = document.getElementById('gameIframe');
+            iframe.src = `assets/games/${game.url.endsWith('.html') ? game.url : game.url + '.html'}`;
+            document.getElementById('gameModal').classList.add('active');
+            showLoaderOverlay();
+
+            loaderTimeout = setTimeout(() => {
+                hideLoaderOverlayImmediate();
+                loaderTimeout = null;
+            }, LOADER_DURATION);
+
+            fallbackTimeout = setTimeout(() => {
+                try {
+                    if (!iframe.contentDocument || iframe.contentDocument.readyState !== 'complete') {
+                        iframe.src = '/offline.html';
+                        hideLoaderOverlayImmediate();
+                        cancelLoaderTimer();
+                    }
+                } catch (e) {
+                    iframe.src = '/offline.html';
+                    hideLoaderOverlayImmediate();
+                    cancelLoaderTimer();
+                }
+                fallbackTimeout = null;
+            }, 10000);
+
+            iframe.addEventListener('load', function onLoad() {
+                clearTimeout(loaderTimeout);
+                clearTimeout(fallbackTimeout);
+                loaderTimeout = null;
+                fallbackTimeout = null;
+                hideLoaderOverlayImmediate();
+                iframe.removeEventListener('load', onLoad);
+            }, { once: true });
+
+            userStats.plays = (userStats.plays || 0) + 1;
+            userStats.points = (userStats.points || 0) + 15;
+            saveStats();
+        }
 
         let sessionStart = null;
         let currentGame = null;
@@ -880,33 +1019,14 @@
             if (overlay) {
                 overlay.style.display = 'flex';
                 overlay.style.opacity = '1';
-                void overlay.offsetHeight;
             }
         }
-        function cancelLoaderTimer() {
-            if (loaderTimeout) { clearTimeout(loaderTimeout); loaderTimeout = null; }
-        }
-
-        function launchGame(game) {
-            cancelLoaderTimer();
-            hideLoaderOverlayImmediate();
-            currentGame = game;
-            sessionStart = Date.now();
-            const iframe = document.getElementById('gameIframe');
-            iframe.src = `assets/games/${game.url.endsWith('.html') ? game.url : game.url + '.html'}`;
-            document.getElementById('gameModal').classList.add('active');
-            showLoaderOverlay();
-            loaderTimeout = setTimeout(() => {
-                hideLoaderOverlayImmediate();
-                loaderTimeout = null;
-            }, LOADER_DURATION);
-            userStats.plays = (userStats.plays || 0) + 1;
-            userStats.points = (userStats.points || 0) + 15;
-            saveStats();
-        }
+        function cancelLoaderTimer() { if (loaderTimeout) { clearTimeout(loaderTimeout); loaderTimeout = null; } }
+        function cancelFallbackTimer() { if (fallbackTimeout) { clearTimeout(fallbackTimeout); fallbackTimeout = null; } }
 
         document.getElementById('closeModal').onclick = () => {
             cancelLoaderTimer();
+            cancelFallbackTimer();
             hideLoaderOverlayImmediate();
             if (sessionStart && currentGame) {
                 const durationSec = Math.floor((Date.now() - sessionStart) / 1000);
@@ -927,34 +1047,42 @@
             currentGame = null;
         };
 
-        function saveStats() { localStorage.setItem('ulaStats', JSON.stringify(userStats)); }
-        
+        document.getElementById('themeBtn').onclick = () => {
+            const isDark = document.body.classList.toggle('dark-theme');
+            const icon = document.getElementById('themeIcon');
+            icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            updateLogoByTheme();
+            const overlay = document.getElementById('loaderOverlay');
+            if (overlay) overlay.style.background = 'var(--bg-base)';
+        };
+
         function updateStatsUI() {
             document.getElementById('stat-streak').innerText = userStats.streak || 0;
             document.getElementById('stat-points').innerText = userStats.points || 0;
             const totalMinutes = Math.floor((userStats.timeSeconds || 0) / 60);
             document.getElementById('stat-time').innerText = totalMinutes + 'm';
-            
+
             const points = userStats.points || 0;
             const levelEl = document.getElementById('stat-level');
             const progressEl = document.getElementById('level-progress');
             let level = "Novell";
             let progress = (points % 500) / 500 * 100;
-            if(points > 2000) level = "Llegenda";
-            else if(points > 1000) level = "Expert";
-            else if(points > 500) level = "Pro";
-            else if(points > 100) level = "Aficionat";
+            if (points > 2000) level = "Llegenda";
+            else if (points > 1000) level = "Expert";
+            else if (points > 500) level = "Pro";
+            else if (points > 100) level = "Aficionat";
             levelEl.innerText = level;
             progressEl.style.width = `${progress}%`;
-            
+
             const history = userStats.gameHistory || {};
-            const sorted = Object.keys(history).sort((a,b) => {
+            const sorted = Object.keys(history).sort((a, b) => {
                 const dateA = history[a].lastPlayed ? new Date(history[a].lastPlayed) : 0;
                 const dateB = history[b].lastPlayed ? new Date(history[b].lastPlayed) : 0;
                 return dateB - dateA;
             });
             const historyBody = document.getElementById('historyBody');
-            if(sorted.length === 0) {
+            if (sorted.length === 0) {
                 historyBody.innerHTML = '<tr><td colspan="4" style="opacity:0.5; padding:40px; text-align:center">Encara no has jugat a cap joc. Comença la teva aventura!</td></tr>';
             } else {
                 historyBody.innerHTML = sorted.map(gameName => {
@@ -969,13 +1097,29 @@
                         const dateObj = new Date(g.lastPlayed);
                         lastPlayedFormatted = dateObj.toLocaleDateString('ca-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
                     }
-                    return `<tr><td>${gameName}</td><td style="text-align: center;"><span class="game-badge">${count}</span></td><td style="text-align: center;">${formattedTime}</td><td style="text-align: right;">${lastPlayedFormatted}</td></tr>`;
+                    return `<tr>
+                        <td>${gameName}</td>
+                        <td style="text-align: center;"><span class="game-badge">${count}</span></td>
+                        <td style="text-align: center;">${formattedTime}</td>
+                        <td style="text-align: right;">${lastPlayedFormatted}</td>
+                    </tr>`;
                 }).join('');
             }
             lucide.createIcons();
         }
 
         document.getElementById('gameSearch').oninput = applyFilters;
+
+        window.clearAllCache = function() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.active.postMessage({ type: 'CLEAR_CACHE' });
+                });
+            }
+            localStorage.clear();
+            alert('Cache netejat. Es recarregarà la pàgina.');
+            window.location.reload();
+        };
     </script>
 </body>
-                    </html>
+</html>
