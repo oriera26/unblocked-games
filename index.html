@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" type="image/x-icon" href="assets/icons/icon.ico">
 
-    <!-- ======== PWA ======== -->
+    <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#007AFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -21,7 +21,7 @@
             --text-main: #1d1d1f;
             --accent: #007AFF;
             --bg-base: #fbfbfd;
-            --glass-bg: rgba(255, 255, 255, 0.4); 
+            --glass-bg: rgba(255, 255, 255, 0.4);
             --glass-border: rgba(0, 0, 0, 0.08);
             --pill-bg: rgba(0, 0, 0, 0.03);
             --table-hover: rgba(0, 0, 0, 0.02);
@@ -53,31 +53,16 @@
             background-color: var(--bg-base);
             color: var(--text-main);
             min-height: 100vh;
-            overflow: hidden;
             transition: background 0.4s ease;
         }
 
-        /* ======== LIQUID GLASS SVG FILTER (ALTA DEFINICIÓ) ======== */
-        .liquid-glass {
-            filter: url(#liquid-glass-hd);
-        }
-
-        /* ======== CANVAS DE FONS AMB CERCLES SÒLIDS (SIMPLIFICAT) ======== */
-        #ambient-canvas {
-            position: fixed;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        /* ======== NAV PRINCIPAL ======== */
+        /* NAV PRINCIPAL */
         nav {
             position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
             width: calc(100% - 30px); max-width: 900px; height: 56px;
-            background: transparent;
-            backdrop-filter: none;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
             border: 1px solid var(--glass-border);
             border-radius: 28px; z-index: 1000;
             display: flex;
@@ -85,18 +70,9 @@
             justify-content: space-between;
             padding: 0 20px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.05);
-            filter: url(#liquid-glass-hd);
-        }
-
-        .nav-inner {
-            position: absolute; inset: 0; border-radius: inherit;
-            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
-            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
-            z-index: -1;
         }
 
         .nav-left, .nav-right, .nav-center { z-index: 1; }
-
         .nav-left, .nav-right { display: flex; align-items: center; gap: 15px; }
         
         .nav-center {
@@ -153,7 +129,7 @@
             transform: scaleX(1.05);
         }
 
-        /* ======== CATEGORIES (LIQUID GLASS) ======== */
+        /* CATEGORIES */
         .category-container {
             position: fixed; 
             bottom: 25px; 
@@ -166,7 +142,9 @@
 
         .category-pill-wrapper {
             position: relative;
-            background: transparent;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
             padding: 4px;
             border-radius: 20px;
             border: 1px solid var(--glass-border);
@@ -210,7 +188,7 @@
             pointer-events: none;
         }
 
-        /* ======== SEARCH ======== */
+        /* SEARCH */
         .search-container { display: flex; align-items: center; position: relative; }
         .search-bar {
             width: 0; opacity: 0; padding: 6px 0; background: transparent;
@@ -224,7 +202,7 @@
         }
         .search-trigger { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
 
-        /* ======== LAYOUT ======== */
+        /* LAYOUT */
         .container { 
             max-width: 1100px; margin: 0 auto; padding: 90px 24px 100px; 
             height: 100vh; overflow-y: auto; position: relative; z-index: 1;
@@ -232,7 +210,7 @@
         }
         .container::-webkit-scrollbar { display: none; }
 
-        /* ===== ANIMACIONS DE TRANSICIÓ ===== */
+        /* TRANSICIONS */
         .view {
             display: none;
             animation-duration: 0.35s;
@@ -264,7 +242,7 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
 
-        /* ======== CARDS AMB LIQUID GLASS ======== */
+        /* CARDS */
         .card-wrapper { 
             position: relative; 
             display: flex; 
@@ -279,10 +257,8 @@
 
         .card-wrapper.favorite-card .card {
             transform: scale(1.02);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
             box-shadow: 0 0 0 2px var(--accent), 0 8px 20px rgba(0,0,0,0.1);
         }
-        .card-wrapper.favorite-card .card:hover { transform: scale(1.07); }
         .card-wrapper .card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .card-wrapper .card:hover { transform: scale(1.05); }
 
@@ -317,7 +293,7 @@
 
         .card-title { margin-top: 10px; font-size: 11px; font-weight: 600; opacity: 0.8; text-align: center; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* ======== ESTADÍSTIQUES ======== */
+        /* ESTADÍSTIQUES */
         .stats-header { margin-bottom: 25px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
         .stat-card {
@@ -354,7 +330,7 @@
         td:last-child { border-radius: 0 12px 12px 0; text-align: right; opacity: 0.6; font-size: 12px; }
         .game-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; margin-left: 8px; vertical-align: middle; }
 
-        /* ======== MODAL ======== */
+        /* MODAL */
         .modal {
             position: fixed; inset: 0; z-index: 2000;
             background: var(--bg-base);
@@ -396,40 +372,6 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .theme-btn { background: none; border: none; color: var(--text-main); opacity: 0.7; cursor: pointer; }
-        
-        .nav-bg, .category-bg {
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px) brightness(1.1);
-            -webkit-backdrop-filter: blur(10px) brightness(1.1);
-        }
-
-        nav, .category-pill-wrapper {
-            filter: none !important;
-        }
-
-        .nav-bg {
-            z-index: 0;
-            background: var(--glass-bg);
-        }
-        .nav-inner {
-            z-index: -1;
-        }
-
-        .category-pill-wrapper {
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            background: transparent;
-        }
-        .category-bg {
-            z-index: 0;
-            background: var(--glass-bg);
-            backdrop-filter: blur(var(--nav-blur)) saturate(180%);
-            -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%);
-        }
 
         .error-container { padding-top: 80px; text-align: center; }
         .reset-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; margin-top: 20px; cursor: pointer; font-weight: 600; }
@@ -437,24 +379,7 @@
 </head>
 <body class="dark-theme">
 
-    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
-        <filter id="liquid-glass-hd" x="-30%" y="-30%" width="160%" height="160%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="4" result="noise-coarse" />
-            <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise-fine" />
-            <feComposite in="noise-coarse" in2="noise-fine" operator="arithmetic" k1="0.5" k2="0.5" k3="0" k4="0" result="noise-combined" />
-            <feDisplacementMap in="SourceGraphic" in2="noise-combined" scale="6" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-            <feGaussianBlur in="displaced" stdDeviation="0.8" result="blurred" />
-            <feMerge>
-                <feMergeNode in="blurred" />
-                <feMergeNode in="SourceGraphic" />
-            </feMerge>
-        </filter>
-    </svg>
-
-    <canvas id="ambient-canvas"></canvas>
-
     <nav>
-        <div class="nav-inner"></div>
         <div class="nav-left">
             <div class="logo" onclick="navigateToView('arcade', 'left')">
                 <img id="logoImg" class="logo-img" src="assets/icons/icon-large-dark.png" alt="ulaGames">
@@ -534,7 +459,6 @@
 
     <div class="category-container" id="categoryContainer">
         <div class="category-pill-wrapper" id="pillWrapper">
-            <div class="category-bg liquid-glass"></div>
             <div class="category-active-bg" id="activePill"></div>
         </div>
     </div>
@@ -553,7 +477,7 @@
 
     <script>
         // ============================================
-        // SERVICE WORKER
+        // SERVICE WORKER (només registre, sense bloqueig)
         // ============================================
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -590,159 +514,6 @@
         let loaderTimeout = null;
         let isTransitioning = false;
         let fallbackTimeout = null;
-
-        // ============================================
-        // FONS AMB CERCLES AMB BLUR, MOVIMENT LLIURE I COL·LISIONS
-        // ============================================
-        const canvas = document.getElementById('ambient-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
-
-        // Configuració de les partícules (cercles amb blur)
-        const PARTICLE_COUNT = 8;
-        const MAX_RADIUS = 80;
-        const MIN_RADIUS = 50;
-        const BLUR_AMOUNT = 90; // píxels de desenfocament
-
-        // Colors sòlids amb una mica d'opacitat per a l'efecte glass
-        const COLORS = [
-            '#007AFF', '#FF4D00', '#FFD60A', '#5E5CE6', '#30B0C0', '#FF2D55',
-            '#0A84FF', '#64D2FF', '#BF5AF2', '#FF9F0A', '#32ADE6', '#E83A59'
-        ];
-
-        function random(min, max) {
-            return min + Math.random() * (max - min);
-        }
-
-        class Particle {
-            constructor(x, y, vx, vy, radius, color) {
-                this.x = x;
-                this.y = y;
-                this.vx = vx;
-                this.vy = vy;
-                this.radius = radius;
-                this.color = color;
-                // massa proporcional a l'àrea (per a col·lisions realistes)
-                this.mass = Math.PI * radius * radius;
-            }
-
-            draw() {
-                ctx.save();
-                ctx.filter = `blur(${BLUR_AMOUNT}px)`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.globalAlpha = 0.75; // transparència suau
-                ctx.fill();
-                ctx.restore();
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                // Rebot contra les vores (amb una mica d'esmorteïment per evitar energia infinita)
-                if (this.x - this.radius < 0) {
-                    this.x = this.radius;
-                    this.vx = -this.vx * 0.98;
-                }
-                if (this.x + this.radius > width) {
-                    this.x = width - this.radius;
-                    this.vx = -this.vx * 0.98;
-                }
-                if (this.y - this.radius < 0) {
-                    this.y = this.radius;
-                    this.vy = -this.vy * 0.98;
-                }
-                if (this.y + this.radius > height) {
-                    this.y = height - this.radius;
-                    this.vy = -this.vy * 0.98;
-                }
-            }
-        }
-
-        // Funció de col·lisió elàstica entre dues partícules
-        function resolveCollision(p1, p2) {
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            const distance = Math.hypot(dx, dy);
-            const minDist = p1.radius + p2.radius;
-            if (distance < minDist) {
-                // Separar les partícules per evitar que es quedin enganxades
-                const angle = Math.atan2(dy, dx);
-                const overlap = minDist - distance;
-                const correctionX = Math.cos(angle) * overlap * 0.5;
-                const correctionY = Math.sin(angle) * overlap * 0.5;
-                p1.x -= correctionX;
-                p1.y -= correctionY;
-                p2.x += correctionX;
-                p2.y += correctionY;
-
-                // Calcular noves velocitats (col·lisió elàstica)
-                const nx = dx / distance;
-                const ny = dy / distance;
-                const vrelx = p2.vx - p1.vx;
-                const vrely = p2.vy - p1.vy;
-                const dot = vrelx * nx + vrely * ny;
-                if (dot < 0) {
-                    const e = 0.85; // coeficient de restitució (una mica inelàstic)
-                    const m1 = p1.mass;
-                    const m2 = p2.mass;
-                    const imp = (1 + e) * dot / ( (1/m1) + (1/m2) );
-                    p1.vx += imp * nx / m1;
-                    p1.vy += imp * ny / m1;
-                    p2.vx -= imp * nx / m2;
-                    p2.vy -= imp * ny / m2;
-                }
-            }
-        }
-
-        function initParticles() {
-            particles = [];
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                let radius = random(MIN_RADIUS, MAX_RADIUS);
-                let x = random(radius, width - radius);
-                let y = random(radius, height - radius);
-                let vx = random(-1.2, 1.2);
-                let vy = random(-1.2, 1.2);
-                let color = COLORS[Math.floor(Math.random() * COLORS.length)];
-                particles.push(new Particle(x, y, vx, vy, radius, color));
-            }
-        }
-
-        function resizeCanvasBackground() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            initParticles(); // reiniciar posicions en canviar mida
-        }
-        window.addEventListener('resize', resizeCanvasBackground);
-
-        function animateBackground() {
-            // Neteja amb esborrat parcial per a efecte d'estela subtil
-            const isDarkTheme = document.body.classList.contains('dark-theme');
-            ctx.fillStyle = isDarkTheme ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)';
-            ctx.fillRect(0, 0, width, height);
-
-            // Actualitzar posicions i col·lisions
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-            }
-            // Resoldre col·lisions entre totes les parelles
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    resolveCollision(particles[i], particles[j]);
-                }
-            }
-            // Dibuixar totes les partícules
-            for (let p of particles) {
-                p.draw();
-            }
-            requestAnimationFrame(animateBackground);
-        }
-
-        // Inicialitzar i arrencar l'animació
-        resizeCanvasBackground();
-        animateBackground();
 
         // ============================================
         // INICIALITZACIÓ DE JOCS I UI
