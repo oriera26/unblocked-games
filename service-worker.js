@@ -1,27 +1,26 @@
-// service-worker.js
-// Versió del cache: ha de coincidir amb cada desplegament
-const CACHE_VERSION = 'ula-games-v2.6.3';
-const STATIC_CACHE = `${CACHE_VERSION}-static`;
-const GAME_CACHE = `${CACHE_VERSION}-games`;
-const GAME_SUB_CACHE = `${CACHE_VERSION}-game-assets`; // Per subrecursos dels jocs
-const FALLBACK_CACHE = `${CACHE_VERSION}-fallback`;
+// ============================================
+// Service Worker lleuger 
+// Només intercepta peticions del mateix origen
+// No bloqueja CORS ni recursos externs (jocs de tercers)
+// ============================================
 
-// Llista exacta d’actius estàtics que volem pre-cachejar
+const CACHE_VERSION = 'ula-shell-v1';
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+
+// Actius estàtics essencials de l'app shell
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/offline.html',            // Pàgina de fallback
+  '/offline.html',
   '/manifest.json',
-  '/assets/css/styles.css',   // Si existeix
   '/assets/js/gameList.js',
-  '/assets/js/scripts.js',    // El JS principal
-  '/assets/icons/favicon.png', // Icona de la pestanya
-  // Afegir aquí totes les fonts, icones i CSS que s'utilitzin
-  // Exemples:
-  // 'https://fonts.googleapis.com/css2?family=...',
+  '/assets/icons/icon.ico',
+  '/assets/icons/icon-192x192.png',
+  '/assets/icons/icon-large-dark.png',
+  '/assets/icons/icon-large-light.png'
 ];
 
-// Instal·lació: pre-cachegem els recursos estàtics i la pàgina de fallback
+// Instal·lació: pre-cachegem el shell
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -30,109 +29,57 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activació: netejar caches antics
+// Activació: neteja caches antics
 self.addEventListener('activate', event => {
-  const validCaches = [STATIC_CACHE, GAME_CACHE, GAME_SUB_CACHE, FALLBACK_CACHE];
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
         keys.map(key => {
-          if (!validCaches.includes(key)) {
-            return caches.delete(key);
-          }
+          if (key !== STATIC_CACHE) return caches.delete(key);
         })
       )
     ).then(() => self.clients.claim())
   );
 });
 
-// Funció auxiliar: intenta una petició de xarxa i guarda la resposta al cache dinàmic de jocs
-async function networkFirstWithGameCache(request, cacheName) {
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  } catch (error) {
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) return cachedResponse;
-    // Si no hi ha res, forcem offline fallback
-    throw error;
-  }
-}
-
-// Estratègia stale-while-revalidate per a gameList.js
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(STATIC_CACHE);
-  const cachedResponse = await cache.match(request);
-  const fetchPromise = fetch(request).then(networkResponse => {
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  }).catch(() => cachedResponse);
-
-  // Si tenim cache, el retornem immediatament; sinó esperem la xarxa
-  return cachedResponse || fetchPromise;
-}
-
-// Intercepció de peticions
+// Intercepció de peticions: només per al mateix origen
 self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const url = new URL(event.request.url);
 
-  // Només gestionem peticions GET
-  if (request.method !== 'GET') return;
+  // Ignorar completament peticions a altres orígens (jocs externs, APIs de tercers)
+  if (url.origin !== location.origin) return;
 
-  // --- 1. Peticions a recursos estàtics (cache-first) ---
-  // Comprovar si és un dels assets estàtics (comparant pathname)
-  const isStaticAsset = STATIC_ASSETS.some(asset => url.pathname === asset || url.pathname === '/' + asset);
-  if (isStaticAsset) {
-    event.respondWith(
-      caches.match(request)
-        .then(cached => cached || fetch(request))
-    );
-    return;
-  }
+  // Ignorar mètodes que no siguin GET
+  if (event.request.method !== 'GET') return;
 
-  // --- 2. gameList.js: stale-while-revalidate ---
-  if (url.pathname.endsWith('/gameList.js') || url.pathname.endsWith('/assets/js/gameList.js')) {
-    event.respondWith(staleWhileRevalidate(request));
-    return;
-  }
-
-  // --- 3. HTML dels jocs (/assets/games/*.html) -> network-first ---
-  if (url.pathname.startsWith('/assets/games/') && url.pathname.endsWith('.html')) {
-    event.respondWith(networkFirstWithGameCache(request, GAME_CACHE));
-    return;
-  }
-
-  // --- 4. Subrecursos dels jocs (imatges, JS, CSS, etc.) -> cache-first amb actualització en segon pla ---
-  if (url.pathname.startsWith('/assets/games/')) {
-    event.respondWith(
-      caches.match(request).then(cached => {
-        const fetchPromise = fetch(request).then(networkResponse => {
-          if (networkResponse.ok) {
-            const cacheCopy = networkResponse.clone();
-            caches.open(GAME_SUB_CACHE).then(cache => cache.put(request, cacheCopy));
-          }
-          return networkResponse;
-        }).catch(() => cached);
-
-        // Si tenim cache, el mostrem immediatament; en cas contrari esperem la xarxa
-        return cached || fetchPromise;
+  // Estratègia: network-first per als recursos estàtics (amb fallback a offline)
+  event.respondWith(
+    fetch(event.request)
+      .then(networkResponse => {
+        // Si la resposta és vàlida, la guardem al cache per a futures visites offline
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(STATIC_CACHE).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
       })
-    );
-    return;
-  }
-
-  // --- 5. Altres peticions (fonts, API, etc.) -> network-first ---
-  event.respondWith(networkFirstWithGameCache(request, STATIC_CACHE));
+      .catch(() => {
+        // Si falla la xarxa, intentem servir des del cache
+        return caches.match(event.request).then(cached => {
+          if (cached) return cached;
+          // Si no hi ha cache i falla la xarxa, mostrem la pàgina offline (per a navegació)
+          if (event.request.mode === 'navigate') {
+            return caches.match('/offline.html');
+          }
+          return new Response('Offline content not available', { status: 404, statusText: 'Not Found' });
+        });
+      })
+  );
 });
 
-// Opcional: missatge per forçar neteja des de la interfície
+// Neteja manual de cache (opcional)
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))));
