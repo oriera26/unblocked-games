@@ -37,7 +37,6 @@
             --fav-glow: rgba(255, 214, 10, 0.3);
             --orb-opacity: 0.7;
 
-            /* Fórmula glass reusable */
             --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.08) contrast(1.04);
             --glass-filter-strong: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.08) contrast(1.05);
         }
@@ -287,7 +286,7 @@
         }
 
         /* ==========================================================
-           SEARCH — LIQUID GLASS
+           SEARCH — LIQUID GLASS (vora única)
            ========================================================== */
         .search-container {
             display: flex; align-items: center; position: relative;
@@ -303,6 +302,9 @@
             background: var(--glass-bg);
             box-shadow: 0 6px 20px rgba(15,20,40,0.10);
         }
+        .dark-theme .search-container:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+        }
 
         .search-bar {
             width: 0; opacity: 0; padding: 6px 0; background: transparent;
@@ -311,26 +313,38 @@
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: none;
         }
-        .search-container:hover .search-bar, .search-bar:focus {
-            width: 140px; opacity: 1; padding: 6px 8px; margin-right: 4px; pointer-events: all;
+        .search-container:hover .search-bar,
+        .search-bar:focus {
+            width: 140px; opacity: 1; padding: 6px 8px; margin-right: 4px;
+            pointer-events: all;
         }
 
+        /* Botó pla — sense vora ni fons per evitar doble contorn */
         .search-trigger {
-            background: var(--glass-bg-soft);
-            border: 1px solid var(--glass-border-soft);
+            background: transparent;
+            border: none;
             color: var(--text-main);
-            opacity: 0.85;
+            opacity: 0.75;
             cursor: pointer;
-            width: 32px; height: 32px;
-            border-radius: 30px;
+            width: 28px; height: 28px;
+            border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: all 0.2s ease;
+            transition: background 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
         }
         .search-trigger:hover {
+            opacity: 1;
             background: var(--glass-bg);
-            transform: scale(1.05);
+            transform: scale(1.06);
+        }
+        .search-trigger:focus-visible {
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+        .search-trigger i,
+        .search-trigger svg {
+            display: block;
         }
 
         /* theme-btn — LIQUID GLASS */
