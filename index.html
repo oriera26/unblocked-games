@@ -21,13 +21,15 @@
             --text-main: #1d1d1f;
             --accent: #007AFF;
             --bg-base: #fbfbfd;
-            --glass-bg: rgba(255, 255, 255, 0.4);
+            /* Fons de vidre més translúcids per deixar veure els orbes */
+            --glass-bg: rgba(255, 255, 255, 0.32);
             --glass-border: rgba(0, 0, 0, 0.08);
             --pill-bg: rgba(0, 0, 0, 0.03);
             --table-hover: rgba(0, 0, 0, 0.02);
             --nav-blur: 20px;
             --fire-color: #ff4d00;
             --fav-glow: rgba(255, 214, 10, 0.3);
+            --orb-opacity: 0.5;
         }
 
         .dark-theme {
@@ -35,11 +37,12 @@
             --text-main: #f5f5f7;
             --accent: #0A84FF;
             --bg-base: #000000;
-            --glass-bg: rgba(20, 20, 20, 0.5);
+            --glass-bg: rgba(28, 28, 30, 0.34);
             --glass-border: rgba(255, 255, 255, 0.12);
             --pill-bg: rgba(255, 255, 255, 0.08);
             --table-hover: rgba(255, 255, 255, 0.05);
             --fav-glow: rgba(255, 214, 10, 0.2);
+            --orb-opacity: 0.75;
         }
 
         * {
@@ -49,11 +52,67 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        html, body {
+            overflow-x: hidden;
+        }
+
         body {
             background-color: var(--bg-base);
             color: var(--text-main);
             min-height: 100vh;
             transition: background 0.4s ease;
+            position: relative;
+        }
+
+        /* ============================================
+           LIQUID GLASS · ORBES DE LLUM DE FONS
+           ============================================ */
+        .liquid-orb {
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            will-change: transform;
+            filter: blur(90px);
+            opacity: var(--orb-opacity);
+            transition: opacity 0.6s ease;
+            backface-visibility: hidden;
+        }
+        #orb-1 {
+            width: 520px; height: 520px;
+            background: radial-gradient(circle,
+                        rgba(0, 122, 255, 0.55) 0%,
+                        rgba(90, 200, 250, 0.35) 45%,
+                        rgba(175, 82, 222, 0.15) 72%,
+                        transparent 90%);
+        }
+        #orb-2 {
+            width: 460px; height: 460px;
+            background: radial-gradient(circle,
+                        rgba(255, 45, 85, 0.45) 0%,
+                        rgba(255, 149, 0, 0.28) 50%,
+                        rgba(255, 214, 10, 0.12) 75%,
+                        transparent 90%);
+        }
+        #orb-3 {
+            width: 380px; height: 380px;
+            background: radial-gradient(circle,
+                        rgba(175, 82, 222, 0.45) 0%,
+                        rgba(90, 200, 250, 0.28) 55%,
+                        transparent 88%);
+        }
+
+        /* Vinyeta subtil damunt els orbes per donar profunditat */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 35%, var(--bg-base) 120%);
+            opacity: 0.35;
         }
 
         /* NAV PRINCIPAL */
@@ -69,7 +128,16 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+            box-shadow:
+                0 8px 32px rgba(0,0,0,0.08),
+                inset 0 1px 0 rgba(255,255,255,0.35),
+                inset 0 -1px 0 rgba(255,255,255,0.08);
+        }
+        .dark-theme nav {
+            box-shadow:
+                0 8px 32px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.12),
+                inset 0 -1px 0 rgba(255,255,255,0.04);
         }
 
         .nav-left, .nav-right, .nav-center { z-index: 1; }
@@ -81,10 +149,11 @@
             transform: translateX(-50%);
             display: flex;
             gap: 8px;
-            background: rgba(128, 128, 128, 0.1);
+            background: rgba(128, 128, 128, 0.12);
             padding: 4px;
             border-radius: 40px;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(10px) saturate(160%);
+            -webkit-backdrop-filter: blur(10px) saturate(160%);
         }
         .nav-link {
             font-size: 14px;
@@ -150,9 +219,18 @@
             border: 1px solid var(--glass-border);
             display: flex;
             gap: 2px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            box-shadow:
+                0 8px 32px rgba(0,0,0,0.12),
+                inset 0 1px 0 rgba(255,255,255,0.35),
+                inset 0 -1px 0 rgba(255,255,255,0.08);
             overflow-x: auto;
             scrollbar-width: none;
+        }
+        .dark-theme .category-pill-wrapper {
+            box-shadow:
+                0 8px 32px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.12),
+                inset 0 -1px 0 rgba(255,255,255,0.04);
         }
 
         .category-item {
@@ -268,9 +346,19 @@
             border-radius: 22%;
             border: 1px solid var(--glass-border);
             display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(10px) brightness(1.1);
-            -webkit-backdrop-filter: blur(10px) brightness(1.1);
+            backdrop-filter: blur(14px) saturate(180%) brightness(1.05);
+            -webkit-backdrop-filter: blur(14px) saturate(180%) brightness(1.05);
             overflow: hidden;
+            box-shadow:
+                0 4px 20px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.35),
+                inset 0 -1px 0 rgba(255,255,255,0.06);
+        }
+        .dark-theme .card {
+            box-shadow:
+                0 4px 20px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.14),
+                inset 0 -1px 0 rgba(255,255,255,0.04);
         }
         .card img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
         .card i.game-icon { width: 40px; height: 40px; stroke-width: 1.2; color: var(--text-main); opacity: 0.3; position: absolute; }
@@ -280,6 +368,7 @@
             position: absolute;
             top: 10px; right: 10px; z-index: 15;
             background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: none; color: rgba(255, 255, 255, 0.9);
             width: 32px; height: 32px; border-radius: 30px;
             display: flex; align-items: center; justify-content: center;
@@ -298,9 +387,19 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
         .stat-card {
             background: var(--glass-bg); border: 1px solid var(--glass-border);
-            padding: 20px; border-radius: 24px; backdrop-filter: blur(40px);
+            padding: 20px; border-radius: 24px;
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
             display: flex; flex-direction: column; gap: 8px;
             position: relative; overflow: hidden;
+            box-shadow:
+                0 8px 28px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.35);
+        }
+        .dark-theme .stat-card {
+            box-shadow:
+                0 8px 28px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.12);
         }
         .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
         .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; font-weight: 700; }
@@ -320,7 +419,16 @@
             padding: 24px; 
             border-radius: 28px; 
             border: 1px solid var(--glass-border);
-            backdrop-filter: blur(40px);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            box-shadow:
+                0 8px 28px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.35);
+        }
+        .dark-theme .history-section {
+            box-shadow:
+                0 8px 28px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.12);
         }
         .table-container { overflow-x: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
@@ -335,6 +443,7 @@
             position: fixed; inset: 0; z-index: 2000;
             background: var(--bg-base);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -353,6 +462,7 @@
             position: absolute; top: 16px; right: 16px;
             width: 40px; height: 40px;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.25);
             color: white; display: flex; align-items: center; justify-content: center;
             z-index: 2150; cursor: pointer; transition: all 0.2s ease;
@@ -375,9 +485,18 @@
 
         .error-container { padding-top: 80px; text-align: center; }
         .reset-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; margin-top: 20px; cursor: pointer; font-weight: 600; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .liquid-orb { display: none; }
+        }
     </style>
 </head>
 <body class="dark-theme">
+
+    <!-- ===== ORBES LIQUID GLASS ===== -->
+    <div id="orb-1" class="liquid-orb"></div>
+    <div id="orb-2" class="liquid-orb"></div>
+    <div id="orb-3" class="liquid-orb"></div>
 
     <nav>
         <div class="nav-left">
@@ -476,6 +595,46 @@
     <script src="assets/js/gameList.js"></script>
 
     <script>
+        // ============================================
+        // LIQUID GLASS · ORBES ANIMATS
+        // ============================================
+        (function initLiquidOrbs() {
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const orbs = [
+                { el: document.getElementById('orb-1'), size: 520, speed: 0.00060, phaseX: 0.80, phaseY: 0.50, ax: 0.38, ay: 0.32 },
+                { el: document.getElementById('orb-2'), size: 460, speed: 0.00042, phaseX: 1.10, phaseY: 0.70, ax: 0.42, ay: 0.38 },
+                { el: document.getElementById('orb-3'), size: 380, speed: 0.00075, phaseX: 0.55, phaseY: 1.05, ax: 0.34, ay: 0.40 }
+            ];
+            if (reduceMotion) return;
+
+            let running = !document.hidden;
+
+            function animateOrbs() {
+                if (!running) return;
+                const t = Date.now();
+                for (let i = 0; i < orbs.length; i++) {
+                    const o = orbs[i];
+                    if (!o.el) continue;
+                    const tt = t * o.speed;
+                    const x = window.innerWidth  / 2 + Math.sin(tt * o.phaseX) * window.innerWidth  * o.ax;
+                    const y = window.innerHeight / 2 + Math.cos(tt * o.phaseY) * window.innerHeight * o.ay;
+                    o.el.style.transform = `translate3d(${x - o.size/2}px, ${y - o.size/2}px, 0)`;
+                }
+                requestAnimationFrame(animateOrbs);
+            }
+            requestAnimationFrame(animateOrbs);
+
+            document.addEventListener('visibilitychange', () => {
+                const shouldRun = !document.hidden && !reduceMotion;
+                if (shouldRun && !running) {
+                    running = true;
+                    requestAnimationFrame(animateOrbs);
+                } else if (!shouldRun) {
+                    running = false;
+                }
+            });
+        })();
+
         // ============================================
         // SERVICE WORKER (només registre, sense bloqueig)
         // ============================================
