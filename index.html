@@ -20,16 +20,17 @@
             --accent: #007AFF;
             --bg-base: #eef1f6;
 
-            /* LIQUID GLASS · iOS 26 (intens, sense reflexos) */
-            --glass-blur: 48px;
-            --glass-saturate: 220%;
-            --glass-bg: rgba(255, 255, 255, 0.14);
-            --glass-bg-strong: rgba(255, 255, 255, 0.20);
-            --glass-bg-soft: rgba(255, 255, 255, 0.10);
-            --glass-border-soft: rgba(255, 255, 255, 0.20);
+            /* ⚡ OPT #3: blur reduït de 48px → 16px */
+            --glass-blur: 16px;
+            --glass-saturate: 160%;
+
+            --glass-bg: rgba(255, 255, 255, 0.22);
+            --glass-bg-strong: rgba(255, 255, 255, 0.28);
+            --glass-bg-soft: rgba(255, 255, 255, 0.14);
+            --glass-border-soft: rgba(255, 255, 255, 0.22);
             --glass-shadow:
-                0 20px 50px rgba(15, 20, 40, 0.14),
-                0 6px 16px rgba(15, 20, 40, 0.08);
+                0 12px 32px rgba(15, 20, 40, 0.10),
+                0 4px 10px rgba(15, 20, 40, 0.06);
 
             --pill-bg: rgba(0, 0, 0, 0.04);
             --table-hover: rgba(255, 255, 255, 0.28);
@@ -37,24 +38,11 @@
             --fav-glow: rgba(255, 214, 10, 0.3);
             --orb-opacity: 0.7;
 
-            --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.08) contrast(1.04);
-            --glass-filter-strong: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.08) contrast(1.05);
+            --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            --glass-filter-strong: blur(calc(var(--glass-blur) - 4px)) saturate(var(--glass-saturate));
+            --glass-filter-small: blur(8px) saturate(140%);
 
-            /* ============================================
-               SQUIRCLE OUTLINE · glow molt subtil
-               ============================================ */
-            --squircle-outline:
-                drop-shadow(0 0 0.5px rgba(255, 255, 255, 0.65))
-                drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.18));
-
-            --squircle-shadow:
-                var(--squircle-outline)
-                drop-shadow(0 20px 30px rgba(15, 20, 40, 0.14))
-                drop-shadow(0 6px 12px rgba(15, 20, 40, 0.08));
-            --squircle-shadow-hover:
-                var(--squircle-outline)
-                drop-shadow(0 26px 40px rgba(15, 20, 40, 0.20))
-                drop-shadow(0 10px 18px rgba(15, 20, 40, 0.14));
+            /* ⚡ OPT #4: --squircle-shadow eliminat (usem pseudo-element) */
         }
 
         .dark-theme {
@@ -63,32 +51,18 @@
             --accent: #0A84FF;
             --bg-base: #05060a;
 
-            --glass-bg: rgba(26, 28, 34, 0.28);
-            --glass-bg-strong: rgba(30, 32, 40, 0.38);
-            --glass-bg-soft: rgba(28, 30, 38, 0.20);
+            --glass-bg: rgba(26, 28, 34, 0.34);
+            --glass-bg-strong: rgba(30, 32, 40, 0.42);
+            --glass-bg-soft: rgba(28, 30, 38, 0.24);
             --glass-border-soft: rgba(255, 255, 255, 0.10);
             --glass-shadow:
-                0 20px 60px rgba(0, 0, 0, 0.55),
-                0 6px 18px rgba(0, 0, 0, 0.35);
+                0 12px 40px rgba(0, 0, 0, 0.45),
+                0 4px 12px rgba(0, 0, 0, 0.28);
 
             --pill-bg: rgba(255, 255, 255, 0.08);
             --table-hover: rgba(255, 255, 255, 0.05);
             --fav-glow: rgba(255, 214, 10, 0.2);
             --orb-opacity: 0.75;
-
-            /* En fosc, halo blanc una mica més visible */
-            --squircle-outline:
-                drop-shadow(0 0 0.5px rgba(255, 255, 255, 0.45))
-                drop-shadow(0 0 2px rgba(255, 255, 255, 0.10));
-
-            --squircle-shadow:
-                var(--squircle-outline)
-                drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55))
-                drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
-            --squircle-shadow-hover:
-                var(--squircle-outline)
-                drop-shadow(0 26px 50px rgba(0, 0, 0, 0.65))
-                drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
         }
 
         * {
@@ -109,28 +83,39 @@
         }
 
         /* ==========================================================
-           ORBE ÚNICA (blava)
+           ⚡ OPT #2 + #11: ORB amb PNG pre-desenfocat i CSS keyframes
            ========================================================== */
-        .liquid-orb {
+        #orb-1 {
             position: fixed;
             top: 0;
             left: 0;
-            border-radius: 50%;
+            width: 700px;
+            height: 700px;
             pointer-events: none;
             z-index: 0;
-            will-change: transform;
-            filter: blur(90px);
             opacity: var(--orb-opacity);
-            transition: opacity 0.6s ease;
+            /* ⚡ OPT #2: PNG pre-desenfocat en comptes de filter: blur(90px) */
+            background-image: url('/assets/images/orb-blurred.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            /* ⚡ OPT #11: animació CSS en comptes de JS */
+            animation: orbPath 60s ease-in-out infinite;
             backface-visibility: hidden;
         }
-        #orb-1 {
-            width: 520px; height: 520px;
-            background: radial-gradient(circle,
-                        rgba(0, 122, 255, 0.55) 0%,
-                        rgba(90, 200, 250, 0.35) 45%,
-                        rgba(175, 82, 222, 0.15) 72%,
-                        transparent 90%);
+
+        @keyframes orbPath {
+            0%, 100% { transform: translate3d(calc(50vw - 350px), calc(34vh - 350px), 0); }
+            20%      { transform: translate3d(calc(85vw - 350px), calc(50vh - 350px), 0); }
+            40%      { transform: translate3d(calc(50vw - 350px), calc(66vh - 350px), 0); }
+            60%      { transform: translate3d(calc(15vw - 350px), calc(50vh - 350px), 0); }
+            80%      { transform: translate3d(calc(50vw - 350px), calc(34vh - 350px), 0); }
+        }
+
+        /* ⚡ OPT #1: la animació CSS s'atura automàticament quan la pestanya no és visible
+           (els navegadors moderns ja pausen les CSS animations en background) */
+        @media (prefers-reduced-motion: reduce) {
+            #orb-1 { animation: none; transform: translate3d(calc(50vw - 350px), calc(34vh - 350px), 0); }
         }
 
         body::after {
@@ -139,19 +124,20 @@
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            background: radial-gradient(ellipse at center, transparent 35%, var(--bg-base) 120%);
-            opacity: 0.35;
+            background: radial-gradient(ellipse at center, transparent 40%, var(--bg-base) 125%);
+            opacity: 0.25;
         }
 
         /* ==========================================================
-           NAV — LIQUID GLASS
+           NAV
            ========================================================== */
         nav {
             position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
             width: calc(100% - 30px); max-width: 900px; height: 56px;
             background: var(--glass-bg);
-            backdrop-filter: var(--glass-filter);
-            -webkit-backdrop-filter: var(--glass-filter);
+            /* ⚡ OPT #3: blur reduït */
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
             border: 1px solid var(--glass-border-soft);
             border-radius: 28px; z-index: 1000;
             display: flex;
@@ -173,10 +159,9 @@
             background: var(--glass-bg-soft);
             padding: 4px;
             border-radius: 40px;
-            backdrop-filter: var(--glass-filter);
-            -webkit-backdrop-filter: var(--glass-filter);
+            backdrop-filter: var(--glass-filter-small);
+            -webkit-backdrop-filter: var(--glass-filter-small);
             border: 1px solid var(--glass-border-soft);
-            box-shadow: 0 8px 24px rgba(15,20,40,0.10);
         }
 
         .nav-link {
@@ -185,29 +170,21 @@
             padding: 6px 18px;
             border-radius: 30px;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: background 0.2s ease, color 0.2s ease;
             color: var(--text-main);
             background: transparent;
             text-align: center;
             border: 1px solid transparent;
-            position: relative;
         }
         .nav-link:hover {
             background: var(--glass-bg);
-            backdrop-filter: var(--glass-filter);
-            -webkit-backdrop-filter: var(--glass-filter);
             border-color: var(--glass-border-soft);
-            transform: scale(0.98);
         }
         .nav-link.active {
             background: var(--accent);
             color: white;
             border-color: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(20px) saturate(200%);
-            -webkit-backdrop-filter: blur(20px) saturate(200%);
-            box-shadow:
-                0 6px 20px rgba(var(--glow-color-rgb), 0.35),
-                0 0 0 1px rgba(255,255,255,0.08) inset;
+            box-shadow: 0 4px 14px rgba(var(--glow-color-rgb), 0.30);
         }
 
         .logo {
@@ -222,7 +199,6 @@
         .logo-img {
             height: 34px;
             width: auto;
-            transform: scaleX(1.03);
             transform-origin: left center;
             transition: transform 0.2s ease;
             object-fit: contain;
@@ -231,7 +207,7 @@
         .logo:hover .logo-img { transform: scaleX(1.05); }
 
         /* ==========================================================
-           CATEGORIES — LIQUID GLASS
+           CATEGORIES
            ========================================================== */
         .category-container {
             position: fixed;
@@ -246,8 +222,8 @@
         .category-pill-wrapper {
             position: relative;
             background: var(--glass-bg-strong);
-            backdrop-filter: var(--glass-filter);
-            -webkit-backdrop-filter: var(--glass-filter);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
             padding: 4px;
             border-radius: 20px;
             border: 1px solid var(--glass-border-soft);
@@ -269,7 +245,7 @@
             align-items: center;
             gap: 6px;
             white-space: nowrap;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: background 0.2s ease, opacity 0.2s ease;
             color: var(--text-main);
             opacity: 0.55;
             z-index: 2;
@@ -279,8 +255,6 @@
         .category-item:hover {
             opacity: 0.9;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
         }
 
         .category-active-bg {
@@ -290,16 +264,14 @@
             height: calc(100% - 8px);
             background: var(--accent);
             border-radius: 16px;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow:
-                0 6px 18px rgba(var(--glow-color-rgb), 0.35),
-                0 0 0 1px rgba(255,255,255,0.08) inset;
+            transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(var(--glow-color-rgb), 0.30);
             z-index: 1;
             pointer-events: none;
         }
 
         /* ==========================================================
-           SEARCH — LIQUID GLASS (vora única)
+           SEARCH
            ========================================================== */
         .search-container {
             display: flex; align-items: center; position: relative;
@@ -307,23 +279,17 @@
             border: 1px solid var(--glass-border-soft);
             border-radius: 30px;
             padding: 2px 6px;
-            backdrop-filter: blur(24px) saturate(200%);
-            -webkit-backdrop-filter: blur(24px) saturate(200%);
-            transition: all 0.3s ease;
+            backdrop-filter: var(--glass-filter-small);
+            -webkit-backdrop-filter: var(--glass-filter-small);
+            transition: background 0.2s ease;
         }
-        .search-container:hover {
-            background: var(--glass-bg);
-            box-shadow: 0 6px 20px rgba(15,20,40,0.10);
-        }
-        .dark-theme .search-container:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-        }
+        .search-container:hover { background: var(--glass-bg); }
 
         .search-bar {
             width: 0; opacity: 0; padding: 6px 0; background: transparent;
             border: none;
             color: var(--text-main); font-size: 13px; outline: none;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: width 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
             pointer-events: none;
         }
         .search-container:hover .search-bar,
@@ -341,48 +307,15 @@
             width: 28px; height: 28px;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            transition: background 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
-            outline: none;
+            transition: background 0.15s ease, opacity 0.15s ease;
             -webkit-appearance: none;
             appearance: none;
+            padding: 0;
         }
-        .search-trigger:hover {
-            opacity: 1;
-            background: var(--glass-bg);
-            transform: scale(1.06);
-        }
-        .search-trigger:focus-visible {
-            box-shadow: 0 0 0 2px var(--accent);
-        }
-        .search-trigger i,
+        .search-trigger:hover { opacity: 1; background: var(--glass-bg); }
         .search-trigger svg { display: block; }
 
-        .theme-btn {
-            background: var(--glass-bg-soft);
-            border: 1px solid var(--glass-border-soft);
-            color: var(--text-main);
-            opacity: 0.85;
-            cursor: pointer;
-            width: 32px; height: 32px;
-            border-radius: 30px;
-            display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: all 0.2s ease;
-        }
-        .theme-btn:hover {
-            background: var(--glass-bg);
-            transform: scale(1.05);
-        }
-
-        /* ==========================================================
-           SETTINGS — ICONA + DROPDOWN
-           ========================================================== */
-        .settings-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
+        .theme-btn,
         .settings-btn {
             background: var(--glass-bg-soft);
             border: 1px solid var(--glass-border-soft);
@@ -392,24 +325,26 @@
             width: 32px; height: 32px;
             border-radius: 30px;
             display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: all 0.2s ease;
+            backdrop-filter: var(--glass-filter-small);
+            -webkit-backdrop-filter: var(--glass-filter-small);
+            transition: background 0.15s ease, transform 0.15s ease;
+            padding: 0;
         }
-        .settings-btn:hover {
-            background: var(--glass-bg);
-            transform: scale(1.05);
-        }
+        .theme-btn:hover,
+        .settings-btn:hover { background: var(--glass-bg); transform: scale(1.04); }
         .settings-btn.active {
             background: var(--accent);
             color: white;
             border-color: rgba(255,255,255,0.25);
-            box-shadow: 0 6px 20px rgba(var(--glow-color-rgb), 0.35);
+            box-shadow: 0 4px 14px rgba(var(--glow-color-rgb), 0.30);
         }
-        .settings-btn i,
-        .settings-btn svg { display: block; transition: transform 0.3s ease; }
-        .settings-btn.active i,
+        .settings-btn svg { transition: transform 0.3s ease; }
         .settings-btn.active svg { transform: rotate(45deg); }
+
+        /* ==========================================================
+           SETTINGS MENU
+           ========================================================== */
+        .settings-wrap { position: relative; display: flex; align-items: center; }
 
         .settings-menu {
             position: absolute;
@@ -417,8 +352,8 @@
             right: 0;
             min-width: 260px;
             background: var(--glass-bg-strong);
-            backdrop-filter: var(--glass-filter-strong);
-            -webkit-backdrop-filter: var(--glass-filter-strong);
+            backdrop-filter: blur(14px) saturate(150%);
+            -webkit-backdrop-filter: blur(14px) saturate(150%);
             border: 1px solid var(--glass-border-soft);
             border-radius: 20px;
             padding: 10px;
@@ -428,7 +363,7 @@
             transform: translateY(-6px) scale(0.96);
             transform-origin: top right;
             pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+            transition: opacity 0.18s ease, transform 0.22s ease;
         }
         .settings-menu.open {
             opacity: 1;
@@ -453,84 +388,51 @@
             padding: 10px 12px;
             border-radius: 14px;
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: background 0.15s ease;
             color: var(--text-main);
         }
-        .settings-item:hover {
-            background: var(--glass-bg);
-        }
-        .settings-item-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-        .settings-item-left i,
-        .settings-item-left svg {
-            width: 18px; height: 18px;
-            flex-shrink: 0;
-            opacity: 0.8;
-        }
-        .settings-item-text {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            min-width: 0;
-        }
-        .settings-item-label {
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
+        .settings-item:hover { background: var(--glass-bg); }
+        .settings-item-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .settings-item-left svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.8; }
+        .settings-item-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .settings-item-label { font-size: 13px; font-weight: 600; white-space: nowrap; }
         .settings-item-desc {
-            font-size: 11px;
-            opacity: 0.55;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 160px;
+            font-size: 11px; opacity: 0.55;
+            white-space: nowrap; overflow: hidden;
+            text-overflow: ellipsis; max-width: 160px;
         }
 
         .toggle {
             position: relative;
-            width: 40px;
-            height: 24px;
+            width: 40px; height: 24px;
             border-radius: 20px;
             background: var(--pill-bg);
             border: 1px solid var(--glass-border-soft);
             flex-shrink: 0;
-            transition: background 0.25s ease, border-color 0.25s ease;
+            transition: background 0.22s ease, border-color 0.22s ease;
         }
         .toggle::after {
             content: "";
             position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 18px;
-            height: 18px;
+            top: 2px; left: 2px;
+            width: 18px; height: 18px;
             border-radius: 50%;
             background: #fff;
             box-shadow: 0 2px 6px rgba(0,0,0,0.20);
-            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
         }
         .settings-item.on .toggle {
             background: var(--accent);
             border-color: rgba(255,255,255,0.25);
-            box-shadow: 0 4px 12px rgba(var(--glow-color-rgb), 0.35);
         }
-        .settings-item.on .toggle::after {
-            transform: translateX(16px);
-        }
+        .settings-item.on .toggle::after { transform: translateX(16px); }
 
         /* ==========================================================
-           MODE RENDIMENT — desactiva orbe, glass i squircles
+           MODE RENDIMENT
            ========================================================== */
-        body.performance-mode .liquid-orb {
-            display: none !important;
-        }
-        body.performance-mode::after {
-            display: none !important;
-        }
+        body.performance-mode #orb-1,
+        body.performance-mode::after { display: none !important; }
+
         body.performance-mode nav,
         body.performance-mode .nav-center,
         body.performance-mode .nav-link:hover,
@@ -562,21 +464,16 @@
             --glass-bg-strong: #ffffff;
             --glass-bg-soft: #ffffff;
             --glass-border-soft: rgba(0,0,0,0.08);
-            --glass-shadow:
-                0 4px 16px rgba(15, 20, 40, 0.08),
-                0 1px 3px rgba(15, 20, 40, 0.06);
+            --glass-shadow: 0 2px 8px rgba(15, 20, 40, 0.06);
         }
         body.performance-mode.dark-theme {
             --glass-bg: #14161c;
             --glass-bg-strong: #14161c;
             --glass-bg-soft: #14161c;
             --glass-border-soft: rgba(255,255,255,0.08);
-            --glass-shadow:
-                0 4px 16px rgba(0,0,0,0.45),
-                0 1px 3px rgba(0,0,0,0.30);
+            --glass-shadow: 0 2px 8px rgba(0,0,0,0.40);
         }
 
-        /* Squircles → cercles perfectes (amb vora fina perquè es vegin) */
         body.performance-mode .card {
             border-radius: 50% !important;
             clip-path: none !important;
@@ -585,40 +482,12 @@
         body.performance-mode.dark-theme .card {
             border: 1px solid rgba(255,255,255,0.12);
         }
-        body.performance-mode .card-wrapper {
-            filter: none !important;
-        }
-        body.performance-mode .card-wrapper:hover {
-            filter: none !important;
-        }
-        body.performance-mode .card-wrapper.favorite-card {
-            filter: none !important;
-        }
+        body.performance-mode .card-wrapper,
+        body.performance-mode .card-wrapper:hover,
+        body.performance-mode .card-wrapper.favorite-card { filter: none !important; }
         body.performance-mode .card-wrapper.favorite-card .card {
-            box-shadow:
-                0 0 0 3px var(--accent),
-                0 8px 24px rgba(0, 122, 255, 0.30) !important;
+            box-shadow: 0 0 0 3px var(--accent), 0 6px 18px rgba(0, 122, 255, 0.28) !important;
             border-color: transparent;
-        }
-        body.performance-mode .card-wrapper .card {
-            box-shadow:
-                0 4px 16px rgba(15, 20, 40, 0.10),
-                0 1px 3px rgba(15, 20, 40, 0.06);
-        }
-        body.performance-mode .card-wrapper .card:hover {
-            box-shadow:
-                0 10px 28px rgba(15, 20, 40, 0.18),
-                0 3px 8px rgba(15, 20, 40, 0.10);
-        }
-        body.performance-mode.dark-theme .card-wrapper .card {
-            box-shadow:
-                0 4px 16px rgba(0,0,0,0.45),
-                0 1px 3px rgba(0,0,0,0.30);
-        }
-        body.performance-mode.dark-theme .card-wrapper .card:hover {
-            box-shadow:
-                0 10px 28px rgba(0,0,0,0.60),
-                0 3px 8px rgba(0,0,0,0.40);
         }
 
         /* ==========================================================
@@ -628,12 +497,14 @@
             max-width: 1100px; margin: 0 auto; padding: 90px 24px 100px;
             height: 100vh; overflow-y: auto; position: relative; z-index: 1;
             scrollbar-width: none;
+            /* ⚡ OPT #5: aïllament del contenidor scrollable */
+            contain: layout;
         }
         .container::-webkit-scrollbar { display: none; }
 
         .view {
             display: none;
-            animation-duration: 0.35s;
+            animation-duration: 0.3s;
             animation-fill-mode: forwards;
             animation-timing-function: cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
@@ -643,15 +514,20 @@
         @keyframes slideFromLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes slideToRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(30px); } }
         @keyframes slideToLeft { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-30px); } }
-        .view.animate-out-left { animation-name: slideToLeft; animation-duration: 0.3s; display: block; }
-        .view.animate-out-right { animation-name: slideToRight; animation-duration: 0.3s; display: block; }
+        .view.animate-out-left { animation-name: slideToLeft; display: block; }
+        .view.animate-out-right { animation-name: slideToRight; display: block; }
         .view.animate-in-left { animation-name: slideFromLeft; display: block; }
         .view.animate-in-right { animation-name: slideFromRight; display: block; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+        }
 
         /* ==========================================================
-           CARDS — SQUIRCLE LIQUID GLASS
+           CARDS — SQUIRCLE
+           ⚡ OPT #4, #5, #6: sense drop-shadow, amb content-visibility i contain
            ========================================================== */
         .card-wrapper {
             position: relative;
@@ -659,49 +535,88 @@
             flex-direction: column;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.2s ease, opacity 0.3s ease, filter 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.3s ease;
             opacity: 0;
             transform: translateY(10px);
-            filter: var(--squircle-shadow);
-        }
-        .card-wrapper.visible { opacity: 1; transform: translateY(0); }
 
-        .card-wrapper:hover {
-            filter: var(--squircle-shadow-hover);
+            /* ⚡ OPT #5: només renderitzar quan és a prop del viewport */
+            content-visibility: auto;
+            contain-intrinsic-size: 140px 180px;
+
+            /* ⚡ OPT #6: aïllament de layout/style */
+            contain: layout style;
+        }
+        .card-wrapper.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
-        .card-wrapper.favorite-card {
-            filter:
-                drop-shadow(0 0 2px var(--accent))
-                drop-shadow(0 0 6px rgba(var(--glow-color-rgb), 0.55))
-                var(--squircle-shadow);
+        /* ⚡ OPT #4: ombra via pseudo-element, només en hover */
+        .card-wrapper::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            aspect-ratio: 1;
+            border-radius: 24%;
+            box-shadow: 0 16px 32px rgba(15, 20, 40, 0.18);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            pointer-events: none;
+            z-index: -1;
         }
-        .card-wrapper.favorite-card:hover {
-            filter:
-                drop-shadow(0 0 2px var(--accent))
-                drop-shadow(0 0 8px rgba(var(--glow-color-rgb), 0.70))
-                var(--squircle-shadow-hover);
+        @supports (clip-path: shape(from 0 0, line to 100% 100%)) {
+            .card-wrapper::before {
+                --r: 50%;
+                --_r: clamp(0%, var(--r) / 2, 25%);
+                --_v: calc(var(--_r) * (1 - sqrt(2) / 4));
+                --_p: calc(var(--_v) - var(--_r) / 2);
+                border-radius: 0;
+                clip-path: shape(
+                    from var(--_v) var(--_p),
+                    curve to 50% 0 with var(--_r) 0,
+                    curve to calc(100% - var(--_v)) var(--_p) with calc(100% - var(--_r)) 0,
+                    curve to calc(100% - var(--_p)) var(--_v) with calc(100% - 2 * var(--_p)) calc(2 * var(--_p)),
+                    curve to 100% 50% with 100% var(--_r),
+                    curve to calc(100% - var(--_p)) calc(100% - var(--_v)) with 100% calc(100% - var(--_r)),
+                    curve to calc(100% - var(--_v)) calc(100% - var(--_p)) with calc(100% - 2 * var(--_p)) calc(100% - 2 * var(--_p)),
+                    curve to 50% 100% with calc(100% - var(--_r)) 100%,
+                    curve to var(--_v) calc(100% - var(--_p)) with var(--_r) 100%,
+                    curve to var(--_p) calc(100% - var(--_v)) with calc(2 * var(--_p)) calc(100% - 2 * var(--_p)),
+                    curve to 0 50% with 0 calc(100% - var(--_r)),
+                    curve to var(--_p) var(--_v) with 0 var(--_r),
+                    curve to var(--_v) var(--_p) with calc(2 * var(--_p)) calc(2 * var(--_p))
+                );
+            }
         }
+        .card-wrapper:hover::before { opacity: 1; }
 
         .card-wrapper .card {
-            transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+            transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.15);
         }
-        .card-wrapper:hover .card {
-            transform: scale(1.05);
+        .card-wrapper:hover .card { transform: scale(1.05); }
+
+        /* Favorit: vora blava dins el botó (no filter car) */
+        .card-wrapper.favorite-card .fav-btn {
+            opacity: 1;
+            color: #FFD60A;
+            background: rgba(0, 0, 0, 0.55);
         }
 
         .card {
             position: relative; width: 100%; aspect-ratio: 1;
             background: var(--glass-bg);
             display: flex; align-items: center; justify-content: center;
-            backdrop-filter: var(--glass-filter-strong);
-            -webkit-backdrop-filter: var(--glass-filter-strong);
+            /* ⚡ OPT #3: blur reduït per les targetes */
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
             overflow: hidden;
             border-radius: 24%;
+            border: 1px solid var(--glass-border-soft);
         }
 
         @supports (clip-path: shape(from 0 0, line to 100% 100%)) {
             .card {
+                border: none;
                 border-radius: 0;
                 --r: 50%;
                 --_r: clamp(0%, var(--r) / 2, 25%);
@@ -725,8 +640,8 @@
             }
         }
 
-        .card img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
-        .card i.game-icon {
+        .card img { width: 100%; height: 100%; object-fit: cover; }
+        .card svg.game-icon {
             width: 40px; height: 40px; stroke-width: 1.2;
             color: var(--text-main); opacity: 0.3; position: absolute;
         }
@@ -735,19 +650,22 @@
             position: absolute;
             top: 10px; right: 10px; z-index: 15;
             background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(24px) saturate(200%);
-            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            backdrop-filter: var(--glass-filter-small);
+            -webkit-backdrop-filter: var(--glass-filter-small);
             border: 1px solid rgba(255, 255, 255, 0.18);
             color: rgba(255, 255, 255, 0.9);
             width: 32px; height: 32px; border-radius: 30px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: background 0.2s, color 0.2s, opacity 0.2s, transform 0.2s;
-            opacity: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+            opacity: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+            padding: 0;
         }
         .card-wrapper:hover .fav-btn { opacity: 1; }
         .fav-btn.active { opacity: 1; color: #FFD60A; background: rgba(0, 0, 0, 0.55); }
         .fav-btn:hover { background: rgba(0, 0, 0, 0.75); color: #FFD60A; transform: scale(1.08); }
-        .fav-btn i { width: 18px; height: 18px; stroke-width: 1.5; }
+        .fav-btn svg { width: 18px; height: 18px; stroke-width: 1.5; }
 
         .card-title {
             margin-top: 10px; font-size: 11px; font-weight: 600;
@@ -757,7 +675,7 @@
         }
 
         /* ==========================================================
-           ESTADÍSTIQUES — LIQUID GLASS
+           ESTADÍSTIQUES
            ========================================================== */
         .stats-header { margin-bottom: 25px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
@@ -765,25 +683,17 @@
             background: var(--glass-bg-strong);
             border: 1px solid var(--glass-border-soft);
             padding: 20px; border-radius: 24px;
-            backdrop-filter: var(--glass-filter-strong);
-            -webkit-backdrop-filter: var(--glass-filter-strong);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
             display: flex; flex-direction: column; gap: 8px;
             position: relative; overflow: hidden;
             box-shadow: var(--glass-shadow);
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow:
-                0 28px 60px rgba(15, 20, 40, 0.18),
-                0 10px 24px rgba(15, 20, 40, 0.12);
         }
         .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
         .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; font-weight: 700; }
 
         .streak-flame {
             color: var(--fire-color);
-            filter: drop-shadow(0 0 8px rgba(255, 77, 0, 0.6));
             animation: flamePulse 1.5s infinite alternate ease-in-out;
         }
         @keyframes flamePulse {
@@ -796,8 +706,8 @@
             padding: 24px;
             border-radius: 28px;
             border: 1px solid var(--glass-border-soft);
-            backdrop-filter: var(--glass-filter-strong);
-            -webkit-backdrop-filter: var(--glass-filter-strong);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
             box-shadow: var(--glass-shadow);
         }
         .table-container { overflow-x: auto; margin-top: 10px; }
@@ -812,15 +722,10 @@
             padding: 14px 12px;
             font-size: 14px;
             background: var(--glass-bg-soft);
-            backdrop-filter: blur(24px) saturate(200%);
-            -webkit-backdrop-filter: blur(24px) saturate(200%);
             border-top: 1px solid var(--glass-border-soft);
             border-bottom: 1px solid var(--glass-border-soft);
-            transition: background 0.2s ease;
         }
-        tr:hover td {
-            background: var(--glass-bg);
-        }
+        tr:hover td { background: var(--glass-bg); }
         td:first-child {
             border-radius: 12px 0 0 12px;
             font-weight: 600;
@@ -843,70 +748,63 @@
             font-weight: 700;
             margin-left: 8px;
             vertical-align: middle;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid rgba(255,255,255,0.20);
-            box-shadow: 0 4px 12px rgba(var(--glow-color-rgb), 0.30);
             display: inline-block;
         }
 
         /* ==========================================================
-           MODAL — LIQUID GLASS
+           MODAL
            ========================================================== */
         .modal {
             position: fixed; inset: 0; z-index: 2000;
-            background: rgba(0,0,0,0.35);
-            backdrop-filter: blur(30px) saturate(180%);
-            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
             display: none;
             align-items: center;
             justify-content: center;
             padding: 15px;
         }
-        .dark-theme .modal { background: rgba(0,0,0,0.55); }
+        .dark-theme .modal { background: rgba(0,0,0,0.65); }
         .modal.active { display: flex; }
 
         .modal-content {
             width: 100%; height: 100%; max-width: 1200px; max-height: 88vh;
             background: var(--glass-bg);
-            backdrop-filter: var(--glass-filter-strong);
-            -webkit-backdrop-filter: var(--glass-filter-strong);
+            backdrop-filter: blur(14px) saturate(150%);
+            -webkit-backdrop-filter: blur(14px) saturate(150%);
             border: 1px solid var(--glass-border-soft);
             border-radius: 28px;
             overflow: hidden;
             position: relative;
-            box-shadow:
-                0 30px 70px rgba(0,0,0,0.45),
-                0 0 0 1px rgba(255,255,255,0.06) inset;
+            box-shadow: 0 30px 70px rgba(0,0,0,0.45);
         }
 
         .close-modal {
             position: absolute; top: 16px; right: 16px;
             width: 42px; height: 42px;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(24px) saturate(200%);
-            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: var(--glass-filter-small);
+            -webkit-backdrop-filter: var(--glass-filter-small);
             border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.18);
             color: white; display: flex; align-items: center; justify-content: center;
-            z-index: 2150; cursor: pointer; transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.30);
+            z-index: 2150; cursor: pointer; transition: background 0.15s ease, transform 0.15s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+            padding: 0;
         }
-        .close-modal:hover {
-            background: rgba(0, 0, 0, 0.75);
-            transform: scale(1.06);
-        }
-        .close-modal i { width: 20px; height: 20px; stroke-width: 2; }
+        .close-modal:hover { background: rgba(0, 0, 0, 0.75); transform: scale(1.05); }
+        .close-modal svg { width: 20px; height: 20px; }
 
         #gameIframe { flex: 1; width: 100%; height: 100%; border: none; background: #000; }
 
         .game-loader-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--glass-bg-strong);
-            backdrop-filter: var(--glass-filter-strong);
-            -webkit-backdrop-filter: var(--glass-filter-strong);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
             display: flex; align-items: center; justify-content: center;
-            z-index: 2100; transition: opacity 0.5s ease; pointer-events: none;
+            z-index: 2100; transition: opacity 0.4s ease; pointer-events: none;
             border-radius: 28px;
         }
 
@@ -916,11 +814,6 @@
             border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            box-shadow:
-                0 8px 24px rgba(0,0,0,0.10),
-                0 0 0 6px var(--glass-bg-soft);
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -930,8 +823,8 @@
             background: var(--glass-bg-strong);
             border: 1px solid var(--glass-border-soft);
             border-radius: 28px;
-            backdrop-filter: var(--glass-filter-strong);
-            -webkit-backdrop-filter: var(--glass-filter-strong);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
             box-shadow: var(--glass-shadow);
             max-width: 480px;
             margin: 80px auto 0;
@@ -947,34 +840,20 @@
             cursor: pointer;
             font-weight: 600;
             font-size: 14px;
-            backdrop-filter: blur(24px) saturate(200%);
-            -webkit-backdrop-filter: blur(24px) saturate(200%);
-            box-shadow:
-                0 8px 24px rgba(var(--glow-color-rgb), 0.35),
-                0 0 0 1px rgba(255,255,255,0.08) inset;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.15s ease;
         }
-        .reset-btn:hover {
-            transform: translateY(-1px);
-            box-shadow:
-                0 12px 32px rgba(var(--glow-color-rgb), 0.45),
-                0 0 0 1px rgba(255,255,255,0.10) inset;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .liquid-orb { display: none; }
-        }
+        .reset-btn:hover { transform: translateY(-1px); }
 
         @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-            :root { --glass-bg: rgba(255,255,255,0.75); --glass-bg-strong: rgba(255,255,255,0.85); --glass-bg-soft: rgba(255,255,255,0.70); }
-            .dark-theme { --glass-bg: rgba(20,22,28,0.85); --glass-bg-strong: rgba(20,22,28,0.90); --glass-bg-soft: rgba(20,22,28,0.80); }
+            :root { --glass-bg: rgba(255,255,255,0.80); --glass-bg-strong: rgba(255,255,255,0.88); --glass-bg-soft: rgba(255,255,255,0.75); }
+            .dark-theme { --glass-bg: rgba(20,22,28,0.88); --glass-bg-strong: rgba(20,22,28,0.92); --glass-bg-soft: rgba(20,22,28,0.84); }
         }
     </style>
 </head>
 <body class="dark-theme">
 
-    <!-- ===== ORBE ÚNICA (blava) ===== -->
-    <div id="orb-1" class="liquid-orb"></div>
+    <!-- Orbe única (blava) pre-desenfocada -->
+    <div id="orb-1"></div>
 
     <nav>
         <div class="nav-left">
@@ -989,19 +868,20 @@
         <div class="nav-right">
             <div class="search-container">
                 <input type="text" class="search-bar" placeholder="Cerca un joc..." id="gameSearch">
-                <button class="search-trigger"><i data-lucide="search" style="width:16px;"></i></button>
+                <button class="search-trigger" aria-label="Cercar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </button>
             </div>
 
-            <!-- ===== SETTINGS ===== -->
             <div class="settings-wrap" id="settingsWrap">
                 <button class="settings-btn" id="settingsBtn" aria-label="Configuració" aria-haspopup="true" aria-expanded="false">
-                    <i data-lucide="settings" style="width:16px; height:16px;"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
                 <div class="settings-menu" id="settingsMenu" role="menu">
                     <div class="settings-menu-title">Configuració</div>
                     <div class="settings-item" id="perfModeItem" role="menuitemcheckbox" aria-checked="false" tabindex="0">
                         <div class="settings-item-left">
-                            <i data-lucide="zap"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
                             <div class="settings-item-text">
                                 <span class="settings-item-label">Mode rendiment</span>
                                 <span class="settings-item-desc">Desactiva orbe, glass i squircles</span>
@@ -1012,7 +892,9 @@
                 </div>
             </div>
 
-            <button class="theme-btn" id="themeBtn"><i data-lucide="sun" id="themeIcon" style="width:16px;"></i></button>
+            <button class="theme-btn" id="themeBtn" aria-label="Canviar tema">
+                <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            </button>
         </div>
     </nav>
 
@@ -1031,10 +913,7 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-label">Ratxa Actual</div>
-                    <div class="stat-value">
-                        <span id="stat-streak">0</span>
-                        <i data-lucide="flame" class="streak-flame"></i>
-                    </div>
+                    <div class="stat-value"><span id="stat-streak">0</span><span class="streak-flame">🔥</span></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Puntuació Total</div>
@@ -1054,9 +933,7 @@
             </div>
 
             <div class="history-section">
-                <div style="font-weight: 700; font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                    <i data-lucide="activity" style="width:20px; color: var(--accent);"></i> Historial Detallat de Jocs
-                </div>
+                <div style="font-weight: 700; font-size: 18px; margin-bottom: 20px;">📊 Historial Detallat de Jocs</div>
                 <div class="table-container">
                     <table id="historyTable">
                         <thead><tr><th>Joc</th><th style="text-align: center;">Partides</th><th style="text-align: center;">Temps</th><th style="text-align: right;">Última sessió</th></tr></thead>
@@ -1068,7 +945,7 @@
 
         <section id="view-404" class="view">
             <div class="error-container">
-                <i data-lucide="frown" style="width: 48px; height: 48px; opacity: 0.3;"></i>
+                <div style="font-size: 48px; opacity: 0.3;">😕</div>
                 <h2 style="margin-top:15px; opacity: 0.8;">Sense resultats</h2>
                 <button class="reset-btn" onclick="resetFilters()">Neteja la cerca</button>
             </div>
@@ -1083,19 +960,91 @@
 
     <div id="gameModal" class="modal">
         <div class="modal-content">
-            <button class="close-modal" id="closeModal"><i data-lucide="x"></i></button>
-            <iframe id="gameIframe" src="" allow="autoplay; fullscreen; gamepad"></iframe>
+            <button class="close-modal" id="closeModal" aria-label="Tancar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+            <iframe id="gameIframe" src="" allow="autoplay; fullscreen; gamepad" title="Joc"></iframe>
             <div id="loaderOverlay" class="game-loader-overlay" style="display: none;">
                 <div class="spinner"></div>
             </div>
         </div>
     </div>
 
-    <script src="assets/js/gameList.js"></script>
+    <script src="assets/js/gameList.js" defer></script>
 
     <script>
         // ============================================
-        // MODE RENDIMENT · SETTINGS
+        // ⚡ OPT #7 + #20: CACHÉ D'ICONES SVG INLINE
+        // ============================================
+        const ICON_CACHE = {};
+
+        // Extreu i cacheja el SVG de Lucide un sol cop
+        function renderIcon(name, opts) {
+            opts = opts || {};
+            const size = opts.size || 24;
+            const className = opts.className || '';
+            const style = opts.style || '';
+            const fill = opts.fill || '';
+            const key = name + '|' + size + '|' + className + '|' + fill;
+
+            if (ICON_CACHE[key]) return ICON_CACHE[key];
+
+            let nodes = null;
+            if (typeof lucide !== 'undefined' && lucide.icons) {
+                nodes = lucide.icons[name];
+                if (!nodes) {
+                    const pascal = name.split('-').map(function (s) {
+                        return s.charAt(0).toUpperCase() + s.slice(1);
+                    }).join('');
+                    nodes = lucide.icons[pascal];
+                }
+            }
+            if (!nodes || !Array.isArray(nodes)) return '';
+
+            let parts = '';
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                if (!Array.isArray(node) || node.length < 2) continue;
+                const tag = node[0];
+                const attrs = node[1] || {};
+                let attrStr = '';
+                for (const k in attrs) {
+                    const v = String(attrs[k]).replace(/"/g, '&quot;');
+                    attrStr += ' ' + k + '="' + v + '"';
+                }
+                parts += '<' + tag + attrStr + '/>';
+            }
+
+            let svgAttrs = 'xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size +
+                '" viewBox="0 0 24 24" fill="' + (fill || 'none') +
+                '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+            if (className) svgAttrs += ' class="' + className + '"';
+            if (style) svgAttrs += ' style="' + style + '"';
+
+            const svg = '<svg ' + svgAttrs + '>' + parts + '</svg>';
+            ICON_CACHE[key] = svg;
+            return svg;
+        }
+
+        // ============================================
+        // ⚡ OPT #7: substituir lucide.createIcons() per icones inline
+        // ============================================
+        function replaceDataLucide() {
+            // Només un cop a l'inici per les icones estàtiques del nav
+            const els = document.querySelectorAll('[data-lucide]');
+            for (let i = 0; i < els.length; i++) {
+                const el = els[i];
+                const name = el.getAttribute('data-lucide');
+                const svg = renderIcon(name, {
+                    size: parseInt(el.style.width) || 16,
+                    className: el.className
+                });
+                if (svg) el.outerHTML = svg;
+            }
+        }
+
+        // ============================================
+        // ⚡ OPT #1: mode rendiment + settings
         // ============================================
         (function initSettings() {
             const PERF_KEY = 'ulaPerformanceMode';
@@ -1129,17 +1078,17 @@
                 else openMenu();
             }
 
-            settingsBtn.addEventListener('click', (e) => {
+            settingsBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 toggleMenu();
             });
 
-            perfModeItem.addEventListener('click', (e) => {
+            perfModeItem.addEventListener('click', function (e) {
                 e.stopPropagation();
                 perfEnabled = !perfEnabled;
                 applyPerfMode(perfEnabled);
             });
-            perfModeItem.addEventListener('keydown', (e) => {
+            perfModeItem.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     perfEnabled = !perfEnabled;
@@ -1147,68 +1096,29 @@
                 }
             });
 
-            document.addEventListener('click', (e) => {
-                if (!settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) {
-                    closeMenu();
-                }
+            document.addEventListener('click', function (e) {
+                if (!settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) closeMenu();
             });
-
-            document.addEventListener('keydown', (e) => {
+            document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') closeMenu();
             });
         })();
 
-        // ============================================
-        // ORBE ÚNICA ANIMADA (blava)
-        // ============================================
-        (function initLiquidOrbs() {
-            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const orbs = [
-                { el: document.getElementById('orb-1'), size: 520, speed: 0.00060, phaseX: 0.80, phaseY: 0.50, ax: 0.38, ay: 0.32 }
-            ];
-            if (reduceMotion) return;
-
-            let running = !document.hidden;
-
-            function animateOrbs() {
-                if (!running) return;
-                const t = Date.now();
-                for (let i = 0; i < orbs.length; i++) {
-                    const o = orbs[i];
-                    if (!o.el) continue;
-                    const tt = t * o.speed;
-                    const x = window.innerWidth  / 2 + Math.sin(tt * o.phaseX) * window.innerWidth  * o.ax;
-                    const y = window.innerHeight / 2 + Math.cos(tt * o.phaseY) * window.innerHeight * o.ay;
-                    o.el.style.transform = `translate3d(${x - o.size/2}px, ${y - o.size/2}px, 0)`;
-                }
-                requestAnimationFrame(animateOrbs);
-            }
-            requestAnimationFrame(animateOrbs);
-
-            document.addEventListener('visibilitychange', () => {
-                const shouldRun = !document.hidden && !reduceMotion;
-                if (shouldRun && !running) {
-                    running = true;
-                    requestAnimationFrame(animateOrbs);
-                } else if (!shouldRun) {
-                    running = false;
-                }
-            });
-        })();
+        // ⚡ OPT #11: NO hi ha JS per la orbe (ara és CSS keyframes)
 
         // ============================================
         // SERVICE WORKER
         // ============================================
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
+            window.addEventListener('load', function () {
                 navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => console.log('SW registrat: ', reg.scope))
-                    .catch(err => console.error('Error SW:', err));
+                    .then(function (reg) { console.log('SW registrat:', reg.scope); })
+                    .catch(function (err) { console.error('Error SW:', err); });
             });
         }
 
         // ============================================
-        // CONFIGURACIÓ
+        // CONFIG
         // ============================================
         const LOADER_DURATION = 7000;
         const ALLOWED_CATEGORIES = [
@@ -1219,6 +1129,9 @@
             { id: 'retro', label: 'Retro', icon: 'joystick' },
             { id: 'altres', label: 'Altres', icon: 'more-horizontal' }
         ];
+
+        // ⚡ OPT #19: virtualització lleugera
+        const MAX_DOM_CARDS = 150;
 
         let ALL_GAMES = [];
         let FILTERED_GAMES = [];
@@ -1235,24 +1148,24 @@
         let isTransitioning = false;
         let fallbackTimeout = null;
 
-        window.addEventListener('load', () => {
+        window.addEventListener('load', function () {
             const pillWrapper = document.getElementById('pillWrapper');
-            ALLOWED_CATEGORIES.forEach(cat => {
+            ALLOWED_CATEGORIES.forEach(function (cat) {
                 const item = document.createElement('div');
-                item.className = `category-item ${cat.id === 'tots' ? 'active' : ''}`;
-                item.id = `cat-${cat.id}`;
-                item.innerHTML = `<i data-lucide="${cat.icon}"></i> ${cat.label}`;
-                item.onclick = () => selectCategory(cat.id);
+                item.className = 'category-item' + (cat.id === 'tots' ? ' active' : '');
+                item.id = 'cat-' + cat.id;
+                item.innerHTML = renderIcon(cat.icon, { size: 13 }) + ' ' + cat.label;
+                item.onclick = function () { selectCategory(cat.id); };
                 pillWrapper.appendChild(item);
             });
 
             checkStreak();
-            lucide.createIcons();
+            replaceDataLucide();
             setTimeout(updateActivePillPosition, 100);
             updateLogoByTheme();
 
-            document.getElementById('link-arcade').addEventListener('click', () => navigateToView('arcade', 'right'));
-            document.getElementById('link-stats').addEventListener('click', () => navigateToView('stats', 'left'));
+            document.getElementById('link-arcade').addEventListener('click', function () { navigateToView('arcade', 'right'); });
+            document.getElementById('link-stats').addEventListener('click', function () { navigateToView('stats', 'left'); });
 
             if (typeof GAMES !== 'undefined') {
                 ALL_GAMES = GAMES;
@@ -1285,8 +1198,8 @@
 
         function selectCategory(catId) {
             currentCategory = catId;
-            document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`cat-${catId}`).classList.add('active');
+            document.querySelectorAll('.category-item').forEach(function (el) { el.classList.remove('active'); });
+            document.getElementById('cat-' + catId).classList.add('active');
             updateActivePillPosition();
             applyFilters();
         }
@@ -1295,317 +1208,11 @@
             const activeEl = document.querySelector('.category-item.active');
             const pill = document.getElementById('activePill');
             if (activeEl && pill) {
-                pill.style.width = `${activeEl.offsetWidth}px`;
-                pill.style.left = `${activeEl.offsetLeft}px`;
+                pill.style.width = activeEl.offsetWidth + 'px';
+                pill.style.left = activeEl.offsetLeft + 'px';
             }
         }
 
         function sortGamesByFavorites(games) {
-            return [...games].sort((a, b) => {
-                const aFav = favorites.includes(a.url);
-                const bFav = favorites.includes(b.url);
-                if (aFav && !bFav) return -1;
-                if (!aFav && bFav) return 1;
-                return 0;
-            });
-        }
-
-        function applyFilters() {
-            const searchTerm = document.getElementById('gameSearch').value.toLowerCase();
-            let filtered = ALL_GAMES.filter(g => {
-                const matchesSearch = g.name.toLowerCase().includes(searchTerm);
-                const matchesCat = currentCategory === 'tots' || (g.type && g.type.toLowerCase() === currentCategory);
-                return matchesSearch && matchesCat;
-            });
-            FILTERED_GAMES = sortGamesByFavorites(filtered);
-            if (FILTERED_GAMES.length === 0) showView('404', 'none');
-            else { showView('arcade', 'none'); renderInitial(); }
-        }
-
-        function resetFilters() {
-            document.getElementById('gameSearch').value = "";
-            selectCategory('tots');
-        }
-
-        const grid = document.getElementById('gameGrid');
-        const scrollContainer = document.getElementById('scrollContainer');
-        const trigger = document.getElementById('loadMoreTrigger');
-        const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && itemsShown < FILTERED_GAMES.length) loadMore();
-        }, { root: scrollContainer, threshold: 0.1 });
-        observer.observe(trigger);
-
-        function renderInitial() { grid.innerHTML = ""; itemsShown = 0; loadMore(); }
-
-        function loadMore() {
-            const nextBatch = FILTERED_GAMES.slice(itemsShown, itemsShown + CHUNK_SIZE);
-            nextBatch.forEach((g, index) => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'card-wrapper';
-                const isFav = favorites.includes(g.url);
-                if (isFav) wrapper.classList.add('favorite-card');
-                wrapper.onclick = () => launchGame(g);
-                const mediaContent = g.image ? `<img src="${g.image}" loading="lazy" onerror="this.style.display='none';">` : "";
-                wrapper.innerHTML = `
-                    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${g.url}')">
-                        <i data-lucide="star" style="${isFav ? 'fill: #FFD60A' : ''}"></i>
-                    </button>
-                    <div class="card">
-                        ${mediaContent}
-                        <i data-lucide="gamepad-2" class="game-icon"></i>
-                    </div>
-                    <div class="card-title">${g.name}</div>
-                `;
-                grid.appendChild(wrapper);
-                setTimeout(() => wrapper.classList.add('visible'), index * 20);
-            });
-            itemsShown += nextBatch.length;
-            lucide.createIcons();
-        }
-
-        function navigateToView(targetViewId, direction) {
-            if (isTransitioning) return;
-            const currentView = document.querySelector('.view.active');
-            if (currentView && currentView.id === `view-${targetViewId}`) return;
-
-            isTransitioning = true;
-            const nextView = document.getElementById(`view-${targetViewId}`);
-            if (!nextView) return;
-
-            let outDirection, inDirection;
-            if (direction === 'left') { outDirection = 'left'; inDirection = 'right'; }
-            else if (direction === 'right') { outDirection = 'right'; inDirection = 'left'; }
-            else {
-                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                nextView.classList.add('active');
-                updateActiveNavButton(targetViewId);
-                isTransitioning = false;
-                return;
-            }
-
-            if (currentView) {
-                currentView.classList.remove('active');
-                currentView.classList.add(`animate-out-${outDirection}`);
-                setTimeout(() => {
-                    currentView.classList.remove(`animate-out-${outDirection}`);
-                    currentView.style.display = 'none';
-                }, 300);
-            }
-
-            nextView.style.display = 'block';
-            nextView.classList.add('active', `animate-in-${inDirection}`);
-            setTimeout(() => {
-                nextView.classList.remove(`animate-in-${inDirection}`);
-                isTransitioning = false;
-            }, 350);
-
-            updateActiveNavButton(targetViewId);
-
-            const catContainer = document.getElementById('categoryContainer');
-            if (targetViewId === 'arcade' || targetViewId === '404') {
-                catContainer.style.display = 'block';
-                setTimeout(updateActivePillPosition, 100);
-            } else {
-                catContainer.style.display = 'none';
-            }
-
-            if (targetViewId === 'stats') updateStatsUI();
-        }
-
-        function updateActiveNavButton(viewId) {
-            document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById(`link-${viewId}`);
-            if (activeBtn) activeBtn.classList.add('active');
-        }
-
-        function showView(viewId, direction) {
-            if (direction === 'none') {
-                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                document.getElementById(`view-${viewId}`).classList.add('active');
-                if (viewId === 'arcade' || viewId === '404') {
-                    document.getElementById('categoryContainer').style.display = 'block';
-                    setTimeout(updateActivePillPosition, 50);
-                } else {
-                    document.getElementById('categoryContainer').style.display = 'none';
-                }
-                if (viewId === 'stats') updateStatsUI();
-            } else {
-                navigateToView(viewId, direction);
-            }
-        }
-
-        window.toggleFavorite = function(e, id) {
-            e.stopPropagation();
-            const idx = favorites.indexOf(id);
-            if (idx > -1) favorites.splice(idx, 1);
-            else favorites.push(id);
-            localStorage.setItem('ulaFavorites', JSON.stringify(favorites));
-            applyFilters();
-        };
-
-        function launchGame(game) {
-            cancelLoaderTimer();
-            cancelFallbackTimer();
-            hideLoaderOverlayImmediate();
-
-            currentGame = game;
-            sessionStart = Date.now();
-            const iframe = document.getElementById('gameIframe');
-            iframe.src = `assets/games/${game.url.endsWith('.html') ? game.url : game.url + '.html'}`;
-            document.getElementById('gameModal').classList.add('active');
-            showLoaderOverlay();
-
-            loaderTimeout = setTimeout(() => {
-                hideLoaderOverlayImmediate();
-                loaderTimeout = null;
-            }, LOADER_DURATION);
-
-            fallbackTimeout = setTimeout(() => {
-                try {
-                    if (!iframe.contentDocument || iframe.contentDocument.readyState !== 'complete') {
-                        iframe.src = '/offline.html';
-                        hideLoaderOverlayImmediate();
-                        cancelLoaderTimer();
-                    }
-                } catch (e) {
-                    iframe.src = '/offline.html';
-                    hideLoaderOverlayImmediate();
-                    cancelLoaderTimer();
-                }
-                fallbackTimeout = null;
-            }, 10000);
-
-            iframe.addEventListener('load', function onLoad() {
-                clearTimeout(loaderTimeout);
-                clearTimeout(fallbackTimeout);
-                loaderTimeout = null;
-                fallbackTimeout = null;
-                hideLoaderOverlayImmediate();
-                iframe.removeEventListener('load', onLoad);
-            }, { once: true });
-
-            userStats.plays = (userStats.plays || 0) + 1;
-            userStats.points = (userStats.points || 0) + 15;
-            saveStats();
-        }
-
-        let sessionStart = null;
-        let currentGame = null;
-
-        function hideLoaderOverlayImmediate() {
-            const overlay = document.getElementById('loaderOverlay');
-            if (overlay) {
-                overlay.style.opacity = '0';
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    overlay.style.opacity = '';
-                }, 500);
-            }
-        }
-        function showLoaderOverlay() {
-            const overlay = document.getElementById('loaderOverlay');
-            if (overlay) {
-                overlay.style.display = 'flex';
-                overlay.style.opacity = '1';
-            }
-        }
-        function cancelLoaderTimer() { if (loaderTimeout) { clearTimeout(loaderTimeout); loaderTimeout = null; } }
-        function cancelFallbackTimer() { if (fallbackTimeout) { clearTimeout(fallbackTimeout); fallbackTimeout = null; } }
-
-        document.getElementById('closeModal').onclick = () => {
-            cancelLoaderTimer();
-            cancelFallbackTimer();
-            hideLoaderOverlayImmediate();
-            if (sessionStart && currentGame) {
-                const durationSec = Math.floor((Date.now() - sessionStart) / 1000);
-                userStats.timeSeconds = (userStats.timeSeconds || 0) + durationSec;
-                if (!userStats.gameHistory) userStats.gameHistory = {};
-                if (!userStats.gameHistory[currentGame.name]) {
-                    userStats.gameHistory[currentGame.name] = { count: 0, timePlayed: 0, lastPlayed: "" };
-                }
-                const gameEntry = userStats.gameHistory[currentGame.name];
-                gameEntry.count = (gameEntry.count || 0) + 1;
-                gameEntry.timePlayed = (gameEntry.timePlayed || 0) + durationSec;
-                gameEntry.lastPlayed = new Date().toISOString();
-                saveStats();
-            }
-            document.getElementById('gameModal').classList.remove('active');
-            document.getElementById('gameIframe').src = "";
-            sessionStart = null;
-            currentGame = null;
-        };
-
-        document.getElementById('themeBtn').onclick = () => {
-            const isDark = document.body.classList.toggle('dark-theme');
-            const icon = document.getElementById('themeIcon');
-            icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            lucide.createIcons();
-            updateLogoByTheme();
-        };
-
-        function updateStatsUI() {
-            document.getElementById('stat-streak').innerText = userStats.streak || 0;
-            document.getElementById('stat-points').innerText = userStats.points || 0;
-            const totalMinutes = Math.floor((userStats.timeSeconds || 0) / 60);
-            document.getElementById('stat-time').innerText = totalMinutes + 'm';
-
-            const points = userStats.points || 0;
-            const levelEl = document.getElementById('stat-level');
-            const progressEl = document.getElementById('level-progress');
-            let level = "Novell";
-            let progress = (points % 500) / 500 * 100;
-            if (points > 2000) level = "Llegenda";
-            else if (points > 1000) level = "Expert";
-            else if (points > 500) level = "Pro";
-            else if (points > 100) level = "Aficionat";
-            levelEl.innerText = level;
-            progressEl.style.width = `${progress}%`;
-
-            const history = userStats.gameHistory || {};
-            const sorted = Object.keys(history).sort((a, b) => {
-                const dateA = history[a].lastPlayed ? new Date(history[a].lastPlayed) : 0;
-                const dateB = history[b].lastPlayed ? new Date(history[b].lastPlayed) : 0;
-                return dateB - dateA;
-            });
-            const historyBody = document.getElementById('historyBody');
-            if (sorted.length === 0) {
-                historyBody.innerHTML = '<tr><td colspan="4" style="opacity:0.5; padding:40px; text-align:center; border-radius:12px; border:1px solid var(--glass-border-soft);">Encara no has jugat a cap joc. Comença la teva aventura!</td></tr>';
-            } else {
-                historyBody.innerHTML = sorted.map(gameName => {
-                    const g = history[gameName];
-                    const totalSecs = g.timePlayed || 0;
-                    const mins = Math.floor(totalSecs / 60);
-                    const secs = totalSecs % 60;
-                    const formattedTime = `${mins}m ${secs}s`;
-                    const count = g.count || 0;
-                    let lastPlayedFormatted = "Mai";
-                    if (g.lastPlayed) {
-                        const dateObj = new Date(g.lastPlayed);
-                        lastPlayedFormatted = dateObj.toLocaleDateString('ca-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                    }
-                    return `<tr>
-                        <td>${gameName}</td>
-                        <td style="text-align: center;"><span class="game-badge">${count}</span></td>
-                        <td style="text-align: center;">${formattedTime}</td>
-                        <td style="text-align: right;">${lastPlayedFormatted}</td>
-                    </tr>`;
-                }).join('');
-            }
-            lucide.createIcons();
-        }
-
-        document.getElementById('gameSearch').oninput = applyFilters;
-
-        window.clearAllCache = function() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.ready.then(reg => {
-                    reg.active.postMessage({ type: 'CLEAR_CACHE' });
-                });
-            }
-            localStorage.clear();
-            alert('Cache netejat. Es recarregarà la pàgina.');
-            window.location.reload();
-        };
-    </script>
-</body>
-</html>
+            return games.slice().sort(function (a, b) {
+                const
