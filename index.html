@@ -39,6 +39,13 @@
 
             --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.08) contrast(1.04);
             --glass-filter-strong: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.08) contrast(1.05);
+
+            --squircle-shadow:
+                drop-shadow(0 20px 30px rgba(15, 20, 40, 0.14))
+                drop-shadow(0 6px 12px rgba(15, 20, 40, 0.08));
+            --squircle-shadow-hover:
+                drop-shadow(0 26px 40px rgba(15, 20, 40, 0.20))
+                drop-shadow(0 10px 18px rgba(15, 20, 40, 0.14));
         }
 
         .dark-theme {
@@ -59,6 +66,13 @@
             --table-hover: rgba(255, 255, 255, 0.05);
             --fav-glow: rgba(255, 214, 10, 0.2);
             --orb-opacity: 0.75;
+
+            --squircle-shadow:
+                drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55))
+                drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+            --squircle-shadow-hover:
+                drop-shadow(0 26px 50px rgba(0, 0, 0, 0.65))
+                drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
         }
 
         * {
@@ -79,7 +93,7 @@
         }
 
         /* ==========================================================
-           ORBES (originals, no modificades)
+           ORBE ÚNICA (blava)
            ========================================================== */
         .liquid-orb {
             position: fixed;
@@ -101,21 +115,6 @@
                         rgba(90, 200, 250, 0.35) 45%,
                         rgba(175, 82, 222, 0.15) 72%,
                         transparent 90%);
-        }
-        #orb-2 {
-            width: 460px; height: 460px;
-            background: radial-gradient(circle,
-                        rgba(255, 45, 85, 0.45) 0%,
-                        rgba(255, 149, 0, 0.28) 50%,
-                        rgba(255, 214, 10, 0.12) 75%,
-                        transparent 90%);
-        }
-        #orb-3 {
-            width: 380px; height: 380px;
-            background: radial-gradient(circle,
-                        rgba(175, 82, 222, 0.45) 0%,
-                        rgba(90, 200, 250, 0.28) 55%,
-                        transparent 88%);
         }
 
         body::after {
@@ -149,7 +148,6 @@
         .nav-left, .nav-right, .nav-center { z-index: 1; }
         .nav-left, .nav-right { display: flex; align-items: center; gap: 15px; }
 
-        /* nav-center — liquid glass */
         .nav-center {
             position: absolute;
             left: 50%;
@@ -165,7 +163,6 @@
             box-shadow: 0 8px 24px rgba(15,20,40,0.10);
         }
 
-        /* nav-link — liquid glass en hover i actiu */
         .nav-link {
             font-size: 14px;
             font-weight: 600;
@@ -319,7 +316,6 @@
             pointer-events: all;
         }
 
-        /* Botó pla — sense vora ni fons per evitar doble contorn */
         .search-trigger {
             background: transparent;
             border: none;
@@ -343,11 +339,8 @@
             box-shadow: 0 0 0 2px var(--accent);
         }
         .search-trigger i,
-        .search-trigger svg {
-            display: block;
-        }
+        .search-trigger svg { display: block; }
 
-        /* theme-btn — LIQUID GLASS */
         .theme-btn {
             background: var(--glass-bg-soft);
             border: 1px solid var(--glass-border-soft);
@@ -364,6 +357,249 @@
         .theme-btn:hover {
             background: var(--glass-bg);
             transform: scale(1.05);
+        }
+
+        /* ==========================================================
+           SETTINGS — ICONA + DROPDOWN
+           ========================================================== */
+        .settings-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .settings-btn {
+            background: var(--glass-bg-soft);
+            border: 1px solid var(--glass-border-soft);
+            color: var(--text-main);
+            opacity: 0.85;
+            cursor: pointer;
+            width: 32px; height: 32px;
+            border-radius: 30px;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            transition: all 0.2s ease;
+        }
+        .settings-btn:hover {
+            background: var(--glass-bg);
+            transform: scale(1.05);
+        }
+        .settings-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: rgba(255,255,255,0.25);
+            box-shadow: 0 6px 20px rgba(var(--glow-color-rgb), 0.35);
+        }
+        .settings-btn i,
+        .settings-btn svg { display: block; transition: transform 0.3s ease; }
+        .settings-btn.active i,
+        .settings-btn.active svg { transform: rotate(45deg); }
+
+        .settings-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            min-width: 260px;
+            background: var(--glass-bg-strong);
+            backdrop-filter: var(--glass-filter-strong);
+            -webkit-backdrop-filter: var(--glass-filter-strong);
+            border: 1px solid var(--glass-border-soft);
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: var(--glass-shadow);
+            z-index: 1200;
+            opacity: 0;
+            transform: translateY(-6px) scale(0.96);
+            transform-origin: top right;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+        }
+        .settings-menu.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .settings-menu-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            padding: 6px 10px 8px;
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            color: var(--text-main);
+        }
+        .settings-item:hover {
+            background: var(--glass-bg);
+        }
+        .settings-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .settings-item-left i,
+        .settings-item-left svg {
+            width: 18px; height: 18px;
+            flex-shrink: 0;
+            opacity: 0.8;
+        }
+        .settings-item-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .settings-item-label {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .settings-item-desc {
+            font-size: 11px;
+            opacity: 0.55;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+
+        /* Toggle switch */
+        .toggle {
+            position: relative;
+            width: 40px;
+            height: 24px;
+            border-radius: 20px;
+            background: var(--pill-bg);
+            border: 1px solid var(--glass-border-soft);
+            flex-shrink: 0;
+            transition: background 0.25s ease, border-color 0.25s ease;
+        }
+        .toggle::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.20);
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+        }
+        .settings-item.on .toggle {
+            background: var(--accent);
+            border-color: rgba(255,255,255,0.25);
+            box-shadow: 0 4px 12px rgba(var(--glow-color-rgb), 0.35);
+        }
+        .settings-item.on .toggle::after {
+            transform: translateX(16px);
+        }
+
+        /* ==========================================================
+           MODE RENDIMENT — desactiva orbe, glass i squircles
+           ========================================================== */
+        body.performance-mode .liquid-orb {
+            display: none !important;
+        }
+        body.performance-mode::after {
+            display: none !important;
+        }
+        body.performance-mode nav,
+        body.performance-mode .nav-center,
+        body.performance-mode .nav-link:hover,
+        body.performance-mode .category-pill-wrapper,
+        body.performance-mode .category-item:hover,
+        body.performance-mode .search-container,
+        body.performance-mode .search-trigger,
+        body.performance-mode .theme-btn,
+        body.performance-mode .settings-btn,
+        body.performance-mode .settings-menu,
+        body.performance-mode .card,
+        body.performance-mode .stat-card,
+        body.performance-mode .history-section,
+        body.performance-mode td,
+        body.performance-mode .modal,
+        body.performance-mode .modal-content,
+        body.performance-mode .game-loader-overlay,
+        body.performance-mode .close-modal,
+        body.performance-mode .error-container,
+        body.performance-mode .reset-btn,
+        body.performance-mode .fav-btn,
+        body.performance-mode .game-badge {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* Fons sòlids (sense transparència del glass) */
+        body.performance-mode {
+            --glass-bg: #ffffff;
+            --glass-bg-strong: #ffffff;
+            --glass-bg-soft: #ffffff;
+            --glass-border-soft: rgba(0,0,0,0.08);
+            --glass-shadow:
+                0 4px 16px rgba(15, 20, 40, 0.08),
+                0 1px 3px rgba(15, 20, 40, 0.06);
+        }
+        body.performance-mode.dark-theme {
+            --glass-bg: #14161c;
+            --glass-bg-strong: #14161c;
+            --glass-bg-soft: #14161c;
+            --glass-border-soft: rgba(255,255,255,0.08);
+            --glass-shadow:
+                0 4px 16px rgba(0,0,0,0.45),
+                0 1px 3px rgba(0,0,0,0.30);
+        }
+
+        /* Squircles → cercles perfectes */
+        body.performance-mode .card {
+            border-radius: 50% !important;
+            clip-path: none !important;
+        }
+        body.performance-mode .card-wrapper {
+            filter: none !important;
+        }
+        body.performance-mode .card-wrapper:hover {
+            filter: none !important;
+        }
+        body.performance-mode .card-wrapper.favorite-card {
+            filter: none !important;
+        }
+        body.performance-mode .card-wrapper.favorite-card .card {
+            box-shadow:
+                0 0 0 3px var(--accent),
+                0 8px 24px rgba(0, 122, 255, 0.30) !important;
+        }
+        body.performance-mode .card-wrapper .card {
+            box-shadow:
+                0 4px 16px rgba(15, 20, 40, 0.10),
+                0 1px 3px rgba(15, 20, 40, 0.06);
+        }
+        body.performance-mode .card-wrapper .card:hover {
+            box-shadow:
+                0 10px 28px rgba(15, 20, 40, 0.18),
+                0 3px 8px rgba(15, 20, 40, 0.10);
+        }
+        body.performance-mode.dark-theme .card-wrapper .card {
+            box-shadow:
+                0 4px 16px rgba(0,0,0,0.45),
+                0 1px 3px rgba(0,0,0,0.30);
+        }
+        body.performance-mode.dark-theme .card-wrapper .card:hover {
+            box-shadow:
+                0 10px 28px rgba(0,0,0,0.60),
+                0 3px 8px rgba(0,0,0,0.40);
         }
 
         /* ==========================================================
@@ -396,7 +632,7 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
 
         /* ==========================================================
-           CARDS — LIQUID GLASS
+           CARDS — SQUIRCLE LIQUID GLASS
            ========================================================== */
         .card-wrapper {
             position: relative;
@@ -404,44 +640,78 @@
             flex-direction: column;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.2s ease, opacity 0.3s ease;
+            transition: transform 0.2s ease, opacity 0.3s ease, filter 0.3s ease;
             opacity: 0;
             transform: translateY(10px);
+            filter: var(--squircle-shadow);
         }
         .card-wrapper.visible { opacity: 1; transform: translateY(0); }
 
-        .card-wrapper.favorite-card .card {
-            transform: scale(1.02);
-            box-shadow:
-                0 0 0 2px var(--accent),
-                0 20px 50px rgba(0, 122, 255, 0.25);
+        .card-wrapper:hover {
+            filter: var(--squircle-shadow-hover);
         }
-        .card-wrapper .card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
-        .card-wrapper .card:hover {
-            transform: scale(1.06) translateY(-2px);
-            box-shadow:
-                0 24px 55px rgba(15, 20, 40, 0.18),
-                0 8px 20px rgba(15, 20, 40, 0.12);
+
+        .card-wrapper.favorite-card {
+            filter:
+                drop-shadow(0 0 2px var(--accent))
+                drop-shadow(0 0 6px rgba(var(--glow-color-rgb), 0.55))
+                var(--squircle-shadow);
+        }
+        .card-wrapper.favorite-card:hover {
+            filter:
+                drop-shadow(0 0 2px var(--accent))
+                drop-shadow(0 0 8px rgba(var(--glow-color-rgb), 0.70))
+                var(--squircle-shadow-hover);
+        }
+
+        .card-wrapper .card {
+            transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+        }
+        .card-wrapper:hover .card {
+            transform: scale(1.05);
         }
 
         .card {
             position: relative; width: 100%; aspect-ratio: 1;
             background: var(--glass-bg);
-            border-radius: 24%;
-            border: 1px solid var(--glass-border-soft);
             display: flex; align-items: center; justify-content: center;
             backdrop-filter: var(--glass-filter-strong);
             -webkit-backdrop-filter: var(--glass-filter-strong);
             overflow: hidden;
-            box-shadow: var(--glass-shadow);
+            border-radius: 24%;
         }
+
+        @supports (clip-path: shape(from 0 0, line to 100% 100%)) {
+            .card {
+                border-radius: 0;
+                --r: 50%;
+                --_r: clamp(0%, var(--r) / 2, 25%);
+                --_v: calc(var(--_r) * (1 - sqrt(2) / 4));
+                --_p: calc(var(--_v) - var(--_r) / 2);
+                clip-path: shape(
+                    from var(--_v) var(--_p),
+                    curve to 50% 0 with var(--_r) 0,
+                    curve to calc(100% - var(--_v)) var(--_p) with calc(100% - var(--_r)) 0,
+                    curve to calc(100% - var(--_p)) var(--_v) with calc(100% - 2 * var(--_p)) calc(2 * var(--_p)),
+                    curve to 100% 50% with 100% var(--_r),
+                    curve to calc(100% - var(--_p)) calc(100% - var(--_v)) with 100% calc(100% - var(--_r)),
+                    curve to calc(100% - var(--_v)) calc(100% - var(--_p)) with calc(100% - 2 * var(--_p)) calc(100% - 2 * var(--_p)),
+                    curve to 50% 100% with calc(100% - var(--_r)) 100%,
+                    curve to var(--_v) calc(100% - var(--_p)) with var(--_r) 100%,
+                    curve to var(--_p) calc(100% - var(--_v)) with calc(2 * var(--_p)) calc(100% - 2 * var(--_p)),
+                    curve to 0 50% with 0 calc(100% - var(--_r)),
+                    curve to var(--_p) var(--_v) with 0 var(--_r),
+                    curve to var(--_v) var(--_p) with calc(2 * var(--_p)) calc(2 * var(--_p))
+                );
+            }
+        }
+
         .card img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
         .card i.game-icon {
             width: 40px; height: 40px; stroke-width: 1.2;
             color: var(--text-main); opacity: 0.3; position: absolute;
         }
 
-        /* Fav btn — LIQUID GLASS */
         .fav-btn {
             position: absolute;
             top: 10px; right: 10px; z-index: 15;
@@ -513,7 +783,6 @@
         }
         .table-container { overflow-x: auto; margin-top: 10px; }
 
-        /* TABLE — LIQUID GLASS */
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
         th {
             text-align: left; padding: 12px; font-size: 11px;
@@ -546,7 +815,6 @@
             border-right: 1px solid var(--glass-border-soft);
         }
 
-        /* game-badge — LIQUID GLASS */
         .game-badge {
             background: var(--accent);
             color: white;
@@ -593,7 +861,6 @@
                 0 0 0 1px rgba(255,255,255,0.06) inset;
         }
 
-        /* close-modal — LIQUID GLASS */
         .close-modal {
             position: absolute; top: 16px; right: 16px;
             width: 42px; height: 42px;
@@ -614,7 +881,6 @@
 
         #gameIframe { flex: 1; width: 100%; height: 100%; border: none; background: #000; }
 
-        /* LOADER OVERLAY — LIQUID GLASS */
         .game-loader-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--glass-bg-strong);
@@ -625,7 +891,6 @@
             border-radius: 28px;
         }
 
-        /* spinner — LIQUID GLASS ring */
         .spinner {
             width: 52px; height: 52px;
             border: 3px solid rgba(128, 128, 128, 0.18);
@@ -640,9 +905,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ==========================================================
-           ERROR / 404 — LIQUID GLASS
-           ========================================================== */
         .error-container {
             padding: 60px 30px;
             text-align: center;
@@ -656,7 +918,6 @@
             margin: 80px auto 0;
         }
 
-        /* reset-btn — LIQUID GLASS sobre accent */
         .reset-btn {
             background: var(--accent);
             color: white;
@@ -693,10 +954,8 @@
 </head>
 <body class="dark-theme">
 
-    <!-- ===== ORBES ===== -->
+    <!-- ===== ORBE ÚNICA (blava) ===== -->
     <div id="orb-1" class="liquid-orb"></div>
-    <div id="orb-2" class="liquid-orb"></div>
-    <div id="orb-3" class="liquid-orb"></div>
 
     <nav>
         <div class="nav-left">
@@ -713,6 +972,27 @@
                 <input type="text" class="search-bar" placeholder="Cerca un joc..." id="gameSearch">
                 <button class="search-trigger"><i data-lucide="search" style="width:16px;"></i></button>
             </div>
+
+            <!-- ===== SETTINGS ===== -->
+            <div class="settings-wrap" id="settingsWrap">
+                <button class="settings-btn" id="settingsBtn" aria-label="Configuració" aria-haspopup="true" aria-expanded="false">
+                    <i data-lucide="settings" style="width:16px; height:16px;"></i>
+                </button>
+                <div class="settings-menu" id="settingsMenu" role="menu">
+                    <div class="settings-menu-title">Configuració</div>
+                    <div class="settings-item" id="perfModeItem" role="menuitemcheckbox" aria-checked="false" tabindex="0">
+                        <div class="settings-item-left">
+                            <i data-lucide="zap"></i>
+                            <div class="settings-item-text">
+                                <span class="settings-item-label">Mode rendiment</span>
+                                <span class="settings-item-desc">Desactiva orbe, glass i squircles</span>
+                            </div>
+                        </div>
+                        <div class="toggle" aria-hidden="true"></div>
+                    </div>
+                </div>
+            </div>
+
             <button class="theme-btn" id="themeBtn"><i data-lucide="sun" id="themeIcon" style="width:16px;"></i></button>
         </div>
     </nav>
@@ -796,14 +1076,81 @@
 
     <script>
         // ============================================
-        // ORBES ANIMADES (idèntiques a l'original)
+        // MODE RENDIMENT · SETTINGS
+        // ============================================
+        (function initSettings() {
+            const PERF_KEY = 'ulaPerformanceMode';
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsMenu = document.getElementById('settingsMenu');
+            const perfModeItem = document.getElementById('perfModeItem');
+
+            let perfEnabled = localStorage.getItem(PERF_KEY) === '1';
+
+            function applyPerfMode(enabled) {
+                document.body.classList.toggle('performance-mode', enabled);
+                perfModeItem.classList.toggle('on', enabled);
+                perfModeItem.setAttribute('aria-checked', String(enabled));
+                localStorage.setItem(PERF_KEY, enabled ? '1' : '0');
+            }
+
+            // Estat inicial
+            applyPerfMode(perfEnabled);
+
+            // Obrir/tancar menú
+            function openMenu() {
+                settingsMenu.classList.add('open');
+                settingsBtn.classList.add('active');
+                settingsBtn.setAttribute('aria-expanded', 'true');
+            }
+            function closeMenu() {
+                settingsMenu.classList.remove('open');
+                settingsBtn.classList.remove('active');
+                settingsBtn.setAttribute('aria-expanded', 'false');
+            }
+            function toggleMenu() {
+                if (settingsMenu.classList.contains('open')) closeMenu();
+                else openMenu();
+            }
+
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu();
+            });
+
+            // Toggle del mode rendiment
+            perfModeItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                perfEnabled = !perfEnabled;
+                applyPerfMode(perfEnabled);
+            });
+            perfModeItem.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    perfEnabled = !perfEnabled;
+                    applyPerfMode(perfEnabled);
+                }
+            });
+
+            // Tancar al clicar fora
+            document.addEventListener('click', (e) => {
+                if (!settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    closeMenu();
+                }
+            });
+
+            // Tancar amb Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeMenu();
+            });
+        })();
+
+        // ============================================
+        // ORBE ÚNICA ANIMADA (blava)
         // ============================================
         (function initLiquidOrbs() {
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const orbs = [
-                { el: document.getElementById('orb-1'), size: 520, speed: 0.00060, phaseX: 0.80, phaseY: 0.50, ax: 0.38, ay: 0.32 },
-                { el: document.getElementById('orb-2'), size: 460, speed: 0.00042, phaseX: 1.10, phaseY: 0.70, ax: 0.42, ay: 0.38 },
-                { el: document.getElementById('orb-3'), size: 380, speed: 0.00075, phaseX: 0.55, phaseY: 1.05, ax: 0.34, ay: 0.40 }
+                { el: document.getElementById('orb-1'), size: 520, speed: 0.00060, phaseX: 0.80, phaseY: 0.50, ax: 0.38, ay: 0.32 }
             ];
             if (reduceMotion) return;
 
