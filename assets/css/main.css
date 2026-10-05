@@ -1,0 +1,184 @@
+/* ============================================================
+   main.css · tokens globals, reset, orbe i mode rendiment
+   Carregat des d'index.html, abans de l'JS.
+   ============================================================ */
+
+/* --- tokens i reset --- */
+:root {
+    --glow-color-rgb: 0, 122, 255;
+    --text-main: #1d1d1f;
+    --accent: #007AFF;
+    --bg-base: #eef1f6;
+
+    /* ⚡ OPT #3: blur reduït de 48px → 16px */
+    --glass-blur: 16px;
+    --glass-saturate: 160%;
+
+    --glass-bg: rgba(255, 255, 255, 0.22);
+    --glass-bg-strong: rgba(255, 255, 255, 0.28);
+    --glass-bg-soft: rgba(255, 255, 255, 0.14);
+    --glass-border-soft: rgba(255, 255, 255, 0.22);
+    --glass-shadow:
+        0 12px 32px rgba(15, 20, 40, 0.10),
+        0 4px 10px rgba(15, 20, 40, 0.06);
+
+    --pill-bg: rgba(0, 0, 0, 0.04);
+    --table-hover: rgba(255, 255, 255, 0.28);
+    --fire-color: #ff4d00;
+    --fav-glow: rgba(255, 214, 10, 0.3);
+    --orb-opacity: 0.7;
+
+    --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    --glass-filter-strong: blur(calc(var(--glass-blur) - 4px)) saturate(var(--glass-saturate));
+    --glass-filter-small: blur(8px) saturate(140%);
+
+    /* ⚡ OPT #4: --squircle-shadow eliminat (usem pseudo-element) */
+}
+
+.dark-theme {
+    --glow-color-rgb: 10, 132, 255;
+    --text-main: #f5f5f7;
+    --accent: #0A84FF;
+    --bg-base: #05060a;
+
+    --glass-bg: rgba(26, 28, 34, 0.34);
+    --glass-bg-strong: rgba(30, 32, 40, 0.42);
+    --glass-bg-soft: rgba(28, 30, 38, 0.24);
+    --glass-border-soft: rgba(255, 255, 255, 0.10);
+    --glass-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.45),
+        0 4px 12px rgba(0, 0, 0, 0.28);
+
+    --pill-bg: rgba(255, 255, 255, 0.08);
+    --table-hover: rgba(255, 255, 255, 0.05);
+    --fav-glow: rgba(255, 214, 10, 0.2);
+    --orb-opacity: 0.75;
+}
+
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body { overflow-x: hidden; }
+
+body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    min-height: 100vh;
+    transition: background 0.4s ease, color 0.4s ease;
+    position: relative;
+}
+
+/* --- ⚡ OPT #2 + #11: ORB amb PNG pre-desenfocat i CSS keyframes --- */
+#orb-1 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 700px;
+    height: 700px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: var(--orb-opacity);
+    /* ⚡ OPT #2: PNG pre-desenfocat en comptes de filter: blur(90px) */
+    background-image: url('/assets/images/orb-blurred.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* ⚡ OPT #11: animació CSS en comptes de JS */
+    animation: orbPath 60s ease-in-out infinite;
+    backface-visibility: hidden;
+}
+
+@keyframes orbPath {
+    0%, 100% { transform: translate3d(calc(50vw - 350px), calc(34vh - 350px), 0); }
+    20%      { transform: translate3d(calc(85vw - 350px), calc(50vh - 350px), 0); }
+    40%      { transform: translate3d(calc(50vw - 350px), calc(66vh - 350px), 0); }
+    60%      { transform: translate3d(calc(15vw - 350px), calc(50vh - 350px), 0); }
+    80%      { transform: translate3d(calc(50vw - 350px), calc(34vh - 350px), 0); }
+}
+
+/* ⚡ OPT #1: la animació CSS s'atura automàticament quan la pestanya no és visible
+   (els navegadors moderns ja pausen les CSS animations en background) */
+@media (prefers-reduced-motion: reduce) {
+    #orb-1 { animation: none; transform: translate3d(calc(50vw - 350px), calc(34vh - 350px), 0); }
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, var(--bg-base) 125%);
+    opacity: 0.25;
+}
+
+/* --- MODE RENDIMENT --- */
+body.performance-mode #orb-1,
+body.performance-mode::after { display: none !important; }
+
+body.performance-mode nav,
+body.performance-mode .nav-center,
+body.performance-mode .nav-link:hover,
+body.performance-mode .category-pill-wrapper,
+body.performance-mode .category-item:hover,
+body.performance-mode .search-container,
+body.performance-mode .search-trigger,
+body.performance-mode .theme-btn,
+body.performance-mode .settings-btn,
+body.performance-mode .settings-menu,
+body.performance-mode .card,
+body.performance-mode .stat-card,
+body.performance-mode .history-section,
+body.performance-mode td,
+body.performance-mode .modal,
+body.performance-mode .modal-content,
+body.performance-mode .game-loader-overlay,
+body.performance-mode .close-modal,
+body.performance-mode .error-container,
+body.performance-mode .reset-btn,
+body.performance-mode .fav-btn,
+body.performance-mode .game-badge {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+body.performance-mode {
+    --glass-bg: #ffffff;
+    --glass-bg-strong: #ffffff;
+    --glass-bg-soft: #ffffff;
+    --glass-border-soft: rgba(0,0,0,0.08);
+    --glass-shadow: 0 2px 8px rgba(15, 20, 40, 0.06);
+}
+body.performance-mode.dark-theme {
+    --glass-bg: #14161c;
+    --glass-bg-strong: #14161c;
+    --glass-bg-soft: #14161c;
+    --glass-border-soft: rgba(255,255,255,0.08);
+    --glass-shadow: 0 2px 8px rgba(0,0,0,0.40);
+}
+
+body.performance-mode .card {
+    border-radius: 50% !important;
+    clip-path: none !important;
+    border: 1px solid rgba(0,0,0,0.10);
+}
+body.performance-mode.dark-theme .card {
+    border: 1px solid rgba(255,255,255,0.12);
+}
+body.performance-mode .card-wrapper,
+body.performance-mode .card-wrapper:hover,
+body.performance-mode .card-wrapper.favorite-card { filter: none !important; }
+body.performance-mode .card-wrapper.favorite-card .card {
+    box-shadow: 0 0 0 3px var(--accent), 0 6px 18px rgba(0, 122, 255, 0.28) !important;
+    border-color: transparent;
+}
+
+/* --- @supports (fallback sense backdrop-filter) · redefineix els tokens --glass-* --- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root { --glass-bg: rgba(255,255,255,0.80); --glass-bg-strong: rgba(255,255,255,0.88); --glass-bg-soft: rgba(255,255,255,0.75); }
+    .dark-theme { --glass-bg: rgba(20,22,28,0.88); --glass-bg-strong: rgba(20,22,28,0.92); --glass-bg-soft: rgba(20,22,28,0.84); }
+}

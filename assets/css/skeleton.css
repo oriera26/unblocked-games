@@ -1,104 +1,144 @@
-/* Afegir al final de styles.css */
+/* ============================================================
+   skeleton.css · estats de carrega i aparicio suau
+   Carregat el darrer, per damunt de main/layout/components.
+   ============================================================
 
-/* Animacions per skeleton */
-@keyframes skeleton-fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+   Contracte amb el DOM real (index.html, després ui.js):
+
+     .grid#gameGrid        rep i treu `.skeleton-grid` mentre carrega
+     .skeleton-card        el substitut que dibuixa el JS
+     .card-wrapper.visible el revelat de les targetes reals
+     .card > img           la portada, quan el joc en té
+
+   Regla de la casa: mai amaguem un element amb un `opacity: 0`
+   que depengui d'una animació per tornar-lo a 1. Si les animacions
+   no s'executen (prefers-reduced-motion, mode rendiment, un
+   navegador o una extensió que les desactiva), l'element ha de
+   seguir sent visible. Per això el revelat dels esquelets i de les
+   imatges es fa amb `animation` sobre una base visible, mai amb
+   un `opacity: 0` permanent.
+   ============================================================ */
+
+/* --- Grid en estat de carrega ----------------------------------
+   Ha de reproduir exactament la geometria de `.grid` (layout.css):
+   mateixes columnes i mateix `gap`. Si no, el contingut real salta
+   en pantalla en substituïr els esquelets. */
+
+.grid.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 20px;
 }
 
-/* Grid skeleton */
-.skeleton-grid {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 30px;
-    opacity: 0.7;
-}
+/* --- El substitut d'una targeta --------------------------------
+   El JS crea `<div class="skeleton skeleton-card skeleton-grid-item">`.
+   Li donem la mateixa silueta que un `.card-wrapper` real: quadrat
+   de `aspect-ratio: 1` amb el mateix `border-radius` i, a sota, la
+   reserva del títol (com `.card-title`).
 
-.skeleton-grid-item {
-    animation: skeleton-fade-in 0.3s ease forwards;
-    opacity: 0;
-}
+   Els tokens del shimmer els defineix el mateix element que els
+   consumeix, no una classe auxiliar: el DOM real nomes hi posa
+   `skeleton`, `skeleton-card` i `skeleton-grid-item`. */
 
-/* Estats de les imatges */
-.card-image-container.skeleton {
-    background-color: var(--skeleton-base) !important;
-    position: relative;
-    overflow: hidden;
-}
-
-.card-image-container.skeleton::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--skeleton-gradient);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.7s infinite linear;
-}
-
-.card-image-container.loaded {
-    background: transparent !important;
-}
-
-.card-image-container.loaded::after {
-    display: none;
-}
-
-/* Millores d'animació */
-.card {
-    animation: skeleton-fade-in 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-    opacity: 0;
-}
-
-.card:nth-child(n) {
-    animation-delay: calc(var(--index, 0) * 0.05s);
-}
-
-/* Optimització per moltes cards */
-.grid {
-    will-change: transform;
-    contain: layout style paint;
-}
-
-/* Ajustos per skeleton a mode light */
-.card-image-container.skeleton {
-    --skeleton-base: #e5e5ea;
-    --skeleton-highlight: #f2f2f7;
-    --skeleton-gradient: linear-gradient(
-        90deg,
-        var(--skeleton-base) 25%,
+.skeleton-card {
+    --skeleton-base: rgba(127, 127, 137, 0.16);
+    --skeleton-highlight: rgba(127, 127, 137, 0.30);
+    --skeleton-sweep: linear-gradient(
+        100deg,
+        transparent 20%,
         var(--skeleton-highlight) 50%,
-        var(--skeleton-base) 75%
+        transparent 80%
     );
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+    user-select: none;
 }
 
-/* Transició suau per imatges carregades */
-.card-image-container img {
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+body.dark-theme .skeleton-card {
+    --skeleton-base: rgba(255, 255, 255, 0.09);
+    --skeleton-highlight: rgba(255, 255, 255, 0.20);
 }
 
-.card-image-container.loaded img {
-    opacity: 1;
+/* El sweep va sobre el quadrat, no sobre tota la targeta. */
+.skeleton-card::before {
+    content: "";
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 24%;
+    overflow: hidden;
+    background: var(--skeleton-base);
+    background-image: var(--skeleton-sweep);
+    background-size: 250% 100%;
+    background-repeat: no-repeat;
+    animation: skeleton-shimmer 1.6s linear infinite;
 }
 
-/* Millores per dispositius mòbils */
+.skeleton-card::after {
+    content: "";
+    display: block;
+    width: 70%;
+    height: 11px;
+    border-radius: 6px;
+    background: var(--skeleton-base);
+}
+
+@keyframes skeleton-shimmer {
+    from { background-position: 150% 0; }
+    to { background-position: -150% 0; }
+}
+
+/* L'esquelet apareix amb un lleu escalonat; el JS ja en posa
+   `style.animationDelay`, així que aquí no cal cap altre retard. */
+.skeleton-grid-item {
+    animation: skeleton-rise 0.28s ease both;
+}
+
+@keyframes skeleton-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Aparicio de les portades ------------------------------------
+   El JS insereix el <img> directament dins de `.card`, sense classe
+   d'estat. Un `animation` a l'element fa l'aparicio suau sense que
+   calgui cap JS: si les animacions son, el <img> es veu normal. */
+
+.card img {
+    animation: ula-fade-in 0.35s ease both;
+}
+
+@keyframes ula-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* --- Casos on l'usuari demana menys moviment --------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-card::before,
+    .skeleton-grid-item,
+    .card img {
+        animation: none;
+    }
+}
+
+/* El mode rendiment apaga el blur i les transicioes globals; el
+   shimmer es pot quedar aturat, pero el contingut ha de ser llegible. */
+body.performance-mode .skeleton-card::before {
+    animation: none;
+    background-image: none;
+}
+
 @media (max-width: 768px) {
-    .skeleton-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
+    .skeleton-card {
+        gap: 6px;
     }
-    
-    .card-image-container.skeleton::after {
-        animation-duration: 2s;
-    }
-    
-    .card {
-        animation-duration: 0.3s;
+    .skeleton-card::after {
+        height: 9px;
     }
 }

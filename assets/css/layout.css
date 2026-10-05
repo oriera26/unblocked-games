@@ -1,0 +1,175 @@
+/* ============================================================
+   layout.css · nav, categories, contenidors i grid
+   Carregat des d'index.html, abans de l'JS.
+   ============================================================ */
+
+/* --- NAV --- */
+nav {
+    position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+    width: calc(100% - 30px); max-width: 900px; height: 56px;
+    background: var(--glass-bg);
+    /* ⚡ OPT #3: blur reduït */
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 28px; z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: var(--glass-shadow);
+}
+
+.nav-left, .nav-right, .nav-center { z-index: 1; }
+.nav-left, .nav-right { display: flex; align-items: center; gap: 15px; }
+
+.nav-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    background: var(--glass-bg-soft);
+    padding: 4px;
+    border-radius: 40px;
+    backdrop-filter: var(--glass-filter-small);
+    -webkit-backdrop-filter: var(--glass-filter-small);
+    border: 1px solid var(--glass-border-soft);
+}
+
+.nav-link {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 18px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    color: var(--text-main);
+    background: transparent;
+    text-align: center;
+    border: 1px solid transparent;
+}
+.nav-link:hover {
+    background: var(--glass-bg);
+    border-color: var(--glass-border-soft);
+}
+.nav-link.active {
+    background: var(--accent);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 14px rgba(var(--glow-color-rgb), 0.30);
+}
+
+.logo {
+    font-weight: 800;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    line-height: 0;
+}
+.logo-img {
+    height: 34px;
+    width: auto;
+    transform-origin: left center;
+    transition: transform 0.2s ease;
+    object-fit: contain;
+    display: block;
+}
+.logo:hover .logo-img { transform: scaleX(1.05); }
+
+/* --- CATEGORIES --- */
+.category-container {
+    position: fixed;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: auto;
+    max-width: 95vw;
+}
+
+.category-pill-wrapper {
+    position: relative;
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    padding: 4px;
+    border-radius: 20px;
+    border: 1px solid var(--glass-border-soft);
+    display: flex;
+    gap: 2px;
+    box-shadow: var(--glass-shadow);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.category-item {
+    position: relative;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: background 0.2s ease, opacity 0.2s ease;
+    color: var(--text-main);
+    opacity: 0.55;
+    z-index: 2;
+}
+.category-item i { width: 13px; height: 13px; }
+.category-item.active { opacity: 1; color: #fff; }
+.category-item:hover {
+    opacity: 0.9;
+    background: var(--glass-bg);
+}
+
+.category-active-bg {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    height: calc(100% - 8px);
+    background: var(--accent);
+    border-radius: 16px;
+    transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 12px rgba(var(--glow-color-rgb), 0.30);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* --- LAYOUT --- */
+.container {
+    max-width: 1100px; margin: 0 auto; padding: 90px 24px 100px;
+    height: 100vh; overflow-y: auto; position: relative; z-index: 1;
+    scrollbar-width: none;
+    /* ⚡ OPT #5: aïllament del contenidor scrollable */
+    contain: layout;
+}
+.container::-webkit-scrollbar { display: none; }
+
+.view {
+    display: none;
+    animation-duration: 0.3s;
+    animation-fill-mode: forwards;
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+.view.active { display: block; }
+
+@keyframes slideFromRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideFromLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideToRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(30px); } }
+@keyframes slideToLeft { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-30px); } }
+.view.animate-out-left { animation-name: slideToLeft; display: block; }
+.view.animate-out-right { animation-name: slideToRight; display: block; }
+.view.animate-in-left { animation-name: slideFromLeft; display: block; }
+.view.animate-in-right { animation-name: slideFromRight; display: block; }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 20px;
+}
