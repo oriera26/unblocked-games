@@ -1,87 +1,145 @@
-// ============================================
-// Service Worker lleuger 
-// Només intercepta peticions del mateix origen
-// No bloqueja CORS ni recursos externs (jocs de tercers)
-// ============================================
+/* ============================================================
+   SERVICE WORKER · ulaGames
+   ============================================================ */
 
-const CACHE_VERSION = 'ula-shell-v1';
-const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const CACHE_VERSION = 'ula-v1.0.0';
+const STATIC_CACHE = CACHE_VERSION + '-static';
+const GAMES_CACHE = CACHE_VERSION + '-games';
+const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
 
-// Actius estàtics essencials de l'app shell
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/offline.html',
-  '/manifest.json',
-  '/assets/js/gameList.js',
-  '/assets/icons/icon.ico',
-  '/assets/icons/icon-192x192.png',
-  '/assets/icons/icon-large-dark.png',
-  '/assets/icons/icon-large-light.png'
+/* Recursos essencials per funcionar offline */
+const PRECACHE_URLS = [
+    '/',
+    '/index.html',
+    '/offline.html',
+    '/manifest.json',
+    '/assets/js/gameList.js',
+    '/assets/images/orb-blurred.png',
+    '/assets/icons/icon-192x192.png',
+    '/assets/icons/icon-512x512.png',
+    '/assets/icons/icon-large-dark.png',
+    '/assets/icons/icon-large-light.png',
+    '/assets/icons/apple-touch-icon.png'
 ];
 
-// Instal·lació: pre-cachegem el shell
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then(cache => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
-  );
+/* ============================================================
+   INSTALL · Precache
+   ============================================================ */
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(STATIC_CACHE)
+            .then((cache) => {
+                return Promise.all(
+                    PRECACHE_URLS.map((url) => {
+                        return cache.add(url).catch((err) => {
+                            console.warn('[SW] No s\'ha pogut precachejar:', url, err);
+                        });
+                    })
+                );
+            })
+            .then(() => self.skipWaiting())
+    );
 });
 
-// Activació: neteja caches antics
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.map(key => {
-          if (key !== STATIC_CACHE) return caches.delete(key);
+/* ============================================================
+   ACTIVATE · Neteja caches antigues
+   ============================================================ */
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys()
+            .then((keys) => {
+                return Promise.all(
+                    keys
+                        .filter((key) => key.startsWith('ula-') && key !== STATIC_CACHE && key !== GAMES_CACHE && key !== RUNTIME_CACHE)
+                        .map((key) => caches.delete(key))
+                );
+            })
+            .then(() => self.clients.claim())
+    );
+});
+
+/* ============================================================
+   FETCH · Estratègies per tipus de recurs
+   ============================================================ */
+self.addEventListener('fetch', (event) => {
+    const request = event.request;
+
+    /* Ignora mètodes no-GET */
+    if (request.method !== 'GET') return;
+
+    /* Ignora peticions a altres orígens (analytics, CDN externs, etc.) */
+    const url = new URL(request.url);
+    if (url.origin !== self.location.origin) return;
+
+    /* Jocs: cache-first amb fallback a xarxa */
+    if (url.pathname.startsWith('/assets/games/')) {
+        event.respondWith(
+            caches.open(GAMES_CACHE).then((cache) => {
+                return cache.match(request).then((cached) => {
+                    if (cached) return cached;
+                    return fetch(request).then((response) => {
+                        if (response.ok) cache.put(request, response.clone());
+                        return response;
+                    });
+                });
+            })
+        );
+        return;
+    }
+
+    /* HTML / navegació: network-first amb fallback offline.html */
+    if (request.mode === 'navigate' || request.destination === 'document') {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    const copy = response.clone();
+                    caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+                    return response;
+                })
+                .catch(() => {
+                    return caches.match(request).then((cached) => {
+                        return cached || caches.match('/offline.html');
+                    });
+                })
+        );
+        return;
+    }
+
+    /* Assets estàtics: cache-first amb revalidació */
+    event.respondWith(
+        caches.open(RUNTIME_CACHE).then((cache) => {
+            return cache.match(request).then((cached) => {
+                const fetchPromise = fetch(request)
+                    .then((response) => {
+                        if (response && response.ok) cache.put(request, response.clone());
+                        return response;
+                    })
+                    .catch(() => cached);
+                return cached || fetchPromise;
+            });
         })
-      )
-    ).then(() => self.clients.claim())
-  );
+    );
 });
 
-// Intercepció de peticions: només per al mateix origen
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
+/* ============================================================
+   MISSATGES · Neteja de cache des de l'app
+   ============================================================ */
+self.addEventListener('message', (event) => {
+    if (!event.data) return;
 
-  // Ignorar completament peticions a altres orígens (jocs externs, APIs de tercers)
-  if (url.origin !== location.origin) return;
+    if (event.data.type === 'CLEAR_CACHE') {
+        event.waitUntil(
+            caches.keys()
+                .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+                .then(() => {
+                    if (event.source && event.source.postMessage) {
+                        event.source.postMessage({ type: 'CACHE_CLEARED' });
+                    }
+                })
+        );
+    }
 
-  // Ignorar mètodes que no siguin GET
-  if (event.request.method !== 'GET') return;
-
-  // Estratègia: network-first per als recursos estàtics (amb fallback a offline)
-  event.respondWith(
-    fetch(event.request)
-      .then(networkResponse => {
-        // Si la resposta és vàlida, la guardem al cache per a futures visites offline
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(STATIC_CACHE).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        // Si falla la xarxa, intentem servir des del cache
-        return caches.match(event.request).then(cached => {
-          if (cached) return cached;
-          // Si no hi ha cache i falla la xarxa, mostrem la pàgina offline (per a navegació)
-          if (event.request.mode === 'navigate') {
-            return caches.match('/offline.html');
-          }
-          return new Response('Offline content not available', { status: 404, statusText: 'Not Found' });
-        });
-      })
-  );
-});
-
-// Neteja manual de cache (opcional)
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'CLEAR_CACHE') {
-    caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))));
-  }
+    if (event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
