@@ -1215,4 +1215,351 @@
 
         function sortGamesByFavorites(games) {
             return games.slice().sort(function (a, b) {
-                const
+                const aFav = favorites.indexOf(a.url) > -1;
+                const bFav = favorites.indexOf(b.url) > -1;
+                if (aFav && !bFav) return -1;
+                if (!aFav && bFav) return 1;
+                return 0;
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('gameSearch').value.toLowerCase();
+            const filtered = ALL_GAMES.filter(function (g) {
+                const matchesSearch = g.name.toLowerCase().indexOf(searchTerm) > -1;
+                const matchesCat = currentCategory === 'tots' || (g.type && g.type.toLowerCase() === currentCategory);
+                return matchesSearch && matchesCat;
+            });
+            FILTERED_GAMES = sortGamesByFavorites(filtered);
+            if (FILTERED_GAMES.length === 0) showView('404', 'none');
+            else { showView('arcade', 'none'); renderInitial(); }
+        }
+
+        function resetFilters() {
+            document.getElementById('gameSearch').value = '';
+            selectCategory('tots');
+        }
+
+        const grid = document.getElementById('gameGrid');
+        const scrollContainer = document.getElementById('scrollContainer');
+        const trigger = document.getElementById('loadMoreTrigger');
+        const observer = new IntersectionObserver(function (entries) {
+            if (entries[0].isIntersecting && itemsShown < FILTERED_GAMES.length) loadMore();
+        }, { root: scrollContainer, threshold: 0.1, rootMargin: '400px 0px' });
+        observer.observe(trigger);
+
+        function renderInitial() {
+            grid.innerHTML = '';
+            itemsShown = 0;
+            loadMore();
+        }
+
+        // ============================================
+        // ⚡ OPT #7, #8, #9, #19: loadMore optimitzat
+        // ============================================
+        function loadMore() {
+            const nextBatch = FILTERED_GAMES.slice(itemsShown, itemsShown + CHUNK_SIZE);
+            if (nextBatch.length === 0) return;
+
+            // ⚡ OPT #8: DocumentFragment — 1 sola operació DOM
+            const fragment = document.createDocumentFragment();
+
+            nextBatch.forEach(function (g) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'card-wrapper';
+                const isFav = favorites.indexOf(g.url) > -1;
+                if (isFav) wrapper.classList.add('favorite-card');
+                wrapper.onclick = function () { launchGame(g); };
+
+                const mediaContent = g.image
+                    ? '<img src="' + g.image + '" loading="lazy" decoding="async" onerror="this.style.display=\'none\';">'
+                    : '';
+
+                // ⚡ OPT #7 + #20: SVG inline cachejat, no data-lucide
+                const starSvg = renderIcon('star', {
+                    size: 18,
+                    fill: isFav ? '#FFD60A' : 'none'
+                });
+                const gamepadSvg = renderIcon('gamepad-2', {
+                    size: 40,
+                    className: 'game-icon'
+                });
+
+                wrapper.innerHTML =
+                    '<button class="fav-btn' + (isFav ? ' active' : '') + '" onclick="toggleFavorite(event, \'' + g.url + '\')" aria-label="Favorit">' +
+                        starSvg +
+                    '</button>' +
+                    '<div class="card">' +
+                        mediaContent +
+                        gamepadSvg +
+                    '</div>' +
+                    '<div class="card-title">' + g.name + '</div>';
+
+                fragment.appendChild(wrapper);
+            });
+
+            grid.appendChild(fragment);
+            itemsShown += nextBatch.length;
+
+            // ⚡ OPT #9: stagger via CSS + un sol rAF (no setTimeout per card)
+            requestAnimationFrame(function () {
+                const wrappers = grid.querySelectorAll('.card-wrapper:not(.visible)');
+                for (let i = 0; i < wrappers.length; i++) {
+                    wrappers[i].style.transitionDelay = (i * 15) + 'ms';
+                    wrappers[i].classList.add('visible');
+                }
+            });
+
+            // ⚡ OPT #19: eliminar targetes antigues si excedim el màxim
+            pruneGrid();
+        }
+
+        function pruneGrid() {
+            const children = grid.children;
+            if (children.length <= MAX_DOM_CARDS) return;
+            const toRemove = children.length - MAX_DOM_CARDS;
+            for (let i = 0; i < toRemove; i++) {
+                grid.removeChild(grid.firstChild);
+            }
+        }
+
+        function navigateToView(targetViewId, direction) {
+            if (isTransitioning) return;
+            const currentView = document.querySelector('.view.active');
+            if (currentView && currentView.id === 'view-' + targetViewId) return;
+
+            isTransitioning = true;
+            const nextView = document.getElementById('view-' + targetViewId);
+            if (!nextView) return;
+
+            let outDirection, inDirection;
+            if (direction === 'left') { outDirection = 'left'; inDirection = 'right'; }
+            else if (direction === 'right') { outDirection = 'right'; inDirection = 'left'; }
+            else {
+                document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+                nextView.classList.add('active');
+                updateActiveNavButton(targetViewId);
+                isTransitioning = false;
+                return;
+            }
+
+            if (currentView) {
+                currentView.classList.remove('active');
+                currentView.classList.add('animate-out-' + outDirection);
+                setTimeout(function () {
+                    currentView.classList.remove('animate-out-' + outDirection);
+                    currentView.style.display = 'none';
+                }, 280);
+            }
+
+            nextView.style.display = 'block';
+            nextView.classList.add('active', 'animate-in-' + inDirection);
+            setTimeout(function () {
+                nextView.classList.remove('animate-in-' + inDirection);
+                isTransitioning = false;
+            }, 320);
+
+            updateActiveNavButton(targetViewId);
+
+            const catContainer = document.getElementById('categoryContainer');
+            if (targetViewId === 'arcade' || targetViewId === '404') {
+                catContainer.style.display = 'block';
+                setTimeout(updateActivePillPosition, 100);
+            } else {
+                catContainer.style.display = 'none';
+            }
+
+            if (targetViewId === 'stats') updateStatsUI();
+        }
+
+        function updateActiveNavButton(viewId) {
+            document.querySelectorAll('.nav-link').forEach(function (btn) { btn.classList.remove('active'); });
+            const activeBtn = document.getElementById('link-' + viewId);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        function showView(viewId, direction) {
+            if (direction === 'none') {
+                document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+                document.getElementById('view-' + viewId).classList.add('active');
+                if (viewId === 'arcade' || viewId === '404') {
+                    document.getElementById('categoryContainer').style.display = 'block';
+                    setTimeout(updateActivePillPosition, 50);
+                } else {
+                    document.getElementById('categoryContainer').style.display = 'none';
+                }
+                if (viewId === 'stats') updateStatsUI();
+            } else {
+                navigateToView(viewId, direction);
+            }
+        }
+
+        window.toggleFavorite = function (e, id) {
+            e.stopPropagation();
+            const idx = favorites.indexOf(id);
+            if (idx > -1) favorites.splice(idx, 1);
+            else favorites.push(id);
+            localStorage.setItem('ulaFavorites', JSON.stringify(favorites));
+            applyFilters();
+        };
+
+        function launchGame(game) {
+            cancelLoaderTimer();
+            cancelFallbackTimer();
+            hideLoaderOverlayImmediate();
+
+            currentGame = game;
+            sessionStart = Date.now();
+            const iframe = document.getElementById('gameIframe');
+            iframe.src = 'assets/games/' + (game.url.endsWith('.html') ? game.url : game.url + '.html');
+            document.getElementById('gameModal').classList.add('active');
+            showLoaderOverlay();
+
+            loaderTimeout = setTimeout(function () {
+                hideLoaderOverlayImmediate();
+                loaderTimeout = null;
+            }, LOADER_DURATION);
+
+            fallbackTimeout = setTimeout(function () {
+                try {
+                    if (!iframe.contentDocument || iframe.contentDocument.readyState !== 'complete') {
+                        iframe.src = '/offline.html';
+                        hideLoaderOverlayImmediate();
+                        cancelLoaderTimer();
+                    }
+                } catch (e) {
+                    iframe.src = '/offline.html';
+                    hideLoaderOverlayImmediate();
+                    cancelLoaderTimer();
+                }
+                fallbackTimeout = null;
+            }, 10000);
+
+            iframe.addEventListener('load', function onLoad() {
+                clearTimeout(loaderTimeout);
+                clearTimeout(fallbackTimeout);
+                loaderTimeout = null;
+                fallbackTimeout = null;
+                hideLoaderOverlayImmediate();
+                iframe.removeEventListener('load', onLoad);
+            }, { once: true });
+
+            userStats.plays = (userStats.plays || 0) + 1;
+            userStats.points = (userStats.points || 0) + 15;
+            saveStats();
+        }
+
+        let sessionStart = null;
+        let currentGame = null;
+
+        function hideLoaderOverlayImmediate() {
+            const overlay = document.getElementById('loaderOverlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(function () {
+                    overlay.style.display = 'none';
+                    overlay.style.opacity = '';
+                }, 400);
+            }
+        }
+        function showLoaderOverlay() {
+            const overlay = document.getElementById('loaderOverlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                overlay.style.opacity = '1';
+            }
+        }
+        function cancelLoaderTimer() { if (loaderTimeout) { clearTimeout(loaderTimeout); loaderTimeout = null; } }
+        function cancelFallbackTimer() { if (fallbackTimeout) { clearTimeout(fallbackTimeout); fallbackTimeout = null; } }
+
+        document.getElementById('closeModal').onclick = function () {
+            cancelLoaderTimer();
+            cancelFallbackTimer();
+            hideLoaderOverlayImmediate();
+            if (sessionStart && currentGame) {
+                const durationSec = Math.floor((Date.now() - sessionStart) / 1000);
+                userStats.timeSeconds = (userStats.timeSeconds || 0) + durationSec;
+                if (!userStats.gameHistory) userStats.gameHistory = {};
+                if (!userStats.gameHistory[currentGame.name]) {
+                    userStats.gameHistory[currentGame.name] = { count: 0, timePlayed: 0, lastPlayed: '' };
+                }
+                const gameEntry = userStats.gameHistory[currentGame.name];
+                gameEntry.count = (gameEntry.count || 0) + 1;
+                gameEntry.timePlayed = (gameEntry.timePlayed || 0) + durationSec;
+                gameEntry.lastPlayed = new Date().toISOString();
+                saveStats();
+            }
+            document.getElementById('gameModal').classList.remove('active');
+            document.getElementById('gameIframe').src = '';
+            sessionStart = null;
+            currentGame = null;
+        };
+
+        document.getElementById('themeBtn').onclick = function () {
+            const isDark = document.body.classList.toggle('dark-theme');
+            const icon = document.getElementById('themeIcon');
+            const newSvg = renderIcon(isDark ? 'sun' : 'moon', { size: 16 });
+            if (newSvg) icon.outerHTML = newSvg.replace('<svg ', '<svg id="themeIcon" ');
+            updateLogoByTheme();
+        };
+
+        function updateStatsUI() {
+            document.getElementById('stat-streak').innerText = userStats.streak || 0;
+            document.getElementById('stat-points').innerText = userStats.points || 0;
+            const totalMinutes = Math.floor((userStats.timeSeconds || 0) / 60);
+            document.getElementById('stat-time').innerText = totalMinutes + 'm';
+
+            const points = userStats.points || 0;
+            const levelEl = document.getElementById('stat-level');
+            const progressEl = document.getElementById('level-progress');
+            let level = 'Novell';
+            let progress = (points % 500) / 500 * 100;
+            if (points > 2000) level = 'Llegenda';
+            else if (points > 1000) level = 'Expert';
+            else if (points > 500) level = 'Pro';
+            else if (points > 100) level = 'Aficionat';
+            levelEl.innerText = level;
+            progressEl.style.width = progress + '%';
+
+            const history = userStats.gameHistory || {};
+            const sorted = Object.keys(history).sort(function (a, b) {
+                const dateA = history[a].lastPlayed ? new Date(history[a].lastPlayed) : 0;
+                const dateB = history[b].lastPlayed ? new Date(history[b].lastPlayed) : 0;
+                return dateB - dateA;
+            });
+            const historyBody = document.getElementById('historyBody');
+            if (sorted.length === 0) {
+                historyBody.innerHTML = '<tr><td colspan="4" style="opacity:0.5; padding:40px; text-align:center;">Encara no has jugat a cap joc. Comença la teva aventura!</td></tr>';
+            } else {
+                historyBody.innerHTML = sorted.map(function (gameName) {
+                    const g = history[gameName];
+                    const totalSecs = g.timePlayed || 0;
+                    const mins = Math.floor(totalSecs / 60);
+                    const secs = totalSecs % 60;
+                    const formattedTime = mins + 'm ' + secs + 's';
+                    const count = g.count || 0;
+                    let lastPlayedFormatted = 'Mai';
+                    if (g.lastPlayed) {
+                        const dateObj = new Date(g.lastPlayed);
+                        lastPlayedFormatted = dateObj.toLocaleDateString('ca-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    }
+                    return '<tr><td>' + gameName + '</td><td style="text-align: center;"><span class="game-badge">' + count + '</span></td><td style="text-align: center;">' + formattedTime + '</td><td style="text-align: right;">' + lastPlayedFormatted + '</td></tr>';
+                }).join('');
+            }
+        }
+
+        document.getElementById('gameSearch').oninput = applyFilters;
+
+        window.clearAllCache = function () {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(function (reg) {
+                    reg.active.postMessage({ type: 'CLEAR_CACHE' });
+                });
+            }
+            localStorage.clear();
+            alert('Cache netejat. Es recarregarà la pàgina.');
+            window.location.reload();
+        };
+    </script>
+</body>
+</html>
