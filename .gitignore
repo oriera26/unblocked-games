@@ -1,0 +1,16 @@
+# Build d'Electron i dependancies
+/electron/
+/node_modules/
+/dist/
+
+# Binaries compilats
+*.exe
+*.dmg
+*.AppImage
+
+# Sistema operatiu
+.DS_Store
+
+# Fitxers de treball dels scripts de tools/
+/tools/*.log
+/tools/tmp/
