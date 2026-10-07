@@ -159,6 +159,31 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # La secció de canvis ve dels teus missatges de commit: es recullen
+      # tots els del push (del més vell al més nou), amb l'assumpte com a
+      # títol i la descripció a sota. Si el push no en porta cap (és una
+      # tag pujada a mà), es posa un avís en lloc de deixar-ho buit.
+      - name: Compon la secció de canvis
+        id: canvis
+        env:
+          COMMITS: ${{ toJSON(github.event.commits) }}
+        run: |
+          node -e '
+            const commits = JSON.parse(process.env.COMMITS ?? "null") ?? [];
+            const text = commits.length
+              ? commits
+                  .map((c) => {
+                    const linies = String(c.message).split("\n");
+                    const descripcio = linies.slice(1).join("\n").trim();
+                    return "### " + linies[0] + "\n\n" + (descripcio || "(sense descripció)");
+                  })
+                  .join("\n\n")
+              : "(Publicació de tag: aquest esdeveniment no porta commits associats.)";
+            console.log("text<<EOF_CANVIS");
+            console.log(text);
+            console.log("EOF_CANVIS");
+          ' >> "$GITHUB_OUTPUT"
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.versio.outputs.version }}
@@ -167,7 +192,6 @@ jobs:
           files: |
             dist/*.exe
             dist/*.deb
-          generate_release_notes: true
           body: |
             ## UnblockedGames by Ula
 
@@ -216,3 +240,7 @@ jobs:
             afegeix ell sol; no cal descarregar-los per fer servir l'app.
 
             ---
+
+            ## Canvis
+
+            ${{ steps.canvis.outputs.text }}
