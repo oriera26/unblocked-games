@@ -1,8 +1,9 @@
 # Quan es puja una tag que comença per `v` (p. ex. v1.0.0) compila
-# l'app per a Windows i per a Linux i la penja com a release de GitHub.
+# l'app per a Windows i per a Linux i la penja com a release de GitHub,
+# amb exactament dos fitxers:
 #
-# Windows: instal·lador NSIS (+ blockmap per a actualitzacions).
-# Linux:  AppImage i .deb.
+#   Windows: instal·lador NSIS (.exe)
+#   Linux:   paquet .deb (Debian/Ubuntu)
 #
 # La tag es crea des de fora del workflow (git tag / llançament manual),
 # així que un push ordinari a `main` no llança cap release.
@@ -46,10 +47,7 @@ jobs:
           name: distribucio-${{ matrix.os }}
           path: |
             dist/*.exe
-            dist/*.blockmap
-            dist/*.AppImage
             dist/*.deb
-            dist/latest*.yml
           if-no-files-found: error
 
   release:
@@ -63,10 +61,11 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          # Només dos fitxers: l'instal·lador de Windows (.exe) i el
+          # paquet de Debian/Ubuntu (.deb). Res més: l'AppImage, el
+          # blockmap i els latest*.yml sobren (aquests dos últims només
+          # els faria servir una auto-actualització, i l'app no en té).
           files: |
             dist/*.exe
-            dist/*.blockmap
-            dist/*.AppImage
             dist/*.deb
-            dist/latest*.yml
           generate_release_notes: true
