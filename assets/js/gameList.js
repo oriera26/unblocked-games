@@ -7,12 +7,12 @@
  *   image  portada a assets/images/, o "" si el joc encara no en té
  *   type   categoria; ha de coincidir amb un id de config.js
  *
- * 696 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
+ * 697 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
  * només exporta la llista.
  *
  * El camp image l'omple tools/fetch-covers.mjs. Els jocs que no tenen
  * portada mostren la icona de mando que dibuixa ui.js, que és el que es
- * veu ara mateix a 696 dels 696 jocs.
+ * veu ara mateix a 697 dels 697 jocs.
  */
 
 export const GAMES = [
@@ -708,6 +708,7 @@ export const GAMES = [
    { name: "You vs. 100 Skibidi", url: "clyouvs100skibidi.html", image: "assets/images/clyouvs100skibidi.webp", type: "accio" },
    { name: "Yume Nikki", url: "clyumenikki.html", image: "assets/images/clyumenikki.webp", type: "altres" },
    { name: "Zen Word", url: "clzenword.html", image: "assets/images/clzenword.webp", type: "puzle" },
+   { name: "Zig Zag", url: "zigzag/index.html", image: "assets/images/zigzag.webp", type: "accio" },
    { name: "Zombie Road", url: "clzombieroad.html", image: "assets/images/clzombieroad.webp", type: "accio" },
    { name: "Zombie Rush", url: "clzombierush.html", image: "assets/images/clzombierush.webp", type: "accio" },
    { name: "Zombotron Reboot", url: "clzombotronreboot.html", image: "assets/images/clzombotronreboot.webp", type: "accio" },

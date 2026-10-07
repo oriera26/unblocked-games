@@ -1,0 +1,252 @@
+Title: 
+
+URL Source: https://html5.gamemonetize.co/ss7gtixbgqc98cq65lq2tag447yo39pv/TemplateData/css/style.css
+
+Published Time: Fri, 12 Nov 2021 18:45:48 GMT
+
+Markdown Content:
+body{
+	margin:0px;
+	padding:0px;
+	position: absolute; 
+	height:100%;
+	width:100%;
+	background-size:cover;
+	font-style: regular;
+	font-family:"Myriad Pro", Myriad,"Helvetica Neue", Helvetica, Arial, sans-serif;
+	background-color:#221f1c;
+}
+
+.webgl-content,#loadingBlock,#errorBrowserBlock{
+	padding:0px;
+	position:absolute;
+	height:100vh;
+	width:100vw;
+	background-color:#221f1c;
+}
+
+#gameContainer,canvas{
+	position:absolute;
+	height:100%;
+	width:100%;
+	background-color:#221f1c;
+}
+
+#fullScreenButton{
+	height:30px;
+	width:30px;
+	position:absolute;
+	z-index:1;
+	bottom:5px;
+	right:5px;
+	background-color:transparent;
+	background-image:url("../img/fullScreen_on.png");
+	background-size:30px 30px;
+	border:none;
+	cursor: pointer;
+}
+
+.subtitle{
+	color:#1896a7;
+	font-size:2.5vh;
+	padding-bottom:3vh;
+	padding-top: 3vh;
+	display: block;
+	height:15vh;
+	width:40vw;
+	margin:auto;
+	text-align: center;
+}
+
+.logo{
+	height:25vh;
+	width:auto;
+	display: block;
+	margin:auto;
+	margin-top:20vh;
+    transition: transform .1s;
+}
+
+.logo:hover {
+  transform: scale(1.2); /* (150% zoom - Note: if the zoom is too large, it will go outside of the viewport) */
+    cursor: pointer;
+}
+
+#loadingBlock,#errorBrowserBlock{
+	/*background-image:url("../img/background.png");
+	background-size:cover;*/
+}
+
+#emptyBar{
+	background: url("../img/progressEmpty.png") no-repeat right;
+	float: right; 
+	width: 60%; 
+	height: 100%; 
+	display: inline-block;
+    
+}
+
+#fullBar{
+	background: url("../img/progressFull.png") no-repeat right;
+	float: left; 
+	width: 40%; 
+	height: 100%; 
+	display: inline-block;
+}
+
+#progressBar,#warningBrowserBlock,#warningMobileBlock,#errorContent{
+	height:25vh;
+	width:40vw;
+	margin:auto;
+	text-align: center;
+    
+    margin-top:-20vh;
+}
+
+#progressBar{
+	height:8vh;
+	color:#666666;
+	font-size:4vh;
+}
+
+#warningBrowserBlock,#warningMobileBlock,#errorContent{
+	margin-top:15vh;
+	color:#666666;
+	font-size:2.3vh;
+}
+
+.browserIcons{
+	display: inline-flex;
+	margin-top:2vh;
+}
+
+.browserIcons a{
+	width:150px;
+}
+
+#errorContent{
+	font-size:3vh;
+	margin-top:5vh;
+}
+
+.centered{
+	height: 100%;
+	max-width:770px;
+	margin-left:auto;
+	margin-right:auto;
+}
+
+
+/* When aspect-ratio is smaller than 4/3*/
+
+
+@media (max-aspect-ratio: 6/10){
+	
+	.webgl-content{
+		-webkit-transform: translate(0%, 0%); transform: translate(0%, 0%);
+		-webkit-box-shadow: 0px 0px 29px 0px rgba(0,0,0,0.15);
+		-moz-box-shadow: 0px 0px 29px 0px rgba(0,0,0,0.15);
+		box-shadow: 0px 0px 29px 0px rgba(0,0,0,0.15);
+	}
+	
+	.keepRatio{
+		width:100%;
+		padding-top: 178%;
+		position: relative;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	.webgl-content,#loadingBlock,#errorBrowserBlock{
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+	}
+
+	.logo{
+		width:80vw;
+		height:auto;
+		margin-top:19vh;
+	}
+	
+	.subtitle{
+		font-size:2vw;
+		height:10vw;
+		padding-bottom:1vw;
+		padding-top: 1vw;
+	}
+
+	.subtitle,#progressBar,#warningBrowserBlock,#warningMobileBlock,#errorContent{
+		width:80vw;
+	}
+	
+	#progressBar{
+		height:9vw;
+		margin-top:1vw;
+		font-size:3vw;
+	}
+	
+	#emptyBar,#fullBar{
+		height: 9vw; 
+	}
+	
+	#warningBrowserBlock,#warningMobileBlock,#errorContent{
+		margin-top:3vw;
+		font-size:2vw;
+	}
+	
+	.browserIcons{
+		margin-top:1vw;
+	}
+	
+	.browserIcons a{
+		width:15vw;
+	}
+	
+	.browserIcons a img{
+		width:8vw;
+	}
+	
+	.webgl-content,#loadingBlock,#errorBrowserBlock{
+		
+		width:calc(100% - 2px);
+		height:auto;
+	}
+}
+
+/* When aspect-ratio is bigger than 16/9*/
+
+@media (min-aspect-ratio: 6/10){
+	body{
+		display:flex;
+		flex-wrap:wrap;
+		justify-content:space-between;
+	}
+	
+	.keepRatio{
+		width:56vh;
+		height:100%;
+		margin:0 auto;
+	}
+	
+	.webgl-content,#gameContainer,canvas,#loadingBlock,#errorBrowserBlock{
+		width: inherit;
+	}
+	
+	.webgl-content{
+	/*-webkit-box-shadow: 0px 0px 29px 0px rgba(0,0,0,0.15);
+		-moz-box-shadow: 0px 0px 29px 0px rgba(0,0,0,0.15);
+		box-shadow: 0px 0px 29px 0px rgba(0,0,0,0.15);*/
+	}
+	
+	.subtitle,#progressBar,#warningBrowserBlock,#warningMobileBlock,#errorContent{
+		width:50vh;
+	}
+	
+	.webgl-content,#loadingBlock,#errorBrowserBlock{
+		
+		height:calc(100% - 2px);
+	}
+}
