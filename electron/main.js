@@ -125,7 +125,7 @@ async function smoke() {
         // dins de l'objecte no s'espera i l'execució es quedaria penjada.
         const result = await mainWindow.webContents.executeJavaScript(`(async () => {
             const estats = await Promise.all(
-                ['/', '/assets/games/clgtavicecity.html', '/assets/images/clgtavicecity.webp']
+                ['/', '/assets/games/zigzag/index.html', '/assets/images/zigzag.webp']
                     .map((u) => fetch(u).then((r) => r.status).catch(() => 0))
             );
             return {
