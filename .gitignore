@@ -13,6 +13,6 @@
 # Sistema operatiu
 .DS_Store
 
-# Fitxers de treball dels scripts de tools/
-/tools/*.log
-/tools/tmp/
+# Tools de desenvolupament: només al disc local (per a la verificació),
+# no es versionen ni es puden mai al repositori.
+/tools/
