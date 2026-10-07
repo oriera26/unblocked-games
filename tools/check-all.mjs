@@ -11,12 +11,15 @@
  *      (candau, logs de passada acabats d'escriure, o el procés node que
  *      executi fetch-covers), mostrant l'última línia de progrés cada 15 s.
  *   2. `check-covers.mjs`      → rutes, fitxers, mides i imatges idèntiques
- *   3. Si surt alguna imatge idèntica, la re-resol sol (màxim 3 rondes):
+ *   3. `check-case.mjs`        → referències que no casen exactament amb el
+ *      nom versionat (a Windows es veuen perquè el disc no distingeix
+ *      majúscules; a Linux, on es comprova a CI, no)
+ *   4. Si surt alguna imatge idèntica, la re-resol sol (màxim 3 rondes):
  *      `fix-list.mjs --dupes-only` + `fetch-covers.mjs --apply --replace`
- *   4. `audit-covers.mjs`      → portades que amb les regles d'ara no punten
- *   5. `check-modules.mjs`     → grau de mòduls
- *   6. `test-server.mjs`       → servidor, MIME, 404, path traversal
- *   7. `covers-sheet.mjs`      → full de contacte i obre el navegador
+ *   5. `audit-covers.mjs`      → portades que amb les regles d'ara no punten
+ *   6. `check-modules.mjs`     → grau de mòduls
+ *   7. `test-server.mjs`       → servidor, MIME, 404, path traversal
+ *   8. `covers-sheet.mjs`      → full de contacte i obre el navegador
  *
  * Flags:  --no-open   no obre el navegador
  *         --no-fix    no re-resol res, només comprova
@@ -249,7 +252,11 @@ while (!NO_FIX && /imatge idèntica/.test(covers.text) && rounds < 3) {
   results.push(covers);
 }
 
-/* --- 4-6 · resta de comprovacions --------------------------------- */
+/* --- 4 · majúscules de les referències ------------------------------ */
+const cases = await run('Majúscules de les referències', 'check-case.mjs');
+results.push(cases);
+
+/* --- 5-7 · resta de comprovacions ------------------------------------ */
 const audit = await run('Audit de portades baixades', 'audit-covers.mjs');
 results.push(audit);
 
