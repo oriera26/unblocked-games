@@ -27,6 +27,7 @@
  */
 
 import { STORAGE_KEYS } from './config.js';
+import { onLangChange, t } from './i18n.js';
 
 /** Temps màxim entre l'última mirada i el retorn perquè compti com un intent. */
 const RETURN_WINDOW_MS = 15 * 60 * 1000;
@@ -37,6 +38,12 @@ const MIN_GAP_MS = 3 * 1000;
 let hiddenAt = null;
 let alreadyDismissed = false;
 let checking = false;
+
+/**
+ * Els elements del banner un cop creat, per poder-los re-traduir. `null`
+ * vol dir que no hi és (encara no s'ha mostrat, o ja s'ha tancat).
+ */
+let bannerEls = null;
 
 function wasDismissed() {
     try {
@@ -119,11 +126,11 @@ function show(appName) {
     banner.id = 'app-banner';
     banner.className = 'app-banner';
     banner.setAttribute('role', 'dialog');
-    banner.setAttribute('aria-label', `${appName} instal·lada`);
+    banner.setAttribute('aria-label', t('banner.app', { name: appName }));
 
     const text = document.createElement('p');
     text.className = 'app-banner-text';
-    text.textContent = `${appName} ja és instal·lada. Obre-la en finestres pròpies.`;
+    text.textContent = t('banner.app', { name: appName });
 
     const actions = document.createElement('div');
     actions.className = 'app-banner-actions';
@@ -131,7 +138,7 @@ function show(appName) {
     const open = document.createElement('button');
     open.type = 'button';
     open.className = 'app-banner-open';
-    open.textContent = 'Obre l\'app';
+    open.textContent = t('banner.open');
     open.addEventListener('click', () => {
         // El botó dóna lloc al valor de window, que el navegador llegeix
         // per saber quina app obrir. No hi ha res més a fer.
@@ -141,18 +148,39 @@ function show(appName) {
     const dismiss = document.createElement('button');
     dismiss.type = 'button';
     dismiss.className = 'app-banner-dismiss';
-    dismiss.setAttribute('aria-label', 'Tanca l\'avís');
+    dismiss.setAttribute('aria-label', t('banner.dismiss'));
     dismiss.textContent = '\u2715';
     dismiss.addEventListener('click', () => {
         alreadyDismissed = true;
         rememberDismissed();
+        bannerEls = null;
         banner.remove();
     });
 
     actions.append(open, dismiss);
     banner.append(text, actions);
     document.body.appendChild(banner);
+
+    bannerEls = { banner, text, open, dismiss, appName };
 }
+
+/**
+ * El banner es crea una sola vegada, així que en canviar d'idioma es
+ * queda en el de quan va aparèixer. Aquesta és la peça que el posa al
+ * dia: s'executa després d'`applyI18n`, que ja s'ha ocupat de la resta
+ * del HTML.
+ */
+onLangChange(() => {
+    if (!bannerEls) return;
+
+    const { banner, text, open, dismiss, appName } = bannerEls;
+    const sentence = t('banner.app', { name: appName });
+
+    text.textContent = sentence;
+    banner.setAttribute('aria-label', sentence);
+    open.textContent = t('banner.open');
+    dismiss.setAttribute('aria-label', t('banner.dismiss'));
+});
 
 /** Muntxa els escoltadors de visibilitat. */
 export function startDetection() {

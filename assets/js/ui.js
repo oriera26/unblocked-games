@@ -20,12 +20,26 @@ import {
 import { filters, isFavorite, stats } from './state.js';
 import { getLevelForPoints } from './levels.js';
 import { iconMarkup } from './icons.js';
+import { localeOf, t } from './i18n.js';
 
 export const $ = (id) => document.getElementById(id);
 
 /* ================================================================
    Categories
    ================================================================ */
+
+/**
+ * L'etiqueta d'una categoria en l'idioma actiu.
+ *
+ * Si la clau no és enlloc (fitxer d'idioma pendent de carregar), es fa
+ * servir el català que porta la pròpia constant: `t()` en aquest cas
+ * retornaria la clau literal, i `cat.accio` a la píldora seria pitjor
+ * que `Acció`.
+ */
+function categoryText(category) {
+    const text = t(category.key);
+    return text === category.key ? category.label : text;
+}
 
 /**
  * Construeix les píldores de categoria dins de #pillWrapper.
@@ -47,7 +61,7 @@ export function renderCategories(onSelect) {
         pill.className = 'category-item';
         pill.id = `cat-${category.id}`;
         pill.setAttribute('aria-pressed', String(category.id === filters.category));
-        pill.innerHTML = `${iconMarkup(category.icon, { size: 13 })}<span>${category.label}</span>`;
+        pill.innerHTML = `${iconMarkup(category.icon, { size: 13 })}<span>${categoryText(category)}</span>`;
         pill.addEventListener('click', () => onSelect(category.id));
 
         wrapper.appendChild(pill);
@@ -134,7 +148,7 @@ function buildCard(game) {
     favButton.type = 'button';
     favButton.className = favorite ? 'fav-btn active' : 'fav-btn';
     favButton.dataset.action = 'favorite';
-    favButton.setAttribute('aria-label', favorite ? 'Treure dels favorits' : 'Afegir als favorits');
+    favButton.setAttribute('aria-label', t(favorite ? 'card.fav.remove' : 'card.fav.add'));
     favButton.setAttribute('aria-pressed', String(favorite));
     favButton.innerHTML = iconMarkup('star', { size: 18, fill: favorite ? '#FFD60A' : 'none' });
 
@@ -327,27 +341,52 @@ export function applyTheme(dark) {
    Pantalla d'estadístiques
    ================================================================ */
 
-/** 'ca-ES' fixa el format de data independentment de la configuració
- *  regional del sistema, que potser és en-US i escriuria "Oct 5, 2:30 PM". */
-const DATE_LOCALE = 'ca-ES';
+/**
+ * El locale per a les dates depèn de l'idioma triat: `ca-ES` fixava el
+ * format en català per a tothom, i un castellà hauria vist «5 oct.
+ * 14:30» en lloc del que ell espera.
+ *
+ * `localeOf` també tradueix `por` → `pt`, perquè `por` no és un tag
+ * BCP47 vàlid i `toLocaleDateString('por')` llençaria error.
+ */
+const dateOptions = {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+};
 
 function formatDuration(totalSeconds) {
     const seconds = Math.max(0, Math.floor(totalSeconds));
     const minutes = Math.floor(seconds / 60);
     const rest = seconds % 60;
-    return `${minutes}m ${rest}s`;
+    return t('stats.duration', { m: minutes, s: rest });
+}
+
+/**
+ * Els minuts sols, amb la seva unitat en l'idioma triat.
+ *
+ * En comptes d'inventar una clau nova (i haver de fer-la arribar als
+ * 100 fitxers), es reutilitza la plantilla de durada: tot el que hi ha
+ * abans de `{s}` és el nombre amb la seva unitat — «12m» en català,
+ * «12 นาที» en tailandès, «12 min» en italià.
+ */
+function formatMinutes(totalSeconds) {
+    const minutes = Math.floor(Math.max(0, totalSeconds) / 60);
+    const head = t('stats.duration', {}).split('{s}')[0];
+
+    // Si alguna plantilla no comença pels minuts (no n'hi ha cap, però
+    // el fitxer el pot editar qualsevol), no es queda la casella buida.
+    if (!head.includes('{m}')) return `${minutes}m`;
+
+    return head.replace('{m}', String(minutes)).trim();
 }
 
 function formatDate(iso) {
-    if (!iso) return 'Mai';
+    if (!iso) return t('stats.never');
     const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return 'Mai';
-    return date.toLocaleDateString(DATE_LOCALE, {
-        day: '2-digit',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    if (Number.isNaN(date.getTime())) return t('stats.never');
+    return date.toLocaleDateString(localeOf(), dateOptions);
 }
 
 export function renderStats() {
@@ -359,7 +398,7 @@ export function renderStats() {
 
     if (streak) streak.textContent = String(stats.streak);
     if (points) points.textContent = String(stats.points);
-    if (time) time.textContent = `${Math.floor(stats.timeSeconds / 60)}m`;
+    if (time) time.textContent = formatMinutes(stats.timeSeconds);
 
     const level = getLevelForPoints(stats.points);
     if (levelEl) levelEl.textContent = level.title;
@@ -378,7 +417,7 @@ export function renderStats() {
         const cell = document.createElement('td');
         cell.colSpan = 4;
         cell.className = 'history-empty';
-        cell.textContent = 'Encara no has jugat a cap joc. Comença la teva aventura!';
+        cell.textContent = t('stats.empty');
         row.appendChild(cell);
         body.replaceChildren(row);
         return;

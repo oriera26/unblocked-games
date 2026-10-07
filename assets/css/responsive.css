@@ -1,0 +1,248 @@
+/* ============================================================
+   responsive.css · punts de tall
+   Carregat el darrer des d'index.html: tot el que diu aquí guana
+   als fitxers de dalt, que és el que permet tenir tots els ajustos
+   de mida en un sol lloc.
+
+   Tallants:
+
+     ≤900px    tauleta i portàtil estret
+     ≤640px    mòbil: el nav es parteix en dues files, la cerca
+               s'obre com a barra damunt del nav, el modal es torna
+               a pantalla completa i la barra de categories agafa
+               tot l'ample
+     ≤400px    mòbil petit
+     ≥1440px   pantalla ampla
+     hover:none dispositius tàctils, on no hi ha hover que reveli
+               l'estrella de favorits ni obri la cerca
+
+   Regla de la casa: aquí només hi ha mides, posicions i punts de
+   tall. El vidre (glass, orbes, squircles) no es toca: és el que
+   defineixen main.css, layout.css i components.css, i ha de quedar
+   igual a totes les mides.
+   ============================================================ */
+
+/* ============================================================
+   Tauleta i portàtil estret
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .container { padding: 90px 20px 110px; }
+    .error-container { margin-top: 50px; }
+}
+
+/* ============================================================
+   Mòbil
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+    /* --- NAV en dues files ----------------------------------
+       A menys de 640px, la píldora centrada dels enllaços es
+       menja el logo per un costat i els botons per l'altre: cap
+       dels tres cap a la mateixa fila. La solució és fer-ho en
+       dues files i conservar-ho tot (res de menjar-se res).
+
+       L'ordre del DOM és nav-left, nav-center, nav-right. Sense
+       `order`, en embolicar la píldora del centre trencaria la
+       primera fila i els botons quedarien tots sols a una tercera. */
+
+    nav {
+        top: max(15px, calc(env(safe-area-inset-top, 0px) + 10px));
+        width: calc(100% - 20px);
+        height: auto;
+        min-height: 56px;
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        row-gap: 6px;
+        column-gap: 10px;
+        border-radius: 24px;
+    }
+
+    .nav-left { order: 0; }
+    .nav-right { order: 1; gap: 10px; }
+    .nav-center {
+        order: 2;
+        position: static;
+        left: auto;
+        transform: none;
+        flex: 1 0 100%;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .nav-link { font-size: 13px; padding: 6px 14px; }
+    .logo-img { height: 28px; }
+
+    /* Al tacte, 32px és just: els tres botons del nav creixen. */
+    .search-trigger,
+    .theme-btn,
+    .settings-btn { width: 34px; height: 34px; }
+
+    /* --- El contenidor ha de deixar lloc al nav de dues files --
+       El `padding-top` es calcula des del mateix lloc d'on surt el
+       nav, perquè en un iPhone amb notch la primera fila baixa tant
+       com baixa la franja d'estat. */
+    .container {
+        padding-top: calc(max(15px, env(safe-area-inset-top, 0px) + 10px) + 105px);
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-bottom: 150px;
+    }
+
+    /* --- Cerca: en obrir-se cobreix el nav --------------------
+       Amb la barra oberta, logo + cerca + botons no caben a una
+       sola fila, així que l'obertura es converteix en una barra
+       damunt de tot. La posa la classe `.open` (el clic del botó),
+       no l'hover, que al mòbil no existeix. */
+    .search-container.open {
+        position: absolute;
+        inset: 8px 10px;
+        z-index: 30;
+        background: var(--glass-bg-strong);
+        padding: 4px 6px;
+        border-radius: 18px;
+    }
+    .search-container.open .search-bar {
+        flex: 1;
+        width: auto;
+        opacity: 1;
+        padding: 8px 10px;
+        margin-right: 6px;
+        pointer-events: all;
+        /* Per sota de 16px el Safari fa zoom en enfocar el camp. */
+        font-size: 16px;
+    }
+
+    /* --- El modal es torna pantalla completa ------------------
+       A 88vh amb vora rodona, en un mòbil quedaven dues franjes
+       negres i el joc, més petit del que podia. */
+    .modal { padding: 0; }
+    .modal-content {
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+    }
+    .game-loader-overlay,
+    .mobile-gate { border-radius: 0; }
+
+    .close-modal,
+    .fullscreen-modal {
+        top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
+        right: 12px;
+        width: 40px;
+        height: 40px;
+    }
+    /* Mateix càlcul que a components.css, amb els nous 40px:
+       12 de vora + 40 del botó de tancar + 8 de separació. */
+    .fullscreen-modal { right: 60px; }
+
+    /* --- Barra de categories a l'amplada del mòbil ------------ */
+    .category-container {
+        left: 10px;
+        right: 10px;
+        transform: none;
+        max-width: none;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    }
+
+    /* --- Graella: més columnes, menys separació ---------------
+       `115px` és el punt on un mòbil de 360px fa dues files i un
+       de 414px n'hi fa tres. Ha de canviar també l'esquelet, o en
+       carregar les targetes reals la graella saltaria de mida. */
+    .grid,
+    .grid.skeleton-grid {
+        grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+        gap: 14px;
+    }
+
+    /* --- Estadístiques --------------------------------------- */
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+    }
+    .stats-title { font-size: 26px; }
+    .stats-subtitle { font-size: 14px; }
+    .stat-card { padding: 14px; border-radius: 20px; }
+    .stat-value { font-size: 24px; }
+    .history-section { padding: 16px; border-radius: 22px; }
+    .history-title { font-size: 16px; margin-bottom: 14px; }
+    th { padding: 8px 6px; font-size: 10px; }
+    td { padding: 10px 6px; font-size: 13px; }
+    .game-badge { margin-left: 4px; }
+
+    /* --- Menú de configuració dins la pantalla ----------------
+       El menú es desancora del botó: `.settings-wrap` deixa de ser la
+       seva referència i passa a ser-ho el nav. A ≤640 el botó de
+       Configuració és prou a l'esquerra (hi ha els botons de tema i
+       de cerca al seu costat) perquè un menú de 320px li surti per
+       l'altra banda de la pantalla. Enganxat al nav, `right: 0` el
+       deixa sempre dins i `top: 100%` el cau per sota de les dues
+       files, sense tapar els enllaços. */
+    .settings-wrap { position: static; }
+    .settings-menu {
+        min-width: 0;
+        width: min(320px, calc(100vw - 24px));
+    }
+
+    /* --- Vista 404 ------------------------------------------- */
+    .error-container { margin-top: 40px; padding: 44px 20px; }
+    .error-emoji { font-size: 40px; }
+}
+
+/* ============================================================
+   Mòbil petit
+   ============================================================ */
+
+@media (max-width: 400px) {
+    .nav-left { gap: 6px; }
+    .nav-right { gap: 8px; }
+    .nav-link { font-size: 12px; padding: 5px 11px; }
+    .logo-img { height: 24px; }
+    .search-trigger,
+    .theme-btn,
+    .settings-btn { width: 32px; height: 32px; }
+
+    .stats-title { font-size: 22px; }
+    .stat-card { padding: 12px; }
+    .stat-value { font-size: 22px; }
+    .lang-select { width: 96px; }
+}
+
+/* ============================================================
+   Pantalla ampla
+   ============================================================ */
+
+@media (min-width: 1440px) {
+    /* En un monitor de 2K la graella pot aprofitar més ample en
+       lloc de deixar barreres als costats. */
+    .container { max-width: 1200px; }
+    .grid,
+    .grid.skeleton-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 22px;
+    }
+}
+
+/* ============================================================
+   Dispositius tàctils
+   ============================================================ */
+
+@media (hover: none) {
+    /* L'estrella de favorits es feia visible només en hover: en una
+       pantalla tàctil no hi ha hover, així que mai es veia i no es
+       podia marcar cap favorit des del mòbil. */
+    .fav-btn { opacity: 1; }
+
+    /* La cerca també s'obria amb l'hover, que en tacte s'enganxa
+       a l'últim element tocat i obre la barra soles. Només la obre
+       la classe `.open` (`:not` per no treure-li l'efecte a la
+       classe, que té la mateixa especificitat). */
+    .search-container:not(.open):hover .search-bar {
+        width: 0;
+        opacity: 0;
+        padding: 6px 0;
+        margin-right: 0;
+        pointer-events: none;
+    }
+}

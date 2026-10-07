@@ -17,6 +17,9 @@
     <link rel="stylesheet" href="assets/css/layout.css">
     <link rel="stylesheet" href="assets/css/components.css">
     <link rel="stylesheet" href="assets/css/skeleton.css">
+    <!-- Darrer: responsive.css recull tots els punts de tall i ha de poder
+         guanyar el que diuen els fitxers de dalt. -->
+    <link rel="stylesheet" href="assets/css/responsive.css">
 </head>
 <body class="dark-theme">
 
@@ -30,46 +33,61 @@
             </div>
         </div>
         <div class="nav-center">
-            <span class="nav-link active" id="link-arcade" data-view="arcade">Jocs</span>
-            <span class="nav-link" id="link-stats" data-view="stats">Estadístiques</span>
+            <span class="nav-link active" id="link-arcade" data-view="arcade" data-i18n="nav.jocs">Jocs</span>
+            <span class="nav-link" id="link-stats" data-view="stats" data-i18n="nav.stats">Estadístiques</span>
         </div>
         <div class="nav-right">
-            <div class="search-container">
-                <input type="text" class="search-bar" placeholder="Cerca un joc..." id="gameSearch">
-                <button class="search-trigger" aria-label="Cercar">
+            <div class="search-container" id="searchContainer">
+                <input type="text" class="search-bar" placeholder="Cerca un joc..." id="gameSearch" data-i18n-ph="search.placeholder">
+                <button type="button" class="search-trigger" aria-label="Cercar" aria-expanded="false" aria-controls="gameSearch" data-i18n-aria="search.aria">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </button>
             </div>
 
             <div class="settings-wrap" id="settingsWrap">
-                <button class="settings-btn" id="settingsBtn" aria-label="Configuració" aria-haspopup="true" aria-expanded="false">
+                <button class="settings-btn" id="settingsBtn" aria-label="Configuració" data-i18n-aria="settings.aria" aria-haspopup="true" aria-expanded="false">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
                 <div class="settings-menu" id="settingsMenu" role="menu">
-                    <div class="settings-menu-title">Configuració</div>
+                    <div class="settings-menu-title" data-i18n="settings.title">Configuració</div>
+
+                    <!-- El desplegable d'idioma viu dins del menú de
+                         configuració: és un desplegable dins d'un altre. -->
+                    <div class="settings-item settings-item-lang">
+                        <div class="settings-item-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                            <div class="settings-item-text">
+                                <span class="settings-item-label" data-i18n="settings.lang.label">Idioma</span>
+                                <span class="settings-item-desc" data-i18n="settings.lang.desc">Canvia l'idioma de la web</span>
+                            </div>
+                        </div>
+                        <select id="langSelect" class="lang-select" aria-label="Tria l'idioma de la interfície" data-i18n-aria="settings.lang.aria"></select>
+                    </div>
+
                     <div class="settings-item" id="perfModeItem" role="menuitemcheckbox" aria-checked="false" tabindex="0">
                         <div class="settings-item-left">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
                             <div class="settings-item-text">
-                                <span class="settings-item-label">Mode rendiment</span>
-                                <span class="settings-item-desc">Desactiva orbe, glass i squircles</span>
+                                <span class="settings-item-label" data-i18n="settings.perf.label">Mode rendiment</span>
+                                <span class="settings-item-desc" data-i18n="settings.perf.desc">Desactiva orbe, glass i squircles</span>
                             </div>
                         </div>
                         <div class="toggle" aria-hidden="true"></div>
                     </div>
+
                     <div class="settings-item" id="clearCacheBtn" role="menuitem" tabindex="0">
                         <div class="settings-item-left">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             <div class="settings-item-text">
-                                <span class="settings-item-label">Neteja la memòria cau</span>
-                                <span class="settings-item-desc">Descarta els jocs desats per treure espai</span>
+                                <span class="settings-item-label" data-i18n="settings.cache.label">Neteja la memòria cau</span>
+                                <span class="settings-item-desc" data-i18n="settings.cache.desc">Descarta els jocs desats per treure espai</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <button class="theme-btn" id="themeBtn" aria-label="Canviar tema">
+            <button class="theme-btn" id="themeBtn" aria-label="Canviar tema" data-i18n-aria="theme.aria">
                 <!-- Contenidor, no l'SVG mateix: el canvi de tema substitueix
                      el contingut d'aquest element en lloc de l'element, de manera
                      que el botó no torna a perdre la referència a la icona. -->
@@ -81,42 +99,47 @@
     <div class="container" id="scrollContainer">
         <section id="view-arcade" class="view active">
             <div class="grid" id="gameGrid"></div>
-            <div id="loadMoreTrigger" style="height: 60px;"></div>
+            <div id="loadMoreTrigger" class="load-more"></div>
         </section>
 
         <section id="view-stats" class="view">
             <div class="stats-header">
-                <h1 style="font-size: 32px; font-weight: 800; letter-spacing: -0.5px;">El teu Perfil</h1>
-                <p style="opacity: 0.5; font-size: 15px;">Dades d'activitat i fites assolides.</p>
+                <h1 class="stats-title" data-i18n="stats.title">El teu Perfil</h1>
+                <p class="stats-subtitle" data-i18n="stats.subtitle">Dades d'activitat i fites assolides.</p>
             </div>
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Ratxa Actual</div>
+                    <div class="stat-label" data-i18n="stats.streak">Ratxa Actual</div>
                     <div class="stat-value"><span id="stat-streak">0</span><span class="streak-flame">🔥</span></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Puntuació Total</div>
+                    <div class="stat-label" data-i18n="stats.points">Puntuació Total</div>
                     <div class="stat-value" id="stat-points">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Nivell</div>
+                    <div class="stat-label" data-i18n="stats.level">Nivell</div>
                     <div class="stat-value" id="stat-level">Bronze</div>
-                    <div style="width: 100%; height: 4px; background: var(--pill-bg); border-radius: 2px; margin-top: 4px;">
-                        <div id="level-progress" style="width: 30%; height: 100%; background: var(--accent); border-radius: 2px;"></div>
+                    <div class="level-track">
+                        <div id="level-progress" class="level-bar"></div>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Temps Jugat</div>
+                    <div class="stat-label" data-i18n="stats.time">Temps Jugat</div>
                     <div class="stat-value" id="stat-time">0m</div>
                 </div>
             </div>
 
             <div class="history-section">
-                <div style="font-weight: 700; font-size: 18px; margin-bottom: 20px;">📊 Historial Detallat de Jocs</div>
+                <div class="history-title" data-i18n="stats.historyTitle">📊 Historial Detallat de Jocs</div>
                 <div class="table-container">
                     <table id="historyTable">
-                        <thead><tr><th>Joc</th><th style="text-align: center;">Partides</th><th style="text-align: center;">Temps</th><th style="text-align: right;">Última sessió</th></tr></thead>
+                        <thead><tr>
+                            <th data-i18n="stats.th.game">Joc</th>
+                            <th class="th-center" data-i18n="stats.th.plays">Partides</th>
+                            <th class="th-center" data-i18n="stats.th.time">Temps</th>
+                            <th class="th-right" data-i18n="stats.th.last">Última sessió</th>
+                        </tr></thead>
                         <tbody id="historyBody"></tbody>
                     </table>
                 </div>
@@ -125,9 +148,9 @@
 
         <section id="view-404" class="view">
             <div class="error-container">
-                <div style="font-size: 48px; opacity: 0.3;">😕</div>
-                <h2 style="margin-top:15px; opacity: 0.8;">Sense resultats</h2>
-                <button class="reset-btn" id="resetFilters" type="button">Neteja la cerca</button>
+                <div class="error-emoji">😕</div>
+                <h2 class="error-title" data-i18n="view.empty.title">Sense resultats</h2>
+                <button class="reset-btn" id="resetFilters" type="button" data-i18n="view.empty.reset">Neteja la cerca</button>
             </div>
         </section>
     </div>
@@ -143,18 +166,30 @@
             <!-- A l'esquerra del de tancar: si fos a l'iframe el joc
                  seria l'únic que sortiria a pantalla completa i els botons
                  desapareixerien. -->
-            <button class="fullscreen-modal" id="fullscreenModal" type="button" aria-label="Pantalla completa">
-                <svg class="ico-max" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+            <button class="fullscreen-modal" id="fullscreenModal" type="button" aria-label="Pantalla completa" data-i18n-aria="modal.fullscreen">
+                <svg class="ico-max" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0-2-2v-3"/></svg>
                 <svg class="ico-min" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
             </button>
-            <button class="close-modal" id="closeModal" aria-label="Tancar">
+            <button class="close-modal" id="closeModal" aria-label="Tancar" data-i18n-aria="modal.close">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
             <!-- src="about:blank" i no src="": amb la src buida alguns navegadors
-             tornen a carregar el document actual dins de l'iframe. -->
+                 tornen a carregar el document actual dins de l'iframe. -->
             <iframe id="gameIframe" src="about:blank" allow="autoplay; fullscreen; gamepad" title="Joc"></iframe>
             <div id="loaderOverlay" class="game-loader-overlay" style="display: none;">
                 <div class="spinner"></div>
+            </div>
+            <!-- Avís de mòbil: es mostra abans de carregar cap joc i no
+                 toca l'iframe, que segueix a about:blank. El desa player.js. -->
+            <div id="mobileGate" class="mobile-gate" hidden>
+                <div class="mobile-gate-card">
+                    <div class="mobile-gate-ico">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M12 18h.01"/></svg>
+                    </div>
+                    <h2 class="mobile-gate-title" data-i18n="gate.title">Unblocked Games no està optimitzat per a mòbils</h2>
+                    <p class="mobile-gate-text" data-i18n="gate.text">En jugar des d'un mòbil o una tauleta hi poden haver errors i alguns jocs no responen bé al tacte.</p>
+                    <button type="button" class="mobile-gate-accept" id="gateAccept" data-i18n="gate.accept">Entesos</button>
+                </div>
             </div>
         </div>
     </div>
@@ -165,7 +200,7 @@
          un service worker i un manifest), i l'Electron farà-ho igual.
 
          gameList.js ja no es carrega amb un <script> propi: el mateix fitxer
-         l'importa main.js com a mòdul. -->
+         l'importa main.js com a mòdul. i18n.js tampoc: l'importa main.js. -->
     <script type="module" src="assets/js/main.js"></script>
 
 </body>

@@ -24,10 +24,11 @@ import {
 } from './ui.js';
 import { hydrateDataLucide } from './icons.js';
 import { currentView, go, startRouter } from './router.js';
-import { close, launch } from './player.js';
+import { close, initGate, launch } from './player.js';
 import { checkStreak, filters, toggleFavorite } from './state.js';
-import { initCacheControl, initSettings, registerServiceWorker } from './settings.js';
+import { initCacheControl, initLangSelect, initSettings, registerServiceWorker } from './settings.js';
 import { startDetection } from './detection.js';
+import { initI18n, onLangChange, t } from './i18n.js';
 
 /** Dins d'Electron no hi ha pestanya: la detecció i el SW no hi tenen sentit. */
 const isDesktop = Boolean(window.ulaDesktop);
@@ -84,6 +85,8 @@ function resetFilters() {
 
 function bindSearch() {
     const search = byId('gameSearch');
+    const container = byId('searchContainer');
+    const trigger = container?.querySelector('.search-trigger');
 
     // Es filtra en cada pulsació. Amb 697 jocs és una filtració lineal de
     // poc cost, i un debounce aquí només afegiria complexitat per estalviar
@@ -93,7 +96,42 @@ function bindSearch() {
         applyFilters();
     });
 
+    // El botó obre i tanca la barra. Obre-la el clic i no l'hover: en
+    // pantalla tàctil no hi ha hover i allà el botó era mort.
+    //
+    // El `pointerdown` és el que fa que funcioni el segon clic: en
+    // pitjar el botó amb el camp enfocat, el camp perdria l'enfocament,
+    // el `blur` de sota llevaria la classe i el clic la tornaria a posar
+    // (és a dir, no es tancaria mai).
+    trigger?.addEventListener('pointerdown', (event) => event.preventDefault());
+    trigger?.addEventListener('click', () => {
+        setSearchOpen(!container?.classList.contains('open'));
+    });
+
+    // En perdre l'enfocament, la barra es tanca. El filtre es queda,
+    // com passava abans: per treure'l hi ha el botó de neteja de la
+    // vista de sense resultats.
+    search?.addEventListener('blur', () => setSearchOpen(false));
+    search?.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setSearchOpen(false);
+    });
+
     byId('resetFilters')?.addEventListener('click', resetFilters);
+}
+
+/** Obre o tanca la barra de cerca i explica l'estat qui no hi veu. */
+function setSearchOpen(open) {
+    const container = byId('searchContainer');
+    if (!container) return;
+
+    const search = byId('gameSearch');
+    const trigger = container.querySelector('.search-trigger');
+
+    container.classList.toggle('open', open);
+    trigger?.setAttribute('aria-expanded', String(open));
+
+    if (open) search?.focus();
+    else search?.blur();
 }
 
 function bindTheme() {
@@ -160,7 +198,7 @@ function syncFullscreenButton() {
 
     const on = document.fullscreenElement === byId('gameModal');
     button.classList.toggle('is-fullscreen', on);
-    button.setAttribute('aria-label', on ? 'Surt de pantalla completa' : 'Pantalla completa');
+    button.setAttribute('aria-label', on ? t('modal.fullscreenExit') : t('modal.fullscreen'));
 }
 
 /** Carrega més targetes quan l'usuari arriba al final de la llista. */
@@ -193,15 +231,38 @@ function bindFavorites() {
     });
 }
 
-function start() {
+function onCategorySelect(categoryId) {
+    filters.category = categoryId;
+    setActiveCategory(categoryId);
+    applyFilters();
+}
+
+/**
+ * Quan algú canvia d'idioma, tot el que s'ha dibuixat amb `t()` es
+ * torna a dibuixar: les píldores de categoria, la graella —les
+ * etiquetes dels botons de favorit es posen en crear cada targeta— i
+ * les estadístiques, si hi som.
+ *
+ * El text estàtic del HTML ja l'ha repassat `applyI18n` abans de
+ * cridar-nos, així que aquí només toca el que neix del codi.
+ */
+function onLanguageChange() {
+    renderCategories(onCategorySelect);
+    setActiveCategory(filters.category);
+    applyFilters();
+    if (currentView() === 'stats') renderStats();
+}
+
+async function start() {
+    // L'idioma abans de res: categories i estadístiques es dibuixen
+    // amb `t()`, i corregir-les després seria un parpelleig.
+    await initI18n();
+    initLangSelect();
+
     // La ratxa s'ha de comptar un sol cop per sessió, quan arribem.
     checkStreak();
 
-    renderCategories((categoryId) => {
-        filters.category = categoryId;
-        setActiveCategory(categoryId);
-        applyFilters();
-    });
+    renderCategories(onCategorySelect);
 
     // Les icones estàtiques del nav. Les del grid les demana el mateix
     // render que les crea.
@@ -213,9 +274,11 @@ function start() {
     bindModal();
     bindFavorites();
     bindInfiniteScroll();
+    initGate();
 
     initSettings();
     initCacheControl();
+    onLangChange(onLanguageChange);
 
     // El routing s'arrenca abans de la primera càrrega perquè l'enllaç
     // profund decideixi quina vista s'obre, i `onArrive` mantingui les
@@ -239,8 +302,10 @@ function start() {
     if (!isDesktop) startDetection();
 }
 
+// `start` és asíncron (carrega l'idioma), i un `async` retornat d'un
+// listener es menja les promeses sense rebug: d'això `void`.
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, { once: true });
+    document.addEventListener('DOMContentLoaded', () => void start(), { once: true });
 } else {
-    start();
+    void start();
 }

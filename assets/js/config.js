@@ -21,14 +21,17 @@ export const VIEW_TRANSITION_MS = 320;
 /**
  * Els ids han de coincidir amb el camp `type` de gameList.js.
  * 'tots' és la categoria neutra: no filtra.
+ *
+ * `label` és el català de fàbrica (el que es veu si la traducció no
+ * arriba) i `key` és la clau d'i18n, resolta a t() en dibuixar-les.
  */
 export const CATEGORIES = [
-    { id: 'tots', label: 'Tots', icon: 'layout-grid' },
-    { id: 'accio', label: 'Acció', icon: 'zap' },
-    { id: 'puzle', label: 'Puzle', icon: 'brain' },
-    { id: 'esports', label: 'Esports', icon: 'trophy' },
-    { id: 'retro', label: 'Retro', icon: 'joystick' },
-    { id: 'altres', label: 'Altres', icon: 'more-horizontal' }
+    { id: 'tots', label: 'Tots', key: 'cat.tots', icon: 'layout-grid' },
+    { id: 'accio', label: 'Acció', key: 'cat.accio', icon: 'zap' },
+    { id: 'puzle', label: 'Puzle', key: 'cat.puzle', icon: 'brain' },
+    { id: 'esports', label: 'Esports', key: 'cat.esports', icon: 'trophy' },
+    { id: 'retro', label: 'Retro', key: 'cat.retro', icon: 'joystick' },
+    { id: 'altres', label: 'Altres', key: 'cat.altres', icon: 'more-horizontal' }
 ];
 
 export const CATEGORY_ALL = 'tots';
@@ -57,7 +60,9 @@ export const STORAGE_KEYS = {
     favorites: 'ulaFavorites',
     stats: 'ulaStats',
     performanceMode: 'ulaPerformanceMode',
-    appBannerDismissed: 'ulaAppBannerDismissed'
+    appBannerDismissed: 'ulaAppBannerDismissed',
+    /** Idioma triat. Absent = el que diu el navegador. El llegeix també offline.html. */
+    lang: 'ulaLang'
 };
 
 /** Forma de `userStats` en una instal·lació nova. */

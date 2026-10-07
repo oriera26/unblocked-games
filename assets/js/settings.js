@@ -4,6 +4,38 @@
  */
 
 import { SERVICE_WORKER_URL, STORAGE_KEYS } from './config.js';
+import { LANGS, currentLang, setLang, t } from './i18n.js';
+
+/* ================================================================
+   Idioma
+   ================================================================ */
+
+/**
+ * Muntxa el desplegable d'idioma de Configuració.
+ *
+ * Les opcions es diuen cadascuna en la seva llengua («Deutsch», no
+ * «Alemany»): qui busca alemany el reconeixerà així, i qui el parla
+ * potser no sap com es diu en català.
+ */
+export function initLangSelect() {
+    const select = document.getElementById('langSelect');
+    if (!select) return;
+
+    select.replaceChildren();
+
+    for (const lang of LANGS) {
+        const option = document.createElement('option');
+        option.value = lang.code;
+        option.textContent = lang.native;
+        select.appendChild(option);
+    }
+
+    select.value = currentLang();
+
+    select.addEventListener('change', () => {
+        void setLang(select.value);
+    });
+}
 
 /* ================================================================
    Mode rendiment
@@ -119,8 +151,14 @@ async function clearServiceWorkerCache() {
  * Aquí el botó és un <button> de debò i, si en un entorn sense
  * `alert` (una finestra d'Electron, per exemple) no es pot confirmar,
  * es neteja igual.
+ *
+ * El missatge es resol en clicar i no en carregar: la persona pot
+ * haver canviat d'idioma després d'entrar.
+ *
+ * @param {string} [buttonId]
+ * @param {string|null} [message]  text propi; `null` = l'idioma actiu
  */
-export function initCacheControl(buttonId = 'clearCacheBtn', message = 'Memòria netejada. Es recarrega la pàgina.') {
+export function initCacheControl(buttonId = 'clearCacheBtn', message = null) {
     const button = document.getElementById(buttonId);
     if (!button) return;
 
@@ -134,7 +172,7 @@ export function initCacheControl(buttonId = 'clearCacheBtn', message = 'Memòria
             console.warn('[ula] no s\'ha pogut buidar localStorage', err);
         }
 
-        if (typeof confirm === 'function' && !confirm(message)) {
+        if (typeof confirm === 'function' && !confirm(message ?? t('settings.cache.confirm'))) {
             button.disabled = false;
             return;
         }

@@ -185,3 +185,7 @@ nav {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 20px;
 }
+
+/* L'espai que queda sota de l'última fila, on l'IntersectionObserver
+   demana més targetes. */
+.load-more { height: 60px; }

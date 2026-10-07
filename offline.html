@@ -55,10 +55,10 @@
     <main class="relative z-10 w-full max-w-md mx-auto text-center opacity-0 animate-fade-in-up">
         
         <!-- Headings -->
-        <h1 class="text-3xl font-semibold tracking-tight text-white mb-3">
+        <h1 id="offlineTitle" class="text-3xl font-semibold tracking-tight text-white mb-3">
             Sense connexió
         </h1>
-        <p class="text-neutral-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto font-normal">
+        <p id="offlineText" class="text-neutral-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto font-normal">
             No s'ha pogut establir connexió amb el servidor. Comprova la teva xarxa i torna-ho a provar.
         </p>
 
@@ -75,20 +75,66 @@
     </main>
 
     <script>
+        /* Traducció. Aquesta pàgina es carrega sola dins de la iframe del joc
+           quan no hi ha xarxa, així que no pot importar el mòdul i18n.js: es
+           fa una càrrega pròpia. Si el fitxer de l'idioma no es pot obtenir —
+           que és justament quan es veu aquesta pàgina — es queda el català que
+           ja ve al HTML. Les claus són les mateixes que a assets/lang/ca.json. */
+        const OFFLINE = {
+            retry: 'Reintentar connexió',
+            checking: 'Comprovant...',
+            reloading: 'Recarregant...'
+        };
+        const OFFLINE_RTL = ['ar', 'he', 'ur', 'fa', 'ps'];
+
+        (async () => {
+            const lang = localStorage.getItem('ulaLang') || 'ca';
+            if (lang === 'ca') return;
+
+            try {
+                const res = await fetch('assets/lang/' + lang + '.json');
+                if (!res.ok) return;
+                const dict = await res.json();
+                const get = (key) => (typeof dict[key] === 'string' ? dict[key] : null);
+
+                const title = get('offline.title');
+                if (title) {
+                    document.title = title;
+                    document.getElementById('offlineTitle').textContent = title;
+                    document.documentElement.lang = lang;
+                    if (OFFLINE_RTL.includes(lang)) document.documentElement.dir = 'rtl';
+                }
+
+                const text = get('offline.text');
+                if (text) document.getElementById('offlineText').textContent = text;
+
+                const retry = get('offline.retry');
+                if (retry) {
+                    OFFLINE.retry = retry;
+                    document.getElementById('btnText').textContent = retry;
+                }
+
+                OFFLINE.checking = get('offline.checking') ?? OFFLINE.checking;
+                OFFLINE.reloading = get('offline.reloading') ?? OFFLINE.reloading;
+            } catch {
+                // Sense xarxa: el català de fàbrica ja hi és al HTML.
+            }
+        })();
+
         // Interactive retry handler with smooth animation and network check simulation
         function handleRetry(btn) {
             const icon = document.getElementById('retryIcon');
             const btnText = document.getElementById('btnText');
-            
+             
             // Disable button temporarily & spin icon
             btn.style.opacity = '0.8';
             btn.style.pointerEvents = 'none';
             icon.classList.add('animate-spin');
-            btnText.textContent = 'Comprovant...';
+            btnText.textContent = OFFLINE.checking;
 
             setTimeout(() => {
                 if (navigator.onLine) {
-                    btnText.textContent = 'Recarregant...';
+                    btnText.textContent = OFFLINE.reloading;
                     setTimeout(() => {
                         window.location.reload();
                     }, 500);
@@ -97,7 +143,7 @@
                     btn.style.opacity = '1';
                     btn.style.pointerEvents = 'auto';
                     icon.classList.remove('animate-spin');
-                    btnText.textContent = 'Reintentar connexió';
+                    btnText.textContent = OFFLINE.retry;
                 }
             }, 1000);
         }

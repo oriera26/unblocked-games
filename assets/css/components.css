@@ -29,22 +29,40 @@
     pointer-events: all;
 }
 
+/* El botó té la mateixa cara que els altres dos del nav (vora de vidre)
+   i, en obrir-se, es tenyeix d'accent: l'estat obert es decideix amb la
+   classe `.open` (posada pel clic) i no amb `:hover`, perquè al mòbil
+   no hi ha hover. */
 .search-trigger {
-    background: transparent;
-    border: none;
+    background: var(--glass-bg-soft);
+    border: 1px solid var(--glass-border-soft);
     color: var(--text-main);
-    opacity: 0.75;
+    opacity: 0.9;
     cursor: pointer;
     width: 28px; height: 28px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s ease, opacity 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
     -webkit-appearance: none;
     appearance: none;
     padding: 0;
+    flex: none;
 }
-.search-trigger:hover { opacity: 1; background: var(--glass-bg); }
+.search-trigger:hover,
+.search-container.open .search-trigger {
+    opacity: 1;
+    background: var(--accent);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
 .search-trigger svg { display: block; }
+
+/* La mateixa obertura que en hover, però per classe: és la que fa
+   servir el clic, i l'única que existeix en una pantalla tàctil. */
+.search-container.open .search-bar {
+    width: 140px; opacity: 1; padding: 6px 8px; margin-right: 4px;
+    pointer-events: all;
+}
 
 .theme-btn,
 .settings-btn {
@@ -130,6 +148,47 @@
     white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; max-width: 160px;
 }
+
+/* --- SELECT D'IDIOMA --- */
+/* El desplegable dins del desplegable. `appearance: none` perquè la
+   cara nativa (blanca al Windows) trencaria el vidre; la fletxa la
+   posem nosaltres amb un SVG de fons. */
+
+.lang-select {
+    flex: none;
+    width: 112px;
+    padding: 7px 24px 7px 9px;
+    border-radius: 12px;
+    background-color: var(--glass-bg-soft);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 10px;
+    border: 1px solid var(--glass-border-soft);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    text-overflow: ellipsis;
+    transition: background-color 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.lang-select:hover { background-color: var(--glass-bg); }
+.lang-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lang-select option {
+    background: var(--bg-base);
+    color: var(--text-main);
+}
+/* En àrab, hebreu, persa, urdú i paixtu la fletxa va a l'altra banda. */
+html[dir="rtl"] .lang-select {
+    padding: 7px 9px 7px 24px;
+    background-position: left 8px center;
+}
+
+.settings-item-lang { cursor: default; }
 
 .toggle {
     position: relative;
@@ -303,7 +362,12 @@
 }
 
 /* --- ESTADÍSTIQUES --- */
+/* Capçalera i resta de peces que abans eren `style=` inline a index.html:
+   tal com estaven, cap media query els hi podia tocar. */
 .stats-header { margin-bottom: 25px; }
+.stats-title { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
+.stats-subtitle { opacity: 0.5; font-size: 15px; }
+
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
 .stat-card {
     background: var(--glass-bg-strong);
@@ -317,6 +381,19 @@
 }
 .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
 .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; font-weight: 700; }
+
+/* Pista i barra del nivell (abans dos `style=` inline). */
+.level-track {
+    width: 100%; height: 4px;
+    background: var(--pill-bg);
+    border-radius: 2px;
+    margin-top: 4px;
+}
+.level-bar {
+    width: 30%; height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+}
 
 .streak-flame {
     color: var(--fire-color);
@@ -336,6 +413,7 @@
     -webkit-backdrop-filter: blur(12px) saturate(150%);
     box-shadow: var(--glass-shadow);
 }
+.history-title { font-weight: 700; font-size: 18px; margin-bottom: 20px; }
 .table-container { overflow-x: auto; margin-top: 10px; }
 
 /* Aquestes tres classes substitueixen els `style=` inline que hi havia
@@ -357,6 +435,9 @@ th {
     text-transform: uppercase; opacity: 0.45;
     letter-spacing: 0.5px; font-weight: 700;
 }
+/* Alineació de les columnes de l'historial (abans `style=` inline). */
+.th-center { text-align: center; }
+.th-right { text-align: right; }
 td {
     padding: 14px 12px;
     font-size: 14px;
@@ -489,6 +570,9 @@ td:last-child {
     max-width: 480px;
     margin: 80px auto 0;
 }
+/* Els dos elements que duien `style=` inline a la vista 404. */
+.error-emoji { font-size: 48px; opacity: 0.3; }
+.error-title { margin-top: 15px; opacity: 0.8; }
 
 .reset-btn {
     background: var(--accent);
@@ -597,3 +681,83 @@ td:last-child {
     line-height: 0;
 }
 .ula-icon > svg { width: 100%; height: 100%; display: block; }
+
+/* --- AVÍS DE MÒBIL ABANS DEL JO CREAT PER --- */
+/* El crea i el desa player.js. És un mur dins del modal: tapa l'iframe
+   (que segueix a about:blank, el joc encara no s'ha carregat) i viu per
+   sota dels botons de tancar i de pantalla completa, que s'han de poder
+   fer servir per sortir-ne. */
+
+.mobile-gate {
+    position: absolute;
+    inset: 0;
+    z-index: 2140;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    border-radius: 28px;
+    animation: mobile-gate-in 0.25s ease;
+}
+/* `hidden` no basta: el `display: flex` de dalt guanyaria l'estil
+   `display: none` que el navegador hi posa per defecte. */
+.mobile-gate[hidden] { display: none; }
+
+@keyframes mobile-gate-in {
+    from { opacity: 0.4; }
+    to { opacity: 1; }
+}
+
+.mobile-gate-card {
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.mobile-gate-ico {
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+}
+.mobile-gate-ico svg { width: 26px; height: 26px; }
+
+.mobile-gate-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+}
+
+.mobile-gate-text {
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0.7;
+}
+
+.mobile-gate-accept {
+    margin-top: 6px;
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 12px 30px;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+.mobile-gate-accept:hover { transform: translateY(-1px); }
+.mobile-gate-accept:active { transform: scale(0.98); }
+.mobile-gate-accept:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }

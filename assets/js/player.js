@@ -4,6 +4,11 @@
  * Aquesta peça la porta tota la lògica de temps: un spinner que no ha
  * de quedar penjat, un iframe que no ha de quedar carregant una pàgina
  * trencada, i el temps de joc que s'ha d'anar a comptar.
+ *
+ * Hi ha una peça més: en un dispositiu tàctil el joc no es carrega de
+ * primeres, sinó que abans surt l'avís que la web no està optimitzat
+ * per a mòbils. Mentre l'avís és a pantalla, l'iframe segueix a
+ * about:blank: no s'ha demanat cap joc encara.
  */
 
 import { FALLBACK_DURATION, GAMES_DIR, LOADER_DURATION, OFFLINE_URL } from './config.js';
@@ -82,12 +87,86 @@ function hideLoader() {
     }, 400);
 }
 
+/* --- Avís de mòbil ------------------------------------------------- */
+
+/**
+ * Cal posar l'avís abans del joc?
+ *
+ * `pointer: coarse` és el mateix criteri que usa detection.js: parla
+ * de dispositiu tàctil (mòbil o tauleta), no de l'amplada de la
+ * finestra. Un ordinador amb la finestra estreta no veurà l'avís, que
+ * en parlaria de mòbils.
+ */
+function needsGate() {
+    return window.matchMedia?.('(pointer: coarse)').matches ?? false;
+}
+
+/** El joc que s'obrirà quan es pitji «Entesos». */
+let gatePending = null;
+let gateBound = false;
+
+/** Enganxa el botó «Entesos» un sol cop. */
+export function initGate() {
+    if (gateBound) return;
+    const accept = document.getElementById('gateAccept');
+    if (!accept) return;
+    gateBound = true;
+
+    accept.addEventListener('click', () => {
+        const game = gatePending;
+        hideGate();
+        if (game) openGame(game);
+    });
+}
+
+/**
+ * Mostra l'avís i deixa el joc a punt.
+ *
+ * Es desa la identitat del joc, no s'obre res: l'iframe continua a
+ * about:blank i, si l'usuari tanca el modal en comptes de pitjar
+ * «Entesos», no s'ha carregat ni comptat cap partida.
+ */
+function showGate(game) {
+    const gate = document.getElementById('mobileGate');
+    const modal = document.getElementById('gameModal');
+
+    if (!gate || !modal) {
+        // Sense elements no hi ha mur possible: segueix tocant el joc.
+        openGame(game);
+        return;
+    }
+
+    gatePending = game;
+    gate.hidden = false;
+    modal.classList.add('active');
+}
+
+function hideGate() {
+    gatePending = null;
+    const gate = document.getElementById('mobileGate');
+    if (gate) gate.hidden = true;
+}
+
 /* --- Obertura ----------------------------------------------------- */
 
 export function launch(game) {
     cancelTimers();
     hideLoader();
 
+    if (needsGate()) {
+        showGate(game);
+        return;
+    }
+
+    openGame(game);
+}
+
+/**
+ * Carrega el joc dins de l'iframe i obre el modal.
+ *
+ * @param {object} game
+ */
+function openGame(game) {
     const iframe = document.getElementById('gameIframe');
     const modal = document.getElementById('gameModal');
     if (!iframe || !modal) return;
@@ -154,6 +233,9 @@ function cancelTimers() {
 export function close() {
     cancelTimers();
     hideLoader();
+    // Si l'usuari tanca amb l'avís a pantalla, el joc pendent es
+    // descarta: no s'ha carregat i no hi ha res a tancar.
+    hideGate();
 
     if (sessionStart && currentGame) {
         recordSession(currentGame.name, (Date.now() - sessionStart) / 1000);
