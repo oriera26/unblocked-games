@@ -64,6 +64,10 @@ export function go(id, options = {}) {
 
     if (!animate) {
         for (const view of document.querySelectorAll('.view')) view.classList.remove('active');
+        // L'estil inline no pot quedar-se atrapat d'una vista a una altra:
+        // `display: none` inline guanyaria `.view.active { display: block }`
+        // i la vista activa no es veuria (l'error de "la llista desapareix").
+        to.style.display = '';
         to.classList.add('active');
         current = id;
         writeUrl(id);
@@ -84,11 +88,16 @@ export function go(id, options = {}) {
 
     from?.classList.remove('active');
     from?.classList.add(outClass);
+    // Idem que en el cas sense animació: netegem qualsevol `display: none`
+    // inline pendent abans d'activar-la.
+    to.style.display = '';
     to.classList.add('active', inClass);
 
     setTimeout(() => {
+        // En sortir no cal amagar `from` a mà: `.view` ja té `display: none`
+        // de base i a més li llevem `active` i la classe d'animació. Posar-hi
+        // un `display: none` inline era el que trencava la tornada.
         from?.classList.remove(outClass);
-        if (from) from.style.display = 'none';
         to.classList.remove(inClass);
         animating = false;
         current = id;
