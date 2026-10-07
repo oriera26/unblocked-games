@@ -128,7 +128,7 @@
         </script>
         <script>
             (function() {
-                const gameUrl = "https://engine.gtavice.city:8443";
+                const gameUrl = "gtavicecity/engine.html";
 
                 window.__GAME_URL__ = gameUrl;
             }
@@ -194,7 +194,7 @@
         <section id="overlay" class="overlay" hidden>
             <header class="topbar">
                 <div class="topbar-left">
-                    <img class="topbar-logo" src="https://www.gtavice.city/vice-city-logo.webp" alt="Vice City" width="170" height="34">
+                    <img class="topbar-logo" src="gtavicecity/vice-city-logo.webp" alt="Vice City" width="170" height="34">
                 </div>
                 <div class="topbar-mid">
                     <p id="load-warn" class="topbar-warn" role="status" aria-live="polite">
@@ -231,7 +231,7 @@
             <iframe class="game-frame" title="GTA Vice City" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-forms allow-popups-to-escape-sandbox allow-modals" allow="fullscreen; gamepad; autoplay; clipboard-read; clipboard-write" referrerpolicy="no-referrer" loading="eager"></iframe>
         </template>
         <script type="module">
-            const d = window.__GAME_URL__ || "https://engine.gtavice.city:8443"
+            const d = window.__GAME_URL__ || "gtavicecity/engine.html"
               , u = 6e4
               , a = e => document.querySelector(e)
               , f = a("#play")
