@@ -193,6 +193,12 @@ jobs:
             dist/*.exe
             dist/*.deb
           body: |
+            ## Canvis
+
+            ${{ steps.canvis.outputs.text }}
+
+            ---
+
             ## UnblockedGames by Ula
 
             Catàleg de jocs per a navegador presentat com a aplicació
@@ -201,7 +207,7 @@ jobs:
 
             ### Què conté
 
-            - **696 jocs** classificats per categories, amb cercador per
+            - **697 jocs** classificats per categories, amb cercador per
               nom, favorits i una pestanya d'estadístiques (ratxa, punts,
               nivell i historial de partida).
             - **Tot va dins del paquet**: els HTML dels jocs i les seues
@@ -238,9 +244,3 @@ jobs:
             Res més: la release conté només aquests dos fitxers. El
             *Source code (zip)* / *(tar.gz)* que GitHub posa a sota els
             afegeix ell sol; no cal descarregar-los per fer servir l'app.
-
-            ---
-
-            ## Canvis
-
-            ${{ steps.canvis.outputs.text }}
