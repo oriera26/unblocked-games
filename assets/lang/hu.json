@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Játékok",
   "nav.stats": "Statisztikák",
+  "search.placeholder": "Játék keresése...",
+  "search.aria": "Keresés",
   "settings.aria": "Beállítások",
   "settings.title": "Beállítások",
   "settings.perf.label": "Teljesítménymód",

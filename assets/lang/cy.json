@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Gemau",
   "nav.stats": "Ystadegau",
+  "search.placeholder": "Chwilio am gem...",
+  "search.aria": "Chwilio",
   "settings.aria": "Gosodiadau",
   "settings.title": "Gosodiadau",
   "settings.perf.label": "Modd perfformiad",

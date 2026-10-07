@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Egwuregwu",
   "nav.stats": "Ntupute",
+  "search.placeholder": "Chọọ egwuru...",
+  "search.aria": "Chọọ",
   "settings.aria": "Ntọala",
   "settings.title": "Ntọala",
   "settings.perf.label": "Ụzọ Nrụpụta",

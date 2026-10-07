@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Imidlalo",
   "nav.stats": "Izibalo",
+  "search.placeholder": "Sesha umdlalo...",
+  "search.aria": "Sesha",
   "settings.aria": "Izilungiselelo",
   "settings.title": "Izilungiselelo",
   "settings.perf.label": "Imodi yokusebenza kahle",

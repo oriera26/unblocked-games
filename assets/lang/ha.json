@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Wasanni",
   "nav.stats": "Bayanai",
+  "search.placeholder": "Nemi wani wasa...",
+  "search.aria": "Nemi",
   "settings.aria": "Saituna",
   "settings.title": "Saituna",
   "settings.perf.label": "Yanayin aiki",

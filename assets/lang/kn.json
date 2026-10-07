@@ -1,6 +1,8 @@
 {
   "nav.jocs": "ಆಟಗಳು",
   "nav.stats": "ಅಂಕಿಅಂಶಗಳು",
+  "search.placeholder": "ಆಟವನ್ನು ಹುಡುಕಿ...",
+  "search.aria": "ಹುಡುಕಿ",
   "settings.aria": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
   "settings.title": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
   "settings.perf.label": "ಕಾರ್ಯಕ್ಷಮತೆ ಕ್ರಮ",

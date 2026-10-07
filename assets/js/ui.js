@@ -168,7 +168,7 @@ function buildCard(game) {
         media.appendChild(img);
     } else {
         // Sense portada: la icona de mando. És el que es veu a 627 dels
-        // 697 jocs, així que ha de quedar ben centrada.
+        // 696 jocs, així que ha de quedar ben centrada.
         media.innerHTML = iconMarkup('gamepad-2', { size: 40, className: 'game-icon' });
     }
 

@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Mängud",
   "nav.stats": "Statistika",
+  "search.placeholder": "Otsi mängu...",
+  "search.aria": "Otsi",
   "settings.aria": "Seaded",
   "settings.title": "Seaded",
   "settings.perf.label": "Jõudlusrežiim",

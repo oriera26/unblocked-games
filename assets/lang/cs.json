@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Hry",
   "nav.stats": "Statistiky",
+  "search.placeholder": "Hledat hru...",
+  "search.aria": "Hledat",
   "settings.aria": "Nastavení",
   "settings.title": "Nastavení",
   "settings.perf.label": "Režim výkonu",

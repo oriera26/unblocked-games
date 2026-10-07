@@ -1,6 +1,8 @@
 {
   "nav.jocs": "ゲーム",
   "nav.stats": "統計",
+  "search.placeholder": "ゲームを検索...",
+  "search.aria": "検索",
   "settings.aria": "設定",
   "settings.title": "設定",
   "settings.perf.label": "パフォーマンスモード",

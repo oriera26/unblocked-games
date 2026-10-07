@@ -1,6 +1,8 @@
 {
   "nav.jocs": "الألعاب",
   "nav.stats": "الإحصائيات",
+  "search.placeholder": "ابحث عن لعبة...",
+  "search.aria": "بحث",
   "settings.aria": "الإعدادات",
   "settings.title": "الإعدادات",
   "settings.perf.label": "وضع الأداء",

@@ -1,6 +1,8 @@
 {
   "nav.jocs": "गेम्स",
   "nav.stats": "आँकड़े",
+  "search.placeholder": "कोई गेम खोजें...",
+  "search.aria": "खोजें",
   "settings.aria": "सेटिंग्स",
   "settings.title": "सेटिंग्स",
   "settings.perf.label": "परफ़ॉर्मेंस मोड",

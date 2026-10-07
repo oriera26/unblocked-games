@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Games",
   "nav.stats": "Statistics",
+  "search.placeholder": "Search for a game...",
+  "search.aria": "Search",
   "settings.aria": "Settings",
   "settings.title": "Settings",
   "settings.perf.label": "Performance mode",

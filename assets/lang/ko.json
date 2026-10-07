@@ -1,6 +1,8 @@
 {
   "nav.jocs": "게임",
   "nav.stats": "통계",
+  "search.placeholder": "게임 검색...",
+  "search.aria": "검색",
   "settings.aria": "설정",
   "settings.title": "설정",
   "settings.perf.label": "성능 모드",

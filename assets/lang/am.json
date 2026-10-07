@@ -1,6 +1,8 @@
 {
   "nav.jocs": "ጨዋታዎች",
   "nav.stats": "ስታቲስቲክስ",
+  "search.placeholder": "ጨዋታ ፈልግ...",
+  "search.aria": "ፈልግ",
   "settings.aria": "ቅንብሮች",
   "settings.title": "ቅንብሮች",
   "settings.perf.label": "የአቅም ዘዴ",

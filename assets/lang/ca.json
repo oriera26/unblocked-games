@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Jocs",
   "nav.stats": "Estadístiques",
+  "search.placeholder": "Cerca un joc...",
+  "search.aria": "Cercar",
   "settings.aria": "Configuració",
   "settings.title": "Configuració",
   "settings.perf.label": "Mode rendiment",

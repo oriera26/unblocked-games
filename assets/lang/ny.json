@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Masewero",
   "nav.stats": "Zambalamala",
+  "search.placeholder": "Sakani masewero...",
+  "search.aria": "Sakani",
   "settings.aria": "Zosinthira",
   "settings.title": "Zosinthira",
   "settings.perf.label": "Mtundwa Wachita Bwino",

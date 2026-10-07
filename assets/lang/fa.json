@@ -1,6 +1,8 @@
 {
   "nav.jocs": "بازی‌ها",
   "nav.stats": "آمار",
+  "search.placeholder": "جستجوی بازی...",
+  "search.aria": "جستجو",
   "settings.aria": "تنظیمات",
   "settings.title": "تنظیمات",
   "settings.perf.label": "حالت عملکرد",

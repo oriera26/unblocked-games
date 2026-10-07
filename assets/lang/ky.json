@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Оюндар",
   "nav.stats": "Статистика",
+  "search.placeholder": "Оюн издөө...",
+  "search.aria": "Издөө",
   "settings.aria": "Жөндөөлөр",
   "settings.title": "Жөндөөлөр",
   "settings.perf.label": "Өндүрүштүүлүк режими",

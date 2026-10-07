@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Spellen",
   "nav.stats": "Statistieken",
+  "search.placeholder": "Zoek een spel...",
+  "search.aria": "Zoeken",
   "settings.aria": "Instellingen",
   "settings.title": "Instellingen",
   "settings.perf.label": "Prestatiemodus",

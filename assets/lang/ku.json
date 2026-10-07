@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Lîstik",
   "nav.stats": "Amâr",
+  "search.placeholder": "Lîstikekê bigere...",
+  "search.aria": "Gere",
   "settings.aria": "Mîheng",
   "settings.title": "Mîheng",
   "settings.perf.label": "Moda xebatê",

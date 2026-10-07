@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Игры",
   "nav.stats": "Статистика",
+  "search.placeholder": "Поиск игры...",
+  "search.aria": "Поиск",
   "settings.aria": "Настройки",
   "settings.title": "Настройки",
   "settings.perf.label": "Режим производительности",

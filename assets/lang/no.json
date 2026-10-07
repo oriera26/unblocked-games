@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Spill",
   "nav.stats": "Statistikk",
+  "search.placeholder": "Søk etter et spill...",
+  "search.aria": "Søk",
   "settings.aria": "Innstillinger",
   "settings.title": "Innstillinger",
   "settings.perf.label": "Ytelsesmodus",

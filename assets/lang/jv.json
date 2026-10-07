@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Game",
   "nav.stats": "Statistik",
+  "search.placeholder": "Golèk game...",
+  "search.aria": "Golèk",
   "settings.aria": "Setelan",
   "settings.title": "Setelan",
   "settings.perf.label": "Mode kinerja",

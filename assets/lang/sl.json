@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Igre",
   "nav.stats": "Statistika",
+  "search.placeholder": "Išči igro...",
+  "search.aria": "Išči",
   "settings.aria": "Nastavitve",
   "settings.title": "Nastavitve",
   "settings.perf.label": "Način delovanja",

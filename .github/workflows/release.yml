@@ -207,9 +207,9 @@ jobs:
 
             ### Què conté
 
-            - **696 jocs** classificats per categories, amb favorits i
-              una pestanya d'estadístiques (ratxa, punts, nivell i
-              historial de partida).
+            - **696 jocs** classificats per categories, amb cercador per
+              nom, favorits i una pestanya d'estadístiques (ratxa, punts,
+              nivell i historial de partida).
             - **Tot va dins del paquet**: els HTML dels jocs i les seues
               portades es serveixen localment (`resources/site`), sense
               dependre de cap servidor extern per a mostrar el catàleg.
@@ -220,6 +220,8 @@ jobs:
 
             ### Com s'usa
 
+            - **Cercar**: escriu a la barra superior; els filtres de
+              categoria són just a sota de la capçalera.
             - **Favorits**: l'estrella de cada targeta; els favorits es
               reordenen sols a dalt.
             - **Pantalla completa**: botó de la finestra del joc (a

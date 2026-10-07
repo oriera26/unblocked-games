@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Imikino",
   "nav.stats": "Imibare",
+  "search.placeholder": "Shakisha umukino...",
+  "search.aria": "Shakisha",
   "settings.aria": "Igenamiterere",
   "settings.title": "Igenamiterere",
   "settings.perf.label": "Uburyo Bw'Imikorwa",

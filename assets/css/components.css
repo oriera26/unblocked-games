@@ -7,7 +7,9 @@
 .search-container {
     display: flex; align-items: center; position: relative;
     background: var(--glass-bg-soft);
-    border: 1px solid var(--glass-border-soft);
+    /* Sense vora: el botó de dins ja en porta una de pròpia i la del
+       contenidor li dibuixava un segon anell al voltant, que queia
+       com una vora extra damunt la cara del nav. */
     border-radius: 30px;
     padding: 2px 6px;
     backdrop-filter: var(--glass-filter-small);
@@ -30,9 +32,9 @@
 }
 
 /* El botó té la mateixa cara que els altres dos del nav (vora de vidre)
-   i, en obrir-se, es tenyeix d'accent: l'estat obert es decideix amb la
-   classe `.open` (posada pel clic) i no amb `:hover`, perquè al mòbil
-   no hi ha hover. */
+   i només s'enforteix el fons quan se'l toca o quan la barra s'obre: cap
+   tinta d'accent. L'estat obert es decideix amb la classe `.open` (posada
+   pel clic) i no amb `:hover`, perquè al mòbil no hi ha hover. */
 .search-trigger {
     background: var(--glass-bg-soft);
     border: 1px solid var(--glass-border-soft);
@@ -51,9 +53,7 @@
 .search-trigger:hover,
 .search-container.open .search-trigger {
     opacity: 1;
-    background: var(--accent);
-    border-color: rgba(255, 255, 255, 0.25);
-    color: #fff;
+    background: var(--glass-bg);
 }
 .search-trigger svg { display: block; }
 

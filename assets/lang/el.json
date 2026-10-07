@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Παιχνίδια",
   "nav.stats": "Στατιστικά",
+  "search.placeholder": "Αναζήτηση παιχνιδιού...",
+  "search.aria": "Αναζήτηση",
   "settings.aria": "Ρυθμίσεις",
   "settings.title": "Ρυθμίσεις",
   "settings.perf.label": "Λειτουργία απόδοσης",

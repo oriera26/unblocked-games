@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Bikoro",
   "nav.stats": "Statistiki",
+  "search.placeholder": "Luta kilanzi...",
+  "search.aria": "Koluka",
   "settings.aria": "Sétono",
   "settings.title": "Sétono",
   "settings.perf.label": "Mode ya Makamisi",

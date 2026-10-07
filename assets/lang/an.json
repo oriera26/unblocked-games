@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Chuegos",
   "nav.stats": "Estadísticas",
+  "search.placeholder": "Buscar un chuego...",
+  "search.aria": "Buscar",
   "settings.aria": "Configuración",
   "settings.title": "Configuración",
   "settings.perf.label": "Modo rendimiento",

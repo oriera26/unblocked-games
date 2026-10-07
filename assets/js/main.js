@@ -69,6 +69,9 @@ function applyFilters() {
 }
 
 function resetFilters() {
+    const search = byId('gameSearch');
+    if (search) search.value = '';
+
     filters.search = '';
     filters.category = CATEGORY_ALL;
 
@@ -80,8 +83,55 @@ function resetFilters() {
    Arrencada
    ================================================================ */
 
-function bindResetButton() {
+function bindSearch() {
+    const search = byId('gameSearch');
+    const container = byId('searchContainer');
+    const trigger = container?.querySelector('.search-trigger');
+
+    // Es filtra en cada pulsació. Amb 696 jocs és una filtració lineal de
+    // poc cost, i un debounce aquí només afegiria complexitat per estalviar
+    // unes poques centèsimes de mil·lisegon.
+    search?.addEventListener('input', () => {
+        filters.search = search.value.trim().toLowerCase();
+        applyFilters();
+    });
+
+    // El botó obre i tanca la barra. Obre-la el clic i no l'hover: en
+    // pantalla tàctil no hi ha hover i allà el botó era mort.
+    //
+    // El `pointerdown` és el que fa que funcioni el segon clic: en
+    // pitjar el botó amb el camp enfocat, el camp perdria l'enfocament,
+    // el `blur` de sota llevaria la classe i el clic la tornaria a posar
+    // (és a dir, no es tancaria mai).
+    trigger?.addEventListener('pointerdown', (event) => event.preventDefault());
+    trigger?.addEventListener('click', () => {
+        setSearchOpen(!container?.classList.contains('open'));
+    });
+
+    // En perdre l'enfocament, la barra es tanca. El filtre es queda,
+    // com passava abans: per treure'l hi ha el botó de neteja de la
+    // vista de sense resultats.
+    search?.addEventListener('blur', () => setSearchOpen(false));
+    search?.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setSearchOpen(false);
+    });
+
     byId('resetFilters')?.addEventListener('click', resetFilters);
+}
+
+/** Obre o tanca la barra de cerca i explica l'estat qui no hi veu. */
+function setSearchOpen(open) {
+    const container = byId('searchContainer');
+    if (!container) return;
+
+    const search = byId('gameSearch');
+    const trigger = container.querySelector('.search-trigger');
+
+    container.classList.toggle('open', open);
+    trigger?.setAttribute('aria-expanded', String(open));
+
+    if (open) search?.focus();
+    else search?.blur();
 }
 
 function bindTheme() {
@@ -219,7 +269,7 @@ async function start() {
     hydrateDataLucide();
     updateLogo();
 
-    bindResetButton();
+    bindSearch();
     bindTheme();
     bindModal();
     bindFavorites();

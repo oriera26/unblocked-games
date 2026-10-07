@@ -1,6 +1,8 @@
 {
   "nav.jocs": "თამაშები",
   "nav.stats": "სტატისტიკა",
+  "search.placeholder": "თამაშის მოძებნა...",
+  "search.aria": "ძებნა",
   "settings.aria": "პარამეტრები",
   "settings.title": "პარამეტრები",
   "settings.perf.label": "წარმადობის რეჟიმი",

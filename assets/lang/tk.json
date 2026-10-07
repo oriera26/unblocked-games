@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Oýunlar",
   "nav.stats": "Statistika",
+  "search.placeholder": "Oýun gözle...",
+  "search.aria": "Gözleg",
   "settings.aria": "Saýlamalar",
   "settings.title": "Saýlamalar",
   "settings.perf.label": "Işlapsürlülük rejimi",

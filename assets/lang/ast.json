@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Xuegos",
   "nav.stats": "Estadístiques",
+  "search.placeholder": "Buscar un xuegu...",
+  "search.aria": "Buscar",
   "settings.aria": "Configuración",
   "settings.title": "Configuración",
   "settings.perf.label": "Mou rendimiento",

@@ -1,6 +1,8 @@
 {
   "nav.jocs": "کھیل",
   "nav.stats": "اعداد و شمار",
+  "search.placeholder": "کھیل تلاش کریں...",
+  "search.aria": "تلاش",
   "settings.aria": "ترتیبات",
   "settings.title": "ترتیبات",
   "settings.perf.label": "کارکرد موڈ",

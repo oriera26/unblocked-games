@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Giochi",
   "nav.stats": "Statistiche",
+  "search.placeholder": "Cerca un gioco...",
+  "search.aria": "Cerca",
   "settings.aria": "Impostazioni",
   "settings.title": "Impostazioni",
   "settings.perf.label": "Modalità prestazioni",

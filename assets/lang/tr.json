@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Oyunlar",
   "nav.stats": "İstatistikler",
+  "search.placeholder": "Oyun ara...",
+  "search.aria": "Ara",
   "settings.aria": "Ayarlar",
   "settings.title": "Ayarlar",
   "settings.perf.label": "Performans modu",

@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Gry",
   "nav.stats": "Statystyki",
+  "search.placeholder": "Szukaj gry...",
+  "search.aria": "Szukaj",
   "settings.aria": "Ustawienia",
   "settings.title": "Ustawienia",
   "settings.perf.label": "Tryb wydajności",

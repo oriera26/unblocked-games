@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Cluichí",
   "nav.stats": "Staitisticí",
+  "search.placeholder": "Cuardaigh cluiche...",
+  "search.aria": "Cuardach",
   "settings.aria": "Socruithe",
   "settings.title": "Socruithe",
   "settings.perf.label": "Modh feidhmíochta",

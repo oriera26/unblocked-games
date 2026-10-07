@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Juego'ũ",
   "nav.stats": "Statistika",
+  "search.placeholder": "Heka juego'ũ...",
+  "search.aria": "Heka",
   "settings.aria": "Ñemboheko",
   "settings.title": "Ñemboheko",
   "settings.perf.label": "Ho'u mbosite",

@@ -40,7 +40,7 @@ export const CATEGORY_ALL = 'tots';
 
 /**
  * Virtualització lleugera: quantes targetes es deixen al DOM com a
- * màxim. El grid mostra 697 jocs, però en posar-los tots es fan
+ * màxim. El grid mostra 696 jocs, però en posar-los tots es fan
  * pagar de dues maneres: memoria i cost de maquetació en cada scroll.
  */
 export const MAX_DOM_CARDS = 150;

@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Trò chơi",
   "nav.stats": "Thống kê",
+  "search.placeholder": "Tìm kiếm trò chơi...",
+  "search.aria": "Tìm kiếm",
   "settings.aria": "Cài đặt",
   "settings.title": "Cài đặt",
   "settings.perf.label": "Chế độ hiệu suất",

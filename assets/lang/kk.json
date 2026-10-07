@@ -1,6 +1,8 @@
 {
   "nav.jocs": "Ойындар",
   "nav.stats": "Статистика",
+  "search.placeholder": "Ойын іздеңіз...",
+  "search.aria": "Іздеу",
   "settings.aria": "Баптаулар",
   "settings.title": "Баптаулар",
   "settings.perf.label": "Өнімділік режимі",

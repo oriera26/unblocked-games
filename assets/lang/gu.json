@@ -1,6 +1,8 @@
 {
   "nav.jocs": "રમતો",
   "nav.stats": "આંકડા",
+  "search.placeholder": "રમત શોધો...",
+  "search.aria": "શોધો",
   "settings.aria": "સેટિંગ્સ",
   "settings.title": "સેટિંગ્સ",
   "settings.perf.label": "પરફોર્મન્સ મોડ",
