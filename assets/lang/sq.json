@@ -1,8 +1,6 @@
 {
   "nav.jocs": "Lojërat",
   "nav.stats": "Statistikat",
-  "search.placeholder": "Kërko një lojë...",
-  "search.aria": "Kërko",
   "settings.aria": "Cilësimet",
   "settings.title": "Cilësimet",
   "settings.perf.label": "Modaliteti i performancës",

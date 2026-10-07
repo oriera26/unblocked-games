@@ -1,8 +1,6 @@
 {
   "nav.jocs": "Pelit",
   "nav.stats": "Tilastot",
-  "search.placeholder": "Etsi peliä...",
-  "search.aria": "Haku",
   "settings.aria": "Asetukset",
   "settings.title": "Asetukset",
   "settings.perf.label": "Suorituskykytila",

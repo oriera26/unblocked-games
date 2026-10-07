@@ -130,16 +130,15 @@ async function smoke() {
             );
             return {
                 title: document.title,
-                cerca: !!document.getElementById('gameSearch'),
                 estats
             };
         })()`);
 
         const estats = await result.estats;
-        const ok = Boolean(result.title) && result.cerca && estats.every((s) => s === 200);
+        const ok = Boolean(result.title) && estats.every((s) => s === 200);
 
         console.log(
-            `SMOKE ${ok ? 'OK' : 'FAIL'} · "${result.title}" · cercador=${result.cerca} · estats=[${estats.join(', ')}]`
+            `SMOKE ${ok ? 'OK' : 'FAIL'} · "${result.title}" · estats=[${estats.join(', ')}]`
         );
         app.exit(ok ? 0 : 1);
     } catch (err) {

@@ -1,8 +1,6 @@
 {
   "nav.jocs": "เกม",
   "nav.stats": "สถิติ",
-  "search.placeholder": "ค้นหาเกม...",
-  "search.aria": "ค้นหา",
   "settings.aria": "การตั้งค่า",
   "settings.title": "การตั้งค่า",
   "settings.perf.label": "โหมดประสิทธิภาพ",

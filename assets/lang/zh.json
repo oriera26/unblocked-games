@@ -1,8 +1,6 @@
 {
   "nav.jocs": "游戏",
   "nav.stats": "统计",
-  "search.placeholder": "搜索游戏...",
-  "search.aria": "搜索",
   "settings.aria": "设置",
   "settings.title": "设置",
   "settings.perf.label": "性能模式",
