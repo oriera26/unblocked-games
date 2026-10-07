@@ -1,24 +1,108 @@
-# Quan es puja una tag que comença per `v` (p. ex. v1.0.0) compila
-# l'app per a Windows i per a Linux i la penja com a release de GitHub,
-# amb exactament dos fitxers:
+# A cada push a `main` (o llançament manual) fa tres coses, en ordre:
 #
-#   Windows: instal·lador NSIS (.exe)
-#   Linux:   paquet .deb (Debian/Ubuntu)
+#   1. versio   calcula la pròxima v<major>.<minor>.<patch> amb cascada
+#               base 10 (v1.0.0 → v1.0.1 … v1.0.9 → v1.1.0 …
+#               v1.9.9 → v2.0.0), crea la tag i la puja. Si el commit
+#               ja en té una, la reutilitza: re-executar no gasta números.
+#   2. build    windows-latest (npm run dist) + ubuntu-latest (npm run dist:linux)
+#   3. release  penja exactament dos fitxers: l'instal·lador .exe de
+#               Windows i el paquet .deb de Debian/Ubuntu
 #
-# La tag es crea des de fora del workflow (git tag / llançament manual),
-# així que un push ordinari a `main` no llança cap release.
+# Tot viu en un mateix fitxer de propòsit: la tag es crea amb el token
+# del propi workflow i GitHub no llança cap altre workflow a partir d'un
+# event provocat per aquest token — un `auto-tag.yml` separat no activaria
+# mai la compilació sense un PAT. Ací no cal cap testimoni extra.
+#
+# Si algú puja una tag a mà, aquest mateix workflow la recull i n'fa la
+# release sense calcular cap número nou.
 name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+# Dues pugues seguides han d'esperar-se: si dues calculen la versió al
+# mateix temps, totes dues farien la mateixa tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  versio:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.calc.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calcula i crea la tag
+        id: calc
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # Tag pujada a mà: ja sabem la versió, no en creem cap de nova.
+          if [ "$REF_TYPE" = "tag" ]; then
+            echo "version=$REF_NAME" >> "$GITHUB_OUTPUT"
+            echo "Versió existent: $REF_NAME"
+            exit 0
+          fi
+
+          git fetch --tags --quiet || true
+
+          # Re-execució d'un push que ja tenia tag: reutilitza-la.
+          existing=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)
+          if [ -n "$existing" ]; then
+            echo "version=$existing" >> "$GITHUB_OUTPUT"
+            echo "Aquest commit ja està etiquetat: $existing"
+            exit 0
+          fi
+
+          # Darrer número conegut.
+          last=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)
+          [ -n "$last" ] || last=v0.0.0
+          rest=${last#v}
+          major=${rest%%.*}
+          rest=${rest#*.}
+          minor=${rest%%.*}
+          patch=${rest#*.}
+
+          # Cascada base 10: l'últim dígit fa 0→9 i en passar a 0 suma
+          # l'esquerra; si l'esquerra passa de 9 a 0, suma un més.
+          bump() {
+            local M=${1%%.*}
+            local rest=${1#*.}
+            local m=${rest%%.*}
+            local p=${rest#*.}
+            p=$((p + 1))
+            if [ "$p" -ge 10 ]; then p=0; m=$((m + 1)); fi
+            if [ "$m" -ge 10 ]; then m=0; M=$((M + 1)); fi
+            echo "$M.$m.$p"
+          }
+
+          ver="$major.$minor.$patch"
+          # Salvaguarda: no reutilitzar cap tag que ja existeixi.
+          for _ in $(seq 1 60); do
+            ver=$(bump "$ver")
+            if ! git rev-parse -q --verify "refs/tags/v$ver" >/dev/null; then break; fi
+          done
+
+          git tag -a "v$ver" -m "$(git log -1 --pretty=%s)"
+          git push origin "v$ver"
+          echo "version=v$ver" >> "$GITHUB_OUTPUT"
+          echo "Tag creada: v$ver"
+
   build:
+    needs: versio
     strategy:
       fail-fast: false
       matrix:
@@ -51,7 +135,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: build
+    needs: [versio, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -61,11 +145,58 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          # Només dos fitxers: l'instal·lador de Windows (.exe) i el
-          # paquet de Debian/Ubuntu (.deb). Res més: l'AppImage, el
-          # blockmap i els latest*.yml sobren (aquests dos últims només
-          # els faria servir una auto-actualització, i l'app no en té).
+          tag_name: ${{ needs.versio.outputs.version }}
+          name: UnblockedGames by Ula ${{ needs.versio.outputs.version }}
+          fail_on_unmatched_files: true
           files: |
             dist/*.exe
             dist/*.deb
           generate_release_notes: true
+          body: |
+            ## UnblockedGames by Ula
+
+            Catàleg de jocs per a navegador presentat com a aplicació
+            d'escriptori: s'instal·la al Windows o a Debian/Ubuntu i
+            s'obre directament, servint-se des del propi ordinador.
+
+            ### Què conté
+
+            - **696 jocs** classificats per categories, amb cercador per
+              nom, favorits i una pestanya d'estadístiques (ratxa, punts,
+              nivell i historial de partida).
+            - **Tot va dins del paquet**: els HTML dels jocs i les seues
+              portades es serveixen localment (`resources/site`), sense
+              dependre de cap servidor extern per a mostrar el catàleg.
+            - **Servidor local inclós**: en obrir l'app arrenca un servidor
+              a `127.0.0.1` i hi serveix el lloc. No cal Node ni res més.
+            - **Dues pestanyes**: *Jocs* (inici, amb la graella i els
+              filtres de categoria) i *Estadístiques*.
+
+            ### Com s'usa
+
+            - **Cercar**: escriu a la barra superior; els filtres de
+              categoria són just a sota de la capçalera.
+            - **Favorits**: l'estrella de cada targeta; els favorits es
+              reordenen sols a dalt.
+            - **Pantalla completa**: botó de la finestra del joc (a
+              l'esquerra del de tancar) o `F11`; `Esc` en surt.
+            - **Dreceres**: `F5` / `Ctrl+R` recarrega, `Ctrl`+`+` i
+              `Ctrl`+`-` canvien la mida del text.
+            - **Connexió**: la interfície i el catàleg funcionen de
+              manera local; alguns jocs concrets necessiten internet
+              perquè carreguen recursos d'altres servidors.
+            - No hi ha barra de menú: només la finestra, amb el joc a
+              dins.
+
+            ### Instal·lació
+
+            | Sistema | Fitxer | Com |
+            | --- | --- | --- |
+            | Windows 10 o superior (x64) | `UnblockedGames-by-Ula-…-win-x64.exe` | Obri'l i segueix l'instal·lador; crea drecera d'escriptori i entrada de menú d'inici. |
+            | Debian / Ubuntu | `UnblockedGames-by-Ula-…-linux-amd64.deb` | `sudo apt install ./fitxer.deb` o doble clic amb el gestor de paquets. |
+
+            Res més: la release conté només aquests dos fitxers. El
+            *Source code (zip)* / *(tar.gz)* que GitHub posa a sota els
+            afegeix ell sol; no cal descarregar-los per fer servir l'app.
+
+            ---
