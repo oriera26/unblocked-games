@@ -96,6 +96,11 @@ jobs:
             if ! git rev-parse -q --verify "refs/tags/v$ver" >/dev/null; then break; fi
           done
 
+          # El runner no ve amb identitat de git i les tags anotades en
+          # necessiten una. Posem la del bot, que és la de la pròpia acció.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git tag -a "v$ver" -m "$(git log -1 --pretty=%s)"
           git push origin "v$ver"
           echo "version=v$ver" >> "$GITHUB_OUTPUT"
