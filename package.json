@@ -1,0 +1,72 @@
+{
+  "name": "unblockedgames-by-ula",
+  "productName": "UnblockedGames by Ula",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Catàleg de jocs unblocked: web a GitHub Pages i app d'escriptori per a Windows i Linux.",
+  "author": "Ula",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "dist:linux": "electron-builder --linux",
+    "check": "node tools/check-all.mjs --no-open"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.oriera26.unblockedgames",
+    "productName": "UnblockedGames by Ula",
+    "copyright": "© 2026 Ula",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/main.js"
+    ],
+    "extraResources": [
+      {
+        "from": ".",
+        "to": "site",
+        "filter": [
+          "index.html",
+          "offline.html",
+          "manifest.json",
+          "service-worker.js",
+          "server.js",
+          ".nojekyll",
+          "googlea299b6218e33ce08.html",
+          "assets/**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "UnblockedGames by Ula",
+      "artifactName": "UnblockedGames-by-Ula-${version}-win-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "assets/icons/icon-512x512.png",
+      "category": "Game",
+      "synopsis": "Catàleg de jocs unblocked",
+      "maintainer": "Ula <oriera26@users.noreply.github.com>",
+      "artifactName": "UnblockedGames-by-Ula-${version}-linux-${arch}.${ext}"
+    }
+  }
+}

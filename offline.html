@@ -1,22 +1,111 @@
 <!DOCTYPE html>
-<html lang="ca">
+<html lang="ca" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <title>ulaGames - Sense connexió</title>
-  <style>
-    body {
-      margin: 0; background: #000; color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      display: flex; align-items: center; justify-content: center;
-      height: 100vh; flex-direction: column; gap: 20px;
-    }
-    h1 { font-size: 2rem; }
-    p { opacity: 0.7; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sense connexió</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(24px) scale(0.98)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b;
+            color: #fafafa;
+            overflow-x: hidden;
+        }
+        /* Custom smooth focus and selection */
+        ::selection {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
 </head>
-<body>
-  <h1>😞 Sense connexió</h1>
-  <p>No s'ha pogut carregar el joc. Torna-ho a provar quan tinguis Internet.</p>
-  <button onclick="window.location.reload()">Reintentar</button>
+<body class="min-h-screen flex items-center justify-center p-6 selection:bg-neutral-800 selection:text-white relative">
+
+    <!-- Subtle ambient background gradients -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] animate-pulse-slow"></div>
+        <div class="absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2 w-80 h-80 bg-violet-500/10 rounded-full blur-[100px] animate-pulse-slow" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- Main Card Container with Premium Entrance Animation -->
+    <main class="relative z-10 w-full max-w-md mx-auto text-center opacity-0 animate-fade-in-up">
+        
+        <!-- Headings -->
+        <h1 class="text-3xl font-semibold tracking-tight text-white mb-3">
+            Sense connexió
+        </h1>
+        <p class="text-neutral-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto font-normal">
+            No s'ha pogut establir connexió amb el servidor. Comprova la teva xarxa i torna-ho a provar.
+        </p>
+
+        <!-- Interactive Actions -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button onclick="handleRetry(this)" id="retryBtn" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white text-neutral-950 font-medium text-sm tracking-wide shadow-lg shadow-white/5 hover:bg-neutral-200 active:scale-[0.98] transition-all duration-200 cursor-pointer">
+                <svg id="retryIcon" class="w-4 h-4 mr-2 transition-transform duration-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
+                </svg>
+                <span id="btnText">Reintentar connexió</span>
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Interactive retry handler with smooth animation and network check simulation
+        function handleRetry(btn) {
+            const icon = document.getElementById('retryIcon');
+            const btnText = document.getElementById('btnText');
+            
+            // Disable button temporarily & spin icon
+            btn.style.opacity = '0.8';
+            btn.style.pointerEvents = 'none';
+            icon.classList.add('animate-spin');
+            btnText.textContent = 'Comprovant...';
+
+            setTimeout(() => {
+                if (navigator.onLine) {
+                    btnText.textContent = 'Recarregant...';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    // Reset state if still offline
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                    icon.classList.remove('animate-spin');
+                    btnText.textContent = 'Reintentar connexió';
+                }
+            }, 1000);
+        }
+
+        // Listen for online status updates in real-time
+        window.addEventListener('online', () => {
+            window.location.reload();
+        });
+    </script>
 </body>
 </html>

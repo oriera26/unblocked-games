@@ -1,12 +1,14 @@
-# Build d'Electron i dependancies
-/electron/
+# Dependències i sortides de build (el codi d'electron/ SÍ se versiona)
 /node_modules/
 /dist/
+/electron/node_modules/
+/electron/dist/
 
 # Binaries compilats
 *.exe
 *.dmg
 *.AppImage
+*.deb
 
 # Sistema operatiu
 .DS_Store

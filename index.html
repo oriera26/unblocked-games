@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>UnblockedGames by Ula</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="assets/vendor/lucide.min.js"></script>
     <link rel="icon" type="image/x-icon" href="assets/icons/icon.ico">
 
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#007AFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-256x256.png">
 
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/layout.css">
@@ -25,7 +25,7 @@
 
     <nav>
         <div class="nav-left">
-            <div class="logo" onclick="navigateToView('arcade', 'left')">
+            <div class="logo" id="logoLink">
                 <img id="logoImg" class="logo-img" src="assets/icons/icon-large-dark.png" alt="ulaGames">
             </div>
         </div>
@@ -57,11 +57,23 @@
                         </div>
                         <div class="toggle" aria-hidden="true"></div>
                     </div>
+                    <div class="settings-item" id="clearCacheBtn" role="menuitem" tabindex="0">
+                        <div class="settings-item-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <div class="settings-item-text">
+                                <span class="settings-item-label">Neteja la memòria cau</span>
+                                <span class="settings-item-desc">Descarta els jocs desats per treure espai</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <button class="theme-btn" id="themeBtn" aria-label="Canviar tema">
-                <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                <!-- Contenidor, no l'SVG mateix: el canvi de tema substitueix
+                     el contingut d'aquest element en lloc de l'element, de manera
+                     que el botó no torna a perdre la referència a la icona. -->
+                <span id="themeIcon" class="ula-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
             </button>
         </div>
     </nav>
@@ -115,7 +127,7 @@
             <div class="error-container">
                 <div style="font-size: 48px; opacity: 0.3;">😕</div>
                 <h2 style="margin-top:15px; opacity: 0.8;">Sense resultats</h2>
-                <button class="reset-btn" onclick="resetFilters()">Neteja la cerca</button>
+                <button class="reset-btn" id="resetFilters" type="button">Neteja la cerca</button>
             </div>
         </section>
     </div>
@@ -128,606 +140,33 @@
 
     <div id="gameModal" class="modal">
         <div class="modal-content">
+            <!-- A l'esquerra del de tancar: si fos a l'iframe el joc
+                 seria l'únic que sortiria a pantalla completa i els botons
+                 desapareixerien. -->
+            <button class="fullscreen-modal" id="fullscreenModal" type="button" aria-label="Pantalla completa">
+                <svg class="ico-max" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                <svg class="ico-min" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+            </button>
             <button class="close-modal" id="closeModal" aria-label="Tancar">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
-            <iframe id="gameIframe" src="" allow="autoplay; fullscreen; gamepad" title="Joc"></iframe>
+            <!-- src="about:blank" i no src="": amb la src buida alguns navegadors
+             tornen a carregar el document actual dins de l'iframe. -->
+            <iframe id="gameIframe" src="about:blank" allow="autoplay; fullscreen; gamepad" title="Joc"></iframe>
             <div id="loaderOverlay" class="game-loader-overlay" style="display: none;">
                 <div class="spinner"></div>
             </div>
         </div>
     </div>
 
-    <script src="assets/js/gameList.js" defer></script>
+    <!-- Punt d'entrada. Els mòduls ES són diferits per definició,
+         així que no cal `defer`, i un mòdul no es pot obrir des de file://
+         sinó servit per HTTP. index.html sempre s'ha servit així (hi ha
+         un service worker i un manifest), i l'Electron farà-ho igual.
+
+         gameList.js ja no es carrega amb un <script> propi: el mateix fitxer
+         l'importa main.js com a mòdul. -->
+    <script type="module" src="assets/js/main.js"></script>
 
-    <script>
-        // ============================================
-        // ⚡ OPT #7 + #20: CACHÉ D'ICONES SVG INLINE
-        // ============================================
-        const ICON_CACHE = {};
-
-        // Extreu i cacheja el SVG de Lucide un sol cop
-        function renderIcon(name, opts) {
-            opts = opts || {};
-            const size = opts.size || 24;
-            const className = opts.className || '';
-            const style = opts.style || '';
-            const fill = opts.fill || '';
-            const key = name + '|' + size + '|' + className + '|' + fill;
-
-            if (ICON_CACHE[key]) return ICON_CACHE[key];
-
-            let nodes = null;
-            if (typeof lucide !== 'undefined' && lucide.icons) {
-                nodes = lucide.icons[name];
-                if (!nodes) {
-                    const pascal = name.split('-').map(function (s) {
-                        return s.charAt(0).toUpperCase() + s.slice(1);
-                    }).join('');
-                    nodes = lucide.icons[pascal];
-                }
-            }
-            if (!nodes || !Array.isArray(nodes)) return '';
-
-            let parts = '';
-            for (let i = 0; i < nodes.length; i++) {
-                const node = nodes[i];
-                if (!Array.isArray(node) || node.length < 2) continue;
-                const tag = node[0];
-                const attrs = node[1] || {};
-                let attrStr = '';
-                for (const k in attrs) {
-                    const v = String(attrs[k]).replace(/"/g, '&quot;');
-                    attrStr += ' ' + k + '="' + v + '"';
-                }
-                parts += '<' + tag + attrStr + '/>';
-            }
-
-            let svgAttrs = 'xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size +
-                '" viewBox="0 0 24 24" fill="' + (fill || 'none') +
-                '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
-            if (className) svgAttrs += ' class="' + className + '"';
-            if (style) svgAttrs += ' style="' + style + '"';
-
-            const svg = '<svg ' + svgAttrs + '>' + parts + '</svg>';
-            ICON_CACHE[key] = svg;
-            return svg;
-        }
-
-        // ============================================
-        // ⚡ OPT #7: substituir lucide.createIcons() per icones inline
-        // ============================================
-        function replaceDataLucide() {
-            // Només un cop a l'inici per les icones estàtiques del nav
-            const els = document.querySelectorAll('[data-lucide]');
-            for (let i = 0; i < els.length; i++) {
-                const el = els[i];
-                const name = el.getAttribute('data-lucide');
-                const svg = renderIcon(name, {
-                    size: parseInt(el.style.width) || 16,
-                    className: el.className
-                });
-                if (svg) el.outerHTML = svg;
-            }
-        }
-
-        // ============================================
-        // ⚡ OPT #1: mode rendiment + settings
-        // ============================================
-        (function initSettings() {
-            const PERF_KEY = 'ulaPerformanceMode';
-            const settingsBtn = document.getElementById('settingsBtn');
-            const settingsMenu = document.getElementById('settingsMenu');
-            const perfModeItem = document.getElementById('perfModeItem');
-
-            let perfEnabled = localStorage.getItem(PERF_KEY) === '1';
-
-            function applyPerfMode(enabled) {
-                document.body.classList.toggle('performance-mode', enabled);
-                perfModeItem.classList.toggle('on', enabled);
-                perfModeItem.setAttribute('aria-checked', String(enabled));
-                localStorage.setItem(PERF_KEY, enabled ? '1' : '0');
-            }
-
-            applyPerfMode(perfEnabled);
-
-            function openMenu() {
-                settingsMenu.classList.add('open');
-                settingsBtn.classList.add('active');
-                settingsBtn.setAttribute('aria-expanded', 'true');
-            }
-            function closeMenu() {
-                settingsMenu.classList.remove('open');
-                settingsBtn.classList.remove('active');
-                settingsBtn.setAttribute('aria-expanded', 'false');
-            }
-            function toggleMenu() {
-                if (settingsMenu.classList.contains('open')) closeMenu();
-                else openMenu();
-            }
-
-            settingsBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                toggleMenu();
-            });
-
-            perfModeItem.addEventListener('click', function (e) {
-                e.stopPropagation();
-                perfEnabled = !perfEnabled;
-                applyPerfMode(perfEnabled);
-            });
-            perfModeItem.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    perfEnabled = !perfEnabled;
-                    applyPerfMode(perfEnabled);
-                }
-            });
-
-            document.addEventListener('click', function (e) {
-                if (!settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) closeMenu();
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') closeMenu();
-            });
-        })();
-
-        // ⚡ OPT #11: NO hi ha JS per la orbe (ara és CSS keyframes)
-
-        // ============================================
-        // SERVICE WORKER
-        // ============================================
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(function (reg) { console.log('SW registrat:', reg.scope); })
-                    .catch(function (err) { console.error('Error SW:', err); });
-            });
-        }
-
-        // ============================================
-        // CONFIG
-        // ============================================
-        const LOADER_DURATION = 7000;
-        const ALLOWED_CATEGORIES = [
-            { id: 'tots', label: 'Tots', icon: 'layout-grid' },
-            { id: 'accio', label: 'Acció', icon: 'zap' },
-            { id: 'puzle', label: 'Puzle', icon: 'brain' },
-            { id: 'esports', label: 'Esports', icon: 'trophy' },
-            { id: 'retro', label: 'Retro', icon: 'joystick' },
-            { id: 'altres', label: 'Altres', icon: 'more-horizontal' }
-        ];
-
-        // ⚡ OPT #19: virtualització lleugera
-        const MAX_DOM_CARDS = 150;
-
-        let ALL_GAMES = [];
-        let FILTERED_GAMES = [];
-        let currentCategory = 'tots';
-        let itemsShown = 0;
-        const CHUNK_SIZE = 30;
-
-        let favorites = JSON.parse(localStorage.getItem('ulaFavorites')) || [];
-        let userStats = JSON.parse(localStorage.getItem('ulaStats')) || {
-            plays: 0, points: 0, timeSeconds: 0, streak: 0, lastDate: null, gameHistory: {}
-        };
-
-        let loaderTimeout = null;
-        let isTransitioning = false;
-        let fallbackTimeout = null;
-
-        window.addEventListener('load', function () {
-            const pillWrapper = document.getElementById('pillWrapper');
-            ALLOWED_CATEGORIES.forEach(function (cat) {
-                const item = document.createElement('div');
-                item.className = 'category-item' + (cat.id === 'tots' ? ' active' : '');
-                item.id = 'cat-' + cat.id;
-                item.innerHTML = renderIcon(cat.icon, { size: 13 }) + ' ' + cat.label;
-                item.onclick = function () { selectCategory(cat.id); };
-                pillWrapper.appendChild(item);
-            });
-
-            checkStreak();
-            replaceDataLucide();
-            setTimeout(updateActivePillPosition, 100);
-            updateLogoByTheme();
-
-            document.getElementById('link-arcade').addEventListener('click', function () { navigateToView('arcade', 'right'); });
-            document.getElementById('link-stats').addEventListener('click', function () { navigateToView('stats', 'left'); });
-
-            if (typeof GAMES !== 'undefined') {
-                ALL_GAMES = GAMES;
-                applyFilters();
-            }
-        });
-
-        function updateLogoByTheme() {
-            const isDark = document.body.classList.contains('dark-theme');
-            const logoSrc = isDark ? 'assets/icons/icon-large-dark.png' : 'assets/icons/icon-large-light.png';
-            const logoImg = document.getElementById('logoImg');
-            if (logoImg) logoImg.src = logoSrc;
-        }
-
-        function checkStreak() {
-            const today = new Date().toDateString();
-            if (userStats.lastDate) {
-                const last = new Date(userStats.lastDate);
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                if (last.toDateString() === yesterday.toDateString()) {
-                    if (userStats.lastDate !== today) userStats.streak = (userStats.streak || 0) + 1;
-                } else if (last.toDateString() !== today) userStats.streak = 1;
-            } else userStats.streak = 1;
-            userStats.lastDate = today;
-            saveStats();
-        }
-
-        function saveStats() { localStorage.setItem('ulaStats', JSON.stringify(userStats)); }
-
-        function selectCategory(catId) {
-            currentCategory = catId;
-            document.querySelectorAll('.category-item').forEach(function (el) { el.classList.remove('active'); });
-            document.getElementById('cat-' + catId).classList.add('active');
-            updateActivePillPosition();
-            applyFilters();
-        }
-
-        function updateActivePillPosition() {
-            const activeEl = document.querySelector('.category-item.active');
-            const pill = document.getElementById('activePill');
-            if (activeEl && pill) {
-                pill.style.width = activeEl.offsetWidth + 'px';
-                pill.style.left = activeEl.offsetLeft + 'px';
-            }
-        }
-
-        function sortGamesByFavorites(games) {
-            return games.slice().sort(function (a, b) {
-                const aFav = favorites.indexOf(a.url) > -1;
-                const bFav = favorites.indexOf(b.url) > -1;
-                if (aFav && !bFav) return -1;
-                if (!aFav && bFav) return 1;
-                return 0;
-            });
-        }
-
-        function applyFilters() {
-            const searchTerm = document.getElementById('gameSearch').value.toLowerCase();
-            const filtered = ALL_GAMES.filter(function (g) {
-                const matchesSearch = g.name.toLowerCase().indexOf(searchTerm) > -1;
-                const matchesCat = currentCategory === 'tots' || (g.type && g.type.toLowerCase() === currentCategory);
-                return matchesSearch && matchesCat;
-            });
-            FILTERED_GAMES = sortGamesByFavorites(filtered);
-            if (FILTERED_GAMES.length === 0) showView('404', 'none');
-            else { showView('arcade', 'none'); renderInitial(); }
-        }
-
-        function resetFilters() {
-            document.getElementById('gameSearch').value = '';
-            selectCategory('tots');
-        }
-
-        const grid = document.getElementById('gameGrid');
-        const scrollContainer = document.getElementById('scrollContainer');
-        const trigger = document.getElementById('loadMoreTrigger');
-        const observer = new IntersectionObserver(function (entries) {
-            if (entries[0].isIntersecting && itemsShown < FILTERED_GAMES.length) loadMore();
-        }, { root: scrollContainer, threshold: 0.1, rootMargin: '400px 0px' });
-        observer.observe(trigger);
-
-        function renderInitial() {
-            grid.innerHTML = '';
-            itemsShown = 0;
-            loadMore();
-        }
-
-        // ============================================
-        // ⚡ OPT #7, #8, #9, #19: loadMore optimitzat
-        // ============================================
-        function loadMore() {
-            const nextBatch = FILTERED_GAMES.slice(itemsShown, itemsShown + CHUNK_SIZE);
-            if (nextBatch.length === 0) return;
-
-            // ⚡ OPT #8: DocumentFragment — 1 sola operació DOM
-            const fragment = document.createDocumentFragment();
-
-            nextBatch.forEach(function (g) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'card-wrapper';
-                const isFav = favorites.indexOf(g.url) > -1;
-                if (isFav) wrapper.classList.add('favorite-card');
-                wrapper.onclick = function () { launchGame(g); };
-
-                const mediaContent = g.image
-                    ? '<img src="' + g.image + '" loading="lazy" decoding="async" onerror="this.style.display=\'none\';">'
-                    : '';
-
-                // ⚡ OPT #7 + #20: SVG inline cachejat, no data-lucide
-                const starSvg = renderIcon('star', {
-                    size: 18,
-                    fill: isFav ? '#FFD60A' : 'none'
-                });
-                const gamepadSvg = renderIcon('gamepad-2', {
-                    size: 40,
-                    className: 'game-icon'
-                });
-
-                wrapper.innerHTML =
-                    '<button class="fav-btn' + (isFav ? ' active' : '') + '" onclick="toggleFavorite(event, \'' + g.url + '\')" aria-label="Favorit">' +
-                        starSvg +
-                    '</button>' +
-                    '<div class="card">' +
-                        mediaContent +
-                        gamepadSvg +
-                    '</div>' +
-                    '<div class="card-title">' + g.name + '</div>';
-
-                fragment.appendChild(wrapper);
-            });
-
-            grid.appendChild(fragment);
-            itemsShown += nextBatch.length;
-
-            // ⚡ OPT #9: stagger via CSS + un sol rAF (no setTimeout per card)
-            requestAnimationFrame(function () {
-                const wrappers = grid.querySelectorAll('.card-wrapper:not(.visible)');
-                for (let i = 0; i < wrappers.length; i++) {
-                    wrappers[i].style.transitionDelay = (i * 15) + 'ms';
-                    wrappers[i].classList.add('visible');
-                }
-            });
-
-            // ⚡ OPT #19: eliminar targetes antigues si excedim el màxim
-            pruneGrid();
-        }
-
-        function pruneGrid() {
-            const children = grid.children;
-            if (children.length <= MAX_DOM_CARDS) return;
-            const toRemove = children.length - MAX_DOM_CARDS;
-            for (let i = 0; i < toRemove; i++) {
-                grid.removeChild(grid.firstChild);
-            }
-        }
-
-        function navigateToView(targetViewId, direction) {
-            if (isTransitioning) return;
-            const currentView = document.querySelector('.view.active');
-            if (currentView && currentView.id === 'view-' + targetViewId) return;
-
-            isTransitioning = true;
-            const nextView = document.getElementById('view-' + targetViewId);
-            if (!nextView) return;
-
-            let outDirection, inDirection;
-            if (direction === 'left') { outDirection = 'left'; inDirection = 'right'; }
-            else if (direction === 'right') { outDirection = 'right'; inDirection = 'left'; }
-            else {
-                document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
-                nextView.classList.add('active');
-                updateActiveNavButton(targetViewId);
-                isTransitioning = false;
-                return;
-            }
-
-            if (currentView) {
-                currentView.classList.remove('active');
-                currentView.classList.add('animate-out-' + outDirection);
-                setTimeout(function () {
-                    currentView.classList.remove('animate-out-' + outDirection);
-                    currentView.style.display = 'none';
-                }, 280);
-            }
-
-            nextView.style.display = 'block';
-            nextView.classList.add('active', 'animate-in-' + inDirection);
-            setTimeout(function () {
-                nextView.classList.remove('animate-in-' + inDirection);
-                isTransitioning = false;
-            }, 320);
-
-            updateActiveNavButton(targetViewId);
-
-            const catContainer = document.getElementById('categoryContainer');
-            if (targetViewId === 'arcade' || targetViewId === '404') {
-                catContainer.style.display = 'block';
-                setTimeout(updateActivePillPosition, 100);
-            } else {
-                catContainer.style.display = 'none';
-            }
-
-            if (targetViewId === 'stats') updateStatsUI();
-        }
-
-        function updateActiveNavButton(viewId) {
-            document.querySelectorAll('.nav-link').forEach(function (btn) { btn.classList.remove('active'); });
-            const activeBtn = document.getElementById('link-' + viewId);
-            if (activeBtn) activeBtn.classList.add('active');
-        }
-
-        function showView(viewId, direction) {
-            if (direction === 'none') {
-                document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
-                document.getElementById('view-' + viewId).classList.add('active');
-                if (viewId === 'arcade' || viewId === '404') {
-                    document.getElementById('categoryContainer').style.display = 'block';
-                    setTimeout(updateActivePillPosition, 50);
-                } else {
-                    document.getElementById('categoryContainer').style.display = 'none';
-                }
-                if (viewId === 'stats') updateStatsUI();
-            } else {
-                navigateToView(viewId, direction);
-            }
-        }
-
-        window.toggleFavorite = function (e, id) {
-            e.stopPropagation();
-            const idx = favorites.indexOf(id);
-            if (idx > -1) favorites.splice(idx, 1);
-            else favorites.push(id);
-            localStorage.setItem('ulaFavorites', JSON.stringify(favorites));
-            applyFilters();
-        };
-
-        function launchGame(game) {
-            cancelLoaderTimer();
-            cancelFallbackTimer();
-            hideLoaderOverlayImmediate();
-
-            currentGame = game;
-            sessionStart = Date.now();
-            const iframe = document.getElementById('gameIframe');
-            iframe.src = 'assets/games/' + (game.url.endsWith('.html') ? game.url : game.url + '.html');
-            document.getElementById('gameModal').classList.add('active');
-            showLoaderOverlay();
-
-            loaderTimeout = setTimeout(function () {
-                hideLoaderOverlayImmediate();
-                loaderTimeout = null;
-            }, LOADER_DURATION);
-
-            fallbackTimeout = setTimeout(function () {
-                try {
-                    if (!iframe.contentDocument || iframe.contentDocument.readyState !== 'complete') {
-                        iframe.src = '/offline.html';
-                        hideLoaderOverlayImmediate();
-                        cancelLoaderTimer();
-                    }
-                } catch (e) {
-                    iframe.src = '/offline.html';
-                    hideLoaderOverlayImmediate();
-                    cancelLoaderTimer();
-                }
-                fallbackTimeout = null;
-            }, 10000);
-
-            iframe.addEventListener('load', function onLoad() {
-                clearTimeout(loaderTimeout);
-                clearTimeout(fallbackTimeout);
-                loaderTimeout = null;
-                fallbackTimeout = null;
-                hideLoaderOverlayImmediate();
-                iframe.removeEventListener('load', onLoad);
-            }, { once: true });
-
-            userStats.plays = (userStats.plays || 0) + 1;
-            userStats.points = (userStats.points || 0) + 15;
-            saveStats();
-        }
-
-        let sessionStart = null;
-        let currentGame = null;
-
-        function hideLoaderOverlayImmediate() {
-            const overlay = document.getElementById('loaderOverlay');
-            if (overlay) {
-                overlay.style.opacity = '0';
-                setTimeout(function () {
-                    overlay.style.display = 'none';
-                    overlay.style.opacity = '';
-                }, 400);
-            }
-        }
-        function showLoaderOverlay() {
-            const overlay = document.getElementById('loaderOverlay');
-            if (overlay) {
-                overlay.style.display = 'flex';
-                overlay.style.opacity = '1';
-            }
-        }
-        function cancelLoaderTimer() { if (loaderTimeout) { clearTimeout(loaderTimeout); loaderTimeout = null; } }
-        function cancelFallbackTimer() { if (fallbackTimeout) { clearTimeout(fallbackTimeout); fallbackTimeout = null; } }
-
-        document.getElementById('closeModal').onclick = function () {
-            cancelLoaderTimer();
-            cancelFallbackTimer();
-            hideLoaderOverlayImmediate();
-            if (sessionStart && currentGame) {
-                const durationSec = Math.floor((Date.now() - sessionStart) / 1000);
-                userStats.timeSeconds = (userStats.timeSeconds || 0) + durationSec;
-                if (!userStats.gameHistory) userStats.gameHistory = {};
-                if (!userStats.gameHistory[currentGame.name]) {
-                    userStats.gameHistory[currentGame.name] = { count: 0, timePlayed: 0, lastPlayed: '' };
-                }
-                const gameEntry = userStats.gameHistory[currentGame.name];
-                gameEntry.count = (gameEntry.count || 0) + 1;
-                gameEntry.timePlayed = (gameEntry.timePlayed || 0) + durationSec;
-                gameEntry.lastPlayed = new Date().toISOString();
-                saveStats();
-            }
-            document.getElementById('gameModal').classList.remove('active');
-            document.getElementById('gameIframe').src = '';
-            sessionStart = null;
-            currentGame = null;
-        };
-
-        document.getElementById('themeBtn').onclick = function () {
-            const isDark = document.body.classList.toggle('dark-theme');
-            const icon = document.getElementById('themeIcon');
-            const newSvg = renderIcon(isDark ? 'sun' : 'moon', { size: 16 });
-            if (newSvg) icon.outerHTML = newSvg.replace('<svg ', '<svg id="themeIcon" ');
-            updateLogoByTheme();
-        };
-
-        function updateStatsUI() {
-            document.getElementById('stat-streak').innerText = userStats.streak || 0;
-            document.getElementById('stat-points').innerText = userStats.points || 0;
-            const totalMinutes = Math.floor((userStats.timeSeconds || 0) / 60);
-            document.getElementById('stat-time').innerText = totalMinutes + 'm';
-
-            const points = userStats.points || 0;
-            const levelEl = document.getElementById('stat-level');
-            const progressEl = document.getElementById('level-progress');
-            let level = 'Novell';
-            let progress = (points % 500) / 500 * 100;
-            if (points > 2000) level = 'Llegenda';
-            else if (points > 1000) level = 'Expert';
-            else if (points > 500) level = 'Pro';
-            else if (points > 100) level = 'Aficionat';
-            levelEl.innerText = level;
-            progressEl.style.width = progress + '%';
-
-            const history = userStats.gameHistory || {};
-            const sorted = Object.keys(history).sort(function (a, b) {
-                const dateA = history[a].lastPlayed ? new Date(history[a].lastPlayed) : 0;
-                const dateB = history[b].lastPlayed ? new Date(history[b].lastPlayed) : 0;
-                return dateB - dateA;
-            });
-            const historyBody = document.getElementById('historyBody');
-            if (sorted.length === 0) {
-                historyBody.innerHTML = '<tr><td colspan="4" style="opacity:0.5; padding:40px; text-align:center;">Encara no has jugat a cap joc. Comença la teva aventura!</td></tr>';
-            } else {
-                historyBody.innerHTML = sorted.map(function (gameName) {
-                    const g = history[gameName];
-                    const totalSecs = g.timePlayed || 0;
-                    const mins = Math.floor(totalSecs / 60);
-                    const secs = totalSecs % 60;
-                    const formattedTime = mins + 'm ' + secs + 's';
-                    const count = g.count || 0;
-                    let lastPlayedFormatted = 'Mai';
-                    if (g.lastPlayed) {
-                        const dateObj = new Date(g.lastPlayed);
-                        lastPlayedFormatted = dateObj.toLocaleDateString('ca-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                    }
-                    return '<tr><td>' + gameName + '</td><td style="text-align: center;"><span class="game-badge">' + count + '</span></td><td style="text-align: center;">' + formattedTime + '</td><td style="text-align: right;">' + lastPlayedFormatted + '</td></tr>';
-                }).join('');
-            }
-        }
-
-        document.getElementById('gameSearch').oninput = applyFilters;
-
-        window.clearAllCache = function () {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.ready.then(function (reg) {
-                    reg.active.postMessage({ type: 'CLEAR_CACHE' });
-                });
-            }
-            localStorage.clear();
-            alert('Cache netejat. Es recarregarà la pàgina.');
-            window.location.reload();
-        };
-    </script>
 </body>
 </html>

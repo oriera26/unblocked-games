@@ -1,0 +1,72 @@
+# Quan es puja una tag que comença per `v` (p. ex. v1.0.0) compila
+# l'app per a Windows i per a Linux i la penja com a release de GitHub.
+#
+# Windows: instal·lador NSIS (+ blockmap per a actualitzacions).
+# Linux:  AppImage i .deb.
+#
+# La tag es crea des de fora del workflow (git tag / llançament manual),
+# així que un push ordinari a `main` no llança cap release.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            comanda: npm run dist
+          - os: ubuntu-latest
+            comanda: npm run dist:linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instal·la dependències
+        run: npm ci
+
+      - name: Compila l'app
+        run: ${{ matrix.comanda }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distribucio-${{ matrix.os }}
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/*.AppImage
+            dist/*.deb
+            dist/latest*.yml
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/*.AppImage
+            dist/*.deb
+            dist/latest*.yml
+          generate_release_notes: true

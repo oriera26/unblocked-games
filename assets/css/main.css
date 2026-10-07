@@ -83,7 +83,7 @@ body {
     z-index: 0;
     opacity: var(--orb-opacity);
     /* ⚡ OPT #2: PNG pre-desenfocat en comptes de filter: blur(90px) */
-    background-image: url('/assets/images/orb-blurred.png');
+    background-image: url('../images/orb-blurred.webp');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -138,6 +138,7 @@ body.performance-mode .modal,
 body.performance-mode .modal-content,
 body.performance-mode .game-loader-overlay,
 body.performance-mode .close-modal,
+body.performance-mode .fullscreen-modal,
 body.performance-mode .error-container,
 body.performance-mode .reset-btn,
 body.performance-mode .fav-btn,

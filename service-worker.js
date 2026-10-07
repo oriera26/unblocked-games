@@ -2,24 +2,38 @@
    SERVICE WORKER · ulaGames
    ============================================================ */
 
-const CACHE_VERSION = 'ula-v1.0.0';
+const CACHE_VERSION = 'ula-v1.3.0';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const GAMES_CACHE = CACHE_VERSION + '-games';
 const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
 
+/**
+ * Tot es resol respecte d'aquest mateix fitxer.
+ *
+ * El mateix lloc es publica a l'arrel (server.js local, Electron) i a un
+ * subdirectori (GitHub Pages el serveix a /unblocked-games/). Un path que
+ * comença per `/` apuntaria sempre a l'arrel del domini i, allà dalt,
+ * precachejaria 404 i cauria offline. Resolt contra `self.location`, en
+ * canvi, funciona als dos llocs sense cap configuració.
+ */
+const rel = (path) => new URL(path, self.location.href).href;
+
+/** Carpeta dels jocs, tal com es veu a l'URL d'aquesta publicació. */
+const GAMES_PATH = new URL('./assets/games/', self.location.href).pathname;
+
 /* Recursos essencials per funcionar offline */
 const PRECACHE_URLS = [
-    '/',
-    '/index.html',
-    '/offline.html',
-    '/manifest.json',
-    '/assets/js/gameList.js',
-    '/assets/images/orb-blurred.png',
-    '/assets/icons/icon-192x192.png',
-    '/assets/icons/icon-512x512.png',
-    '/assets/icons/icon-large-dark.png',
-    '/assets/icons/icon-large-light.png',
-    '/assets/icons/apple-touch-icon.png'
+    './',
+    './index.html',
+    './offline.html',
+    './manifest.json',
+    './assets/js/gameList.js',
+    './assets/vendor/lucide.min.js',
+    './assets/images/orb-blurred.webp',
+    './assets/icons/icon-256x256.png',
+    './assets/icons/icon-512x512.png',
+    './assets/icons/icon-large-dark.png',
+    './assets/icons/icon-large-light.png'
 ];
 
 /* ============================================================
@@ -72,7 +86,7 @@ self.addEventListener('fetch', (event) => {
     if (url.origin !== self.location.origin) return;
 
     /* Jocs: cache-first amb fallback a xarxa */
-    if (url.pathname.startsWith('/assets/games/')) {
+    if (url.pathname.startsWith(GAMES_PATH)) {
         event.respondWith(
             caches.open(GAMES_CACHE).then((cache) => {
                 return cache.match(request).then((cached) => {
@@ -98,7 +112,7 @@ self.addEventListener('fetch', (event) => {
                 })
                 .catch(() => {
                     return caches.match(request).then((cached) => {
-                        return cached || caches.match('/offline.html');
+                        return cached || caches.match(rel('./offline.html'));
                     });
                 })
         );

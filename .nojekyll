@@ -1,0 +1,5 @@
+# Publicació a GitHub Pages
+#
+# Els fitxers de assets/games/ són jocs de tercers; Jekyll no hi ha de
+# tocar (exclou res que comenci per _ i reinicia el processat), i a més
+# s'assegura que es còpien tal com estan.

@@ -338,6 +338,19 @@
 }
 .table-container { overflow-x: auto; margin-top: 10px; }
 
+/* Aquestes tres classes substitueixen els `style=` inline que hi havia
+   a cada <td> de l'historial. Elucent-los permet que la taula es
+   pugui adaptar a pantalles estretes sense tocar el JS. */
+.history-count { text-align: center; }
+.history-date { text-align: right; }
+.history-empty {
+    text-align: center;
+    opacity: 0.5;
+    /* Sense padding, la fila buida és una línia de 14px i sembla que
+       l'historial s'ha trencat. */
+    padding: 40px 12px !important;
+}
+
 table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
 th {
     text-align: left; padding: 12px; font-size: 11px;
@@ -404,7 +417,11 @@ td:last-child {
     box-shadow: 0 30px 70px rgba(0,0,0,0.45);
 }
 
-.close-modal {
+/* Els dos botons rodons de dalt a la dreta del joc: tancar i pantalla
+   completa. Comparteixen estil perquè siguin la mateixa peça visual;
+   el de pantalla completa va desplaçat a l'esquerra del de tancar. */
+.close-modal,
+.fullscreen-modal {
     position: absolute; top: 16px; right: 16px;
     width: 42px; height: 42px;
     background: rgba(0, 0, 0, 0.55);
@@ -417,8 +434,27 @@ td:last-child {
     box-shadow: 0 2px 10px rgba(0,0,0,0.25);
     padding: 0;
 }
-.close-modal:hover { background: rgba(0, 0, 0, 0.75); transform: scale(1.05); }
-.close-modal svg { width: 20px; height: 20px; }
+.fullscreen-modal { right: 66px; /* 16 + 42 del de tancar + 8 de separació */ }
+.close-modal:hover,
+.fullscreen-modal:hover { background: rgba(0, 0, 0, 0.75); transform: scale(1.05); }
+.close-modal svg,
+.fullscreen-modal svg { width: 20px; height: 20px; }
+
+/* La icona canvia segons l'estat: maximitzar / minimitzar. */
+.fullscreen-modal .ico-min { display: none; }
+.fullscreen-modal.is-fullscreen .ico-max { display: none; }
+.fullscreen-modal.is-fullscreen .ico-min { display: block; }
+
+/* El modal a pantalla completa ha d'omplir la pantalla: sense el `max`
+   de la versió enfinestrada (88vh) ni la vora rodona, que en un
+   monitor sencer només deixarien una franja negra a sota. */
+#gameModal:fullscreen .modal-content,
+#gameModal:-webkit-full-screen .modal-content {
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+}
 
 #gameIframe { flex: 1; width: 100%; height: 100%; border: none; background: #000; }
 
@@ -467,3 +503,97 @@ td:last-child {
     transition: transform 0.15s ease;
 }
 .reset-btn:hover { transform: translateY(-1px); }
+
+/* --- AVÍS DE L'APP INSTAL·LADA --- */
+/* El crea detection.js. Es crea per codi perquè només ha d'existir
+   quan la detecció decideix que toca, i el text depèn del nom que dona
+   el navegador. */
+
+.app-banner {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
+    transform: translateX(-50%);
+    z-index: 1800;
+    width: min(420px, calc(100vw - 32px));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 20px;
+    background: var(--glass-bg-strong);
+    border: 1px solid var(--glass-border-soft);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: var(--glass-shadow);
+
+    animation: app-banner-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes app-banner-in {
+    from { opacity: 0; transform: translate(-50%, 16px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.app-banner-text {
+    flex: 1;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.app-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+}
+
+.app-banner-open {
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.app-banner-open:hover { filter: brightness(1.1); }
+
+.app-banner-dismiss {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    opacity: 0.5;
+    font-size: 16px;
+    line-height: 1;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+}
+.app-banner-dismiss:hover { opacity: 1; background: var(--glass-bg); }
+
+.app-banner button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* --- CONTENIDOR D'ICONES --- */
+/* icons.js posa aquí l'SVG i el contenidor li dona la mida. Cal que el
+   contenidor sigui en línia, o el <span> del botó de tema tindria una
+   mida diferent de l'SVG que hi ha dins. */
+.ula-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+    line-height: 0;
+}
+.ula-icon > svg { width: 100%; height: 100%; display: block; }
