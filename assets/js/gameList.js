@@ -7,12 +7,12 @@
  *   image  portada a assets/images/, o "" si el joc encara no en té
  *   type   categoria; ha de coincidir amb un id de config.js
  *
- * 696 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
+ * 697 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
  * només exporta la llista.
  *
  * El camp image l'omple tools/fetch-covers.mjs. Els jocs que no tenen
  * portada mostren la icona de mando que dibuixa ui.js, que és el que es
- * veu ara mateix a 696 dels 696 jocs.
+ * veu ara mateix a 697 dels 697 jocs.
  */
 
 export const GAMES = [
@@ -276,6 +276,7 @@ export const GAMES = [
    { name: "Grow Your Garden", url: "clgrowyourgarden.html", image: "assets/images/clgrowyourgarden.webp", type: "altres" },
    { name: "Growden.io", url: "clgrowdenio.html", image: "assets/images/clgrowdenio.webp", type: "accio" },
    { name: "Guess Their Answer", url: "clguesstheiranswer.html", image: "assets/images/clguesstheiranswer.webp", type: "puzle" },
+   { name: "GTA Vice City Online", url: "clgtavicecity.html", image: "assets/images/clgtavicecity.webp", type: "accio" },
    { name: "Guncho", url: "clguncho.html", image: "assets/images/clguncho.webp", type: "accio" },
    { name: "Gun Night", url: "clgunnight.html", image: "assets/images/clgunnight.webp", type: "accio" },
    { name: "Gun Spin", url: "clgun-spin.html", image: "assets/images/clgun-spin.webp", type: "accio" },

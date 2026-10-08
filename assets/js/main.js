@@ -88,7 +88,7 @@ function bindSearch() {
     const container = byId('searchContainer');
     const trigger = container?.querySelector('.search-trigger');
 
-    // Es filtra en cada pulsació. Amb 696 jocs és una filtració lineal de
+    // Es filtra en cada pulsació. Amb 697 jocs és una filtració lineal de
     // poc cost, i un debounce aquí només afegiria complexitat per estalviar
     // unes poques centèsimes de mil·lisegon.
     search?.addEventListener('input', () => {
