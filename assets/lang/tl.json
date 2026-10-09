@@ -41,6 +41,8 @@
   "modal.close": "Isara",
   "modal.fullscreen": "Buong screen",
   "modal.fullscreenExit": "Lumabas sa buong screen",
+  "modal.volume": "Volume",
+  "modal.volumeSlider": "Volume ng laro",
   "gate.title": "Ang Unblocked Games ay hindi na-optimize para sa mobile",
   "gate.text": "Maaaring magkaroon ng mga error kapag naglalaro mula sa mobile o tablet, at hindi maayos tumutugon ang ilang mga laro sa paghipo.",
   "gate.accept": "Naiintindihan",

@@ -62,8 +62,19 @@ export const STORAGE_KEYS = {
     performanceMode: 'ulaPerformanceMode',
     appBannerDismissed: 'ulaAppBannerDismissed',
     /** Idioma triat. Absent = el que diu el navegador. El llegeix també offline.html. */
-    lang: 'ulaLang'
+    lang: 'ulaLang',
+    /**
+     * Volum de cada joc, com a mapa `{ "cl2048.html": 0.5 }`.
+     *
+     * El llegeix també `game-volume.js`, que corre dins de l'iframe i
+     * no pot importar aquest mòdul: el nom de la clau hi està escrit
+     * literalment i ha de ser el mateix.
+     */
+    gameVolumes: 'ulaGameVolumes'
 };
+
+/** Volum d'un joc de nou (0–1), quan l'usuari encara no n'ha tocat cap. */
+export const DEFAULT_GAME_VOLUME = 1;
 
 /** Forma de `userStats` en una instal·lació nova. */
 export const DEFAULT_STATS = {

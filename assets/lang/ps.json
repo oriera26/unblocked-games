@@ -41,6 +41,8 @@
   "modal.close": "تړل",
   "modal.fullscreen": "بشپړ سکرین",
   "modal.fullscreenExit": "له بشپړ سکرین ووځل",
+  "modal.volume": "صدا",
+  "modal.volumeSlider": "د لوبې صدا",
   "gate.title": "Unblocked Games د موبایلونو لپاره بهینه نه دی",
   "gate.text": "د موبایل یا تابلېت له لارې لوبل کېږي، چې ستونزې پېېدلي شي او ځینې لوبې لمس ته ښه نه ورکوي.",
   "gate.accept": "پوه شو",

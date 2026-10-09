@@ -41,6 +41,8 @@
   "modal.close": "Uždaryti",
   "modal.fullscreen": "Visas ekranas",
   "modal.fullscreenExit": "Išeiti iš viso ekrano",
+  "modal.volume": "Garsumas",
+  "modal.volumeSlider": "Žaidimo garsumas",
   "gate.title": "Unblocked Games nėra optimizuotas mobiliesiems įrenginiams",
   "gate.text": "Žaidimas iš telefono ar planšetės gali sukelti klaidų, o kai kurie žaidimai blogai reaguoja į lietimą.",
   "gate.accept": "Supratau",

@@ -41,6 +41,8 @@
   "modal.close": "Loka",
   "modal.fullscreen": "Heilskjár",
   "modal.fullscreenExit": "Fara úr heilskjá",
+  "modal.volume": "Hljóðstyrkur",
+  "modal.volumeSlider": "Hljóðstyrkur leiks",
   "gate.title": "Unblocked Games er ekki hannað fyrir farsíma",
   "gate.text": "Að spila í síma eða spjaldtölvu getur valdið villum og sumir leikir bregðast ekki vel við snertingu.",
   "gate.accept": "Skilið",

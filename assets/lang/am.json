@@ -41,6 +41,8 @@
   "modal.close": "ዝጋ",
   "modal.fullscreen": "ሙሉ ማያ ገጽ",
   "modal.fullscreenExit": "ከሙሉ ማያ ገጽ ውጣ",
+  "modal.volume": "ድምፅ መጠን",
+  "modal.volumeSlider": "የጨዋታ ድምፅ መጠን",
   "gate.title": "Unblocked Games ለሞባይል አልተስተካከለም",
   "gate.text": "ከስልክ ወይም ከታብሌት መጫወት ስህተቶችን ሊያስከትል ይችላል፣ አንዳንድ ጨዋታዎችም በጣት ሲነካ በደንብ አይመልሱም።",
   "gate.accept": "ተረድተዋል",

@@ -41,6 +41,8 @@
   "modal.close": "Mbyll",
   "modal.fullscreen": "Ekran i plotë",
   "modal.fullscreenExit": "Dil nga ekrani i plotë",
+  "modal.volume": "Volumi",
+  "modal.volumeSlider": "Volumi i lojës",
   "gate.title": "Unblocked Games nuk është optimizuar për telefona",
   "gate.text": "Të luash nga një telefon ose tablet mund të shkaktojë gabime dhe disa lojëra nuk reagojnë mirë ndaj prekjes.",
   "gate.accept": "U kuptua",

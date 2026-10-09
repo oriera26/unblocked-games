@@ -41,6 +41,8 @@
   "modal.close": "Itxi",
   "modal.fullscreen": "Pantaila osoa",
   "modal.fullscreenExit": "Irten pantaila osotik",
+  "modal.volume": "Bolumena",
+  "modal.volumeSlider": "Jokoaren bolumena",
   "gate.title": "Unblocked Games ez dago optimizatua mugikorrentzat",
   "gate.text": "Mugikorretik edo tabletatik jolasean erroreak egon daitezke eta joko batzuek ez dute ondo erantzuten ukipenari.",
   "gate.accept": "Ados",

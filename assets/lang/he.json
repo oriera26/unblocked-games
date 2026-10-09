@@ -41,6 +41,8 @@
   "modal.close": "סגירה",
   "modal.fullscreen": "מסך מלא",
   "modal.fullscreenExit": "יציאה ממסך מלא",
+  "modal.volume": "עוצמת שמע",
+  "modal.volumeSlider": "עוצמת שמע של המשחק",
   "gate.title": "Unblocked Games אינו מותאם למובייל",
   "gate.text": "במשחק ממכשיר נייד או טאבלט עלולים להופיע שגיאות, וחלק מהמשחקים אינם מגיבים טוב למגע.",
   "gate.accept": "הבנתי",

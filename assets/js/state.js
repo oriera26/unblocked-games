@@ -7,7 +7,7 @@
  * havia desat està corrupte.
  */
 
-import { DEFAULT_STATS, POINTS_PER_PLAY, STORAGE_KEYS } from './config.js';
+import { DEFAULT_GAME_VOLUME, DEFAULT_STATS, POINTS_PER_PLAY, STORAGE_KEYS } from './config.js';
 
 /**
  * Llegeix un valor JSON de localStorage.
@@ -147,6 +147,43 @@ export function recordSession(name, seconds) {
     stats.gameHistory[name] = entry;
 
     saveStats();
+}
+
+/* --- Volum per joc -------------------------------------------------- */
+
+/**
+ * Un únic mapa amb el volum de tots els jocs, no una clau per joc:
+ * es llegeix un sol cop en obrir la pàgina i les escriptures d'un
+ * arrosseguen de lliscant són totes sobre aquesta còpia.
+ */
+const storedVolumes = readJson(STORAGE_KEYS.gameVolumes, {});
+export const gameVolumes =
+    storedVolumes && typeof storedVolumes === 'object' && !Array.isArray(storedVolumes) ? storedVolumes : {};
+
+/** El volum desat d'un joc (0–1), o el de defecte si no n'hi ha. */
+export function getGameVolume(id) {
+    const value = Number(gameVolumes[id]);
+    if (!Number.isFinite(value)) return DEFAULT_GAME_VOLUME;
+    return value < 0 ? 0 : value > 1 ? 1 : value;
+}
+
+/**
+ * Desa el volum d'un joc.
+ *
+ * Tres decimals n'hi ha prou: cap joc es nota amb menys, i el fitxer
+ * es queda petit tot i tenir centenars de jocs.
+ *
+ * @param {string} id  nom del fitxer del joc (`cl2048.html`)
+ * @param {number} value 0–1
+ */
+export function setGameVolume(id, value) {
+    const number = Number(value);
+    const clamped = Number.isFinite(number)
+        ? Math.min(1, Math.max(0, number))
+        : DEFAULT_GAME_VOLUME;
+
+    gameVolumes[id] = Math.round(clamped * 1000) / 1000;
+    writeJson(STORAGE_KEYS.gameVolumes, gameVolumes);
 }
 
 /* --- Filtres ------------------------------------------------------- */

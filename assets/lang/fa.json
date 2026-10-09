@@ -41,6 +41,8 @@
   "modal.close": "بستن",
   "modal.fullscreen": "تمام‌صفحه",
   "modal.fullscreenExit": "خروج از حالت تمام‌صفحه",
+  "modal.volume": "میزان صدا",
+  "modal.volumeSlider": "صدای بازی",
   "gate.title": "Unblocked Games برای موبایل بهینه‌سازی نشده است",
   "gate.text": "بازی با گوشی یا تبلت ممکن است خطا ایجاد کند و برخی بازی‌ها به لمس واکنش خوبی نشان نمی‌دهند.",
   "gate.accept": "متوجه شدم",

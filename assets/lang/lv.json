@@ -41,6 +41,8 @@
   "modal.close": "Aizvērt",
   "modal.fullscreen": "Pilnekrāns",
   "modal.fullscreenExit": "Iziet no pilnekrāna",
+  "modal.volume": "Skaļums",
+  "modal.volumeSlider": "Spēles skaļums",
   "gate.title": "Unblocked Games nav optimizēts mobilajām ierīcēm",
   "gate.text": "Spēlēšana no tālruņa vai planšetes var radīt kļūdas, un dažas spēles slikti reaģē uz pieskārienu.",
   "gate.accept": "Skaidri",

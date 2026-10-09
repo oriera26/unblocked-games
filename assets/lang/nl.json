@@ -41,6 +41,8 @@
   "modal.close": "Sluiten",
   "modal.fullscreen": "Volledig scherm",
   "modal.fullscreenExit": "Volledig scherm verlaten",
+  "modal.volume": "Volume",
+  "modal.volumeSlider": "Volume van het spel",
   "gate.title": "Unblocked Games is niet geoptimaliseerd voor mobiel",
   "gate.text": "Spelen op een telefoon of tablet kan fouten veroorzaken en sommige spellen reageren niet goed op aanrakingen.",
   "gate.accept": "Begrepen",

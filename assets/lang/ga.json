@@ -41,6 +41,8 @@
   "modal.close": "Dún",
   "modal.fullscreen": "Scáileán Iomlán",
   "modal.fullscreenExit": "Scoir den Scáileán Iomlán",
+  "modal.volume": "Volume",
+  "modal.volumeSlider": "Volume an chluiche",
   "gate.title": "Níl Unblocked Games optamaithe do ghléasanna soghluaiste",
   "gate.text": "Nuair a imrítear ar ghléas soghluaiste is féidir go dtiocfaidh earráidí, agus ní freagraíonn roinnt cluichí go maith don teagmháil.",
   "gate.accept": "Tuigim",

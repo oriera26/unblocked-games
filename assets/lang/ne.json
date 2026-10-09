@@ -41,6 +41,8 @@
   "modal.close": "बन्द गर्नुहोस्",
   "modal.fullscreen": "पूर्ण स्क्रिन",
   "modal.fullscreenExit": "पूर्ण स्क्रिनबाट निस्कनुहोस्",
+  "modal.volume": "भोल्युम",
+  "modal.volumeSlider": "खेलको भोल्युम",
   "gate.title": "Unblocked Games मोबाइलका लागि अनुकूलित छैन",
   "gate.text": "मोबाइल वा ट्याब्लेटबाट खेल्दा त्रुटि हुन सक्छ र केही खेलहरूले स्पर्शलाई राम्रोसँग प्रतिक्रिया गर्दैनन्।",
   "gate.accept": "बुझियो",

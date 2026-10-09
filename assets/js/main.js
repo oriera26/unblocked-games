@@ -29,6 +29,7 @@ import { checkStreak, filters, toggleFavorite } from './state.js';
 import { initCacheControl, initLangSelect, initSettings, registerServiceWorker } from './settings.js';
 import { startDetection } from './detection.js';
 import { initI18n, onLangChange, t } from './i18n.js';
+import { initVolume } from './volume.js';
 
 /** Dins d'Electron no hi ha pestanya: la detecció i el SW no hi tenen sentit. */
 const isDesktop = Boolean(window.ulaDesktop);
@@ -150,6 +151,7 @@ function bindTheme() {
 function bindModal() {
     byId('closeModal')?.addEventListener('click', close);
     byId('fullscreenModal')?.addEventListener('click', toggleFullscreen);
+    initVolume();
 
     // La icona i l'etiqueta del botó han de seguir el que fa el navegador:
     // Esc surt de pantalla completa sense passar per aquest codi.

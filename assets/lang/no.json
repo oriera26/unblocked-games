@@ -41,6 +41,8 @@
   "modal.close": "Lukk",
   "modal.fullscreen": "Full skjerm",
   "modal.fullscreenExit": "Avslutt fullskjerm",
+  "modal.volume": "Volum",
+  "modal.volumeSlider": "Spillets volum",
   "gate.title": "Unblocked Games er ikke optimalisert for mobiler",
   "gate.text": "Spilling fra en mobil eller nettbrett kan forårsake feil, og noen spill responderer ikke godt på berøring.",
   "gate.accept": "Forstått",

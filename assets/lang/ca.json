@@ -41,6 +41,8 @@
   "modal.close": "Tancar",
   "modal.fullscreen": "Pantalla completa",
   "modal.fullscreenExit": "Surt de pantalla completa",
+  "modal.volume": "Volum",
+  "modal.volumeSlider": "Volum del joc",
   "gate.title": "Unblocked Games no està optimitzat per a mòbils",
   "gate.text": "En jugar des d'un mòbil o una tauleta hi poden haver errors i alguns jocs no responen bé al tacte.",
   "gate.accept": "Entesos",

@@ -41,6 +41,8 @@
   "modal.close": "Schließen",
   "modal.fullscreen": "Vollbild",
   "modal.fullscreenExit": "Vollbild verlassen",
+  "modal.volume": "Lautstärke",
+  "modal.volumeSlider": "Lautstärke des Spiels",
   "gate.title": "Unblocked Games ist nicht für Mobilgeräte optimiert",
   "gate.text": "Beim Spielen auf einem Telefon oder Tablet können Fehler auftreten, und einige Spiele reagieren nicht gut auf Touch.",
   "gate.accept": "Verstanden",

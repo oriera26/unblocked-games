@@ -41,6 +41,8 @@
   "modal.close": "Закрити",
   "modal.fullscreen": "Повний екран",
   "modal.fullscreenExit": "Вийти з повноекранного режиму",
+  "modal.volume": "Гучність",
+  "modal.volumeSlider": "Гучність гри",
   "gate.title": "Unblocked Games не оптимізовано для мобільних пристроїв",
   "gate.text": "Під час гри з телефона або планшета можуть виникати помилки, і деякі ігри погано реагують на дотик.",
   "gate.accept": "Зрозуміло",

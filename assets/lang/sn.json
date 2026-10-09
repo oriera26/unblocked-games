@@ -41,6 +41,8 @@
   "modal.close": "Bvisira",
   "modal.fullscreen": "Skrini Yakazara",
   "modal.fullscreenExit": "Buda MuSkrini Yakazara",
+  "modal.volume": "Volume",
+  "modal.volumeSlider": "Game volume",
   "gate.title": "Unblocked Games haizombogadzirwa kune mafoni",
   "gate.text": "Kutamba kubva kumafoni kana taureti kunogona kukonzera zvikanganiso uye mimwe mibikiso haibate zvakanaka nezvigunwe.",
   "gate.accept": "Ndanzwisisa",

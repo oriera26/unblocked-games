@@ -41,6 +41,8 @@
   "modal.close": "إغلاق",
   "modal.fullscreen": "ملء الشاشة",
   "modal.fullscreenExit": "الخروج من ملء الشاشة",
+  "modal.volume": "مستوى الصوت",
+  "modal.volumeSlider": "مستوى صوت اللعبة",
   "gate.title": "Unblocked Games غير محسّن للأجهزة المحمولة",
   "gate.text": "عند اللعب من هاتف جوّال أو جهاز لوحي قد تظهر أخطاء، وبعض الألعاب لا تستجيب جيدًا للمس.",
   "gate.accept": "فهمت",

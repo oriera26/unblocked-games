@@ -41,6 +41,8 @@
   "modal.close": "关闭",
   "modal.fullscreen": "全屏",
   "modal.fullscreenExit": "退出全屏",
+  "modal.volume": "音量",
+  "modal.volumeSlider": "游戏音量",
   "gate.title": "Unblocked Games 未针对手机进行优化",
   "gate.text": "在手机或平板上游玩可能会出现错误，有些游戏对触控的响应不佳。",
   "gate.accept": "知道了",

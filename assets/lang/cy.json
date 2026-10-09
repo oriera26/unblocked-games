@@ -41,6 +41,8 @@
   "modal.close": "Cau",
   "modal.fullscreen": "Sgrin llawn",
   "modal.fullscreenExit": "Gadael y sgrin llawn",
+  "modal.volume": "Lefel sŵn",
+  "modal.volumeSlider": "Lefel sŵn y gêm",
   "gate.title": "Nid yw Unblocked Games wedi'i optimeiddio ar gyfer dyfeisiau symudol",
   "gate.text": "Gall chwarae o ffôn symudol neu dabliet achosi gwallau, ac nid yw rhai gemau'n ymateb yn dda i gyffwrdd.",
   "gate.accept": "Iawn",

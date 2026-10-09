@@ -127,7 +127,8 @@
     .mobile-gate { border-radius: 0; }
 
     .close-modal,
-    .fullscreen-modal {
+    .fullscreen-modal,
+    .volume-modal {
         top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
         right: 12px;
         width: 40px;
@@ -136,6 +137,13 @@
     /* Mateix càlcul que a components.css, amb els nous 40px:
        12 de vora + 40 del botó de tancar + 8 de separació. */
     .fullscreen-modal { right: 60px; }
+    /* El de volum ja no es posiciona sol: ho fa el seu contenidor,
+       que ara ocupa el lloc que abans tenia el botó. */
+    .volume-wrap {
+        top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
+        right: 108px;
+    }
+    .volume-modal { top: auto; right: auto; }
 
     /* --- Barra de categories a l'amplada del mòbil ------------ */
     .category-container {

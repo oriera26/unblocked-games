@@ -22,7 +22,7 @@
  */
 
 import { createServer } from 'node:http';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -61,6 +61,35 @@ const MIME = {
 
 function mimeOf(filePath) {
     return MIME[extname(filePath).toLowerCase()] ?? null;
+}
+
+/* Volum: els HTML dels jocs surten amb el pedaç de volum a dins.
+
+   A la web això ho fa el service worker; aquí, que no n'hi ha (ni a
+   l'app d'Escripteri ni al servidor local), es posa al vol quan se
+   serveix cada joc. El pedaç ha d'anar abans dels scripts del joc, i la
+   seva URL, absoluta, perquè un joc amb `<base href>` no la desviï. */
+const GAMES_ROOT = join(ROOT, 'assets', 'games') + sep;
+const VOLUME_TAG_ID = '__ulaVolumeTag';
+
+function injectVolumeTag(html, tag) {
+    if (html.includes(VOLUME_TAG_ID)) return html;
+
+    const head = /<head(?:\s[^>]*)?>/i.exec(html);
+    if (head) {
+        const at = head.index + head[0].length;
+        return html.slice(0, at) + tag + html.slice(at);
+    }
+
+    const doctype = /<!doctype[^>]*>/i.exec(html);
+    if (doctype) {
+        const at = doctype.index + doctype[0].length;
+        return html.slice(0, at) + tag + html.slice(at);
+    }
+
+    // Sense cap ancoratge fiable, val més deixar el joc intacte que
+    // trencar-lo: es continua sense control de volum.
+    return html;
 }
 
 /**
@@ -157,6 +186,30 @@ export function createStaticServer() {
         }
 
         const { size } = statSync(file);
+
+        // Els jocs porten el pedaç de volum; la resta de fitxers van tal
+        // com són i es poden transmetre en streaming.
+        if (file.startsWith(GAMES_ROOT) && type === MIME['.html']) {
+            const host = request.headers.host || `127.0.0.1:${DEFAULT_PORT}`;
+            const src = new URL('/assets/js/game-volume.js', `http://${host}`).href;
+            const tag = `<script src="${src}" id="${VOLUME_TAG_ID}"></scr` + 'ipt>';
+            const body = Buffer.from(injectVolumeTag(readFileSync(file, 'utf8'), tag), 'utf8');
+
+            response.writeHead(200, {
+                'Content-Type': type,
+                'Content-Length': body.length,
+                'Cache-Control': 'no-cache',
+                'X-Content-Type-Options': 'nosniff'
+            });
+
+            if (request.method === 'HEAD') {
+                response.end();
+                return;
+            }
+
+            response.end(body);
+            return;
+        }
 
         response.writeHead(200, {
             'Content-Type': type,

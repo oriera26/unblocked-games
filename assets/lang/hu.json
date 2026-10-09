@@ -41,6 +41,8 @@
   "modal.close": "Bezárás",
   "modal.fullscreen": "Teljes képernyő",
   "modal.fullscreenExit": "Kilépés a teljes képernyőből",
+  "modal.volume": "Hangerő",
+  "modal.volumeSlider": "Játék hangereje",
   "gate.title": "Az Unblocked Games nincs optimalizálva mobilra",
   "gate.text": "Telefonról vagy tabletről való játék közben hibák léphetnek fel, és egyes játékok nem reagálnak jól az érintésre.",
   "gate.accept": "Értem",

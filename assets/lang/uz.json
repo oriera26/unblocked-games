@@ -41,6 +41,8 @@
   "modal.close": "Yopish",
   "modal.fullscreen": "To'liq ekran",
   "modal.fullscreenExit": "To'liq ekrandan chiqish",
+  "modal.volume": "Ovoz balandligi",
+  "modal.volumeSlider": "O'yin ovozi",
   "gate.title": "Unblocked Games mobil qurilmalar uchun optimallashtirilmagan",
   "gate.text": "Telefon yoki planshetda o'ynaganda xatolar yuzaga kelishi va ayrim o'yinlar sensorli boshqaruvga yaxshi javob bermasligi mumkin.",
   "gate.accept": "Tushunarli",

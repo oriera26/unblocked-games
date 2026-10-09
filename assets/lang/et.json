@@ -41,6 +41,8 @@
   "modal.close": "Sulge",
   "modal.fullscreen": "Täisekraan",
   "modal.fullscreenExit": "Välju täisekraanist",
+  "modal.volume": "Helitugevus",
+  "modal.volumeSlider": "Mängu helitugevus",
   "gate.title": "Unblocked Games ei ole mobiilseadmetele optimeeritud",
   "gate.text": "Telefonis või tahvelarvutis mängimine võib põhjustada tõrkeid ja osa mängudele ei reageeri puudutusele hästi.",
   "gate.accept": "Selge",

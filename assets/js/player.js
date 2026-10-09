@@ -13,6 +13,7 @@
 
 import { FALLBACK_DURATION, GAMES_DIR, LOADER_DURATION, OFFLINE_URL } from './config.js';
 import { recordPlay, recordSession } from './state.js';
+import { bindVolumeGame, clearVolumeGame, syncVolumeGame, watchVolumeGame } from './volume.js';
 
 let loaderTimeout = null;
 let fallbackTimeout = null;
@@ -153,6 +154,11 @@ export function launch(game) {
     cancelTimers();
     hideLoader();
 
+    // El volum és de cada joc i la interfície l'ha de tenir abans que
+    // l'usuari pugui pitjar res: també quan encara només hi ha l'avís
+    // de mòbil a pantalla i el joc no s'ha carregat.
+    bindVolumeGame(gameSrc(game.url));
+
     if (needsGate()) {
         showGate(game);
         return;
@@ -177,6 +183,10 @@ function openGame(game) {
     iframe.src = gameSrc(game.url);
     modal.classList.add('active');
     showLoader();
+
+    // Mentre carrega, volume.js mira de ficar el pedaç de volum al
+    // document del joc tan aviat com existeixi.
+    watchVolumeGame();
 
     // El spinner no ha d'aguantar més de LOADER_DURATION: passat aquest
     // temps el joc és del tot alliberat encara que no hagi arribat
@@ -208,6 +218,8 @@ function openGame(game) {
         onIframeLoad = null;
         cancelTimers();
         hideLoader();
+        // Assegura el pedaç de volum i li passa el valor desat.
+        syncVolumeGame();
     };
     iframe.addEventListener('load', onIframeLoad);
 
@@ -236,6 +248,7 @@ export function close() {
     // Si l'usuari tanca amb l'avís a pantalla, el joc pendent es
     // descarta: no s'ha carregat i no hi ha res a tancar.
     hideGate();
+    clearVolumeGame();
 
     if (sessionStart && currentGame) {
         recordSession(currentGame.name, (Date.now() - sessionStart) / 1000);

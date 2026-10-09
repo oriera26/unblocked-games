@@ -41,6 +41,8 @@
   "modal.close": "Zavřít",
   "modal.fullscreen": "Celá obrazovka",
   "modal.fullscreenExit": "Ukončit režim celé obrazovky",
+  "modal.volume": "Hlasitost",
+  "modal.volumeSlider": "Hlasitost hry",
   "gate.title": "Unblocked Games není optimalizován pro mobily",
   "gate.text": "Při hraní z telefonu nebo tabletu mohou nastat chyby a některé hry dobře nereagují na dotyk.",
   "gate.accept": "Rozumím",

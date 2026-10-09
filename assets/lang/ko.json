@@ -41,6 +41,8 @@
   "modal.close": "닫기",
   "modal.fullscreen": "전체 화면",
   "modal.fullscreenExit": "전체 화면 종료",
+  "modal.volume": "볼륨",
+  "modal.volumeSlider": "게임 볼륨",
   "gate.title": "Unblocked Games는 모바일에 최적화되어 있지 않습니다",
   "gate.text": "휴대전화나 태블릿에서 플레이하면 오류가 발생할 수 있으며, 일부 게임은 터치에 잘 반응하지 않습니다.",
   "gate.accept": "확인",

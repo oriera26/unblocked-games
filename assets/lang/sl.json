@@ -41,6 +41,8 @@
   "modal.close": "Zapri",
   "modal.fullscreen": "Cel zaslon",
   "modal.fullscreenExit": "Zapusti cel zaslon",
+  "modal.volume": "Glasnost",
+  "modal.volumeSlider": "Glasnost igre",
   "gate.title": "Unblocked Games ni optimiziran za mobilne naprave",
   "gate.text": "Igranje s telefona ali tablice lahko povzroča napake, nekatere igre pa se na dotik ne odzivajo dobro.",
   "gate.accept": "Razumem",

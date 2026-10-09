@@ -41,6 +41,8 @@
   "modal.close": "Tutup",
   "modal.fullscreen": "Layar penuh",
   "modal.fullscreenExit": "Keluar dari layar penuh",
+  "modal.volume": "Volume",
+  "modal.volumeSlider": "Volume game",
   "gate.title": "Unblocked Games tidak dioptimalkan untuk perangkat seluler",
   "gate.text": "Bermain dari ponsel atau tablet dapat menimbulkan kesalahan dan beberapa game tidak merespons sentuhan dengan baik.",
   "gate.accept": "Mengerti",

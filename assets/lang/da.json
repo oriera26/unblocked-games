@@ -41,6 +41,8 @@
   "modal.close": "Luk",
   "modal.fullscreen": "Fuld skærm",
   "modal.fullscreenExit": "Afslut fuld skærm",
+  "modal.volume": "Lydstyrke",
+  "modal.volumeSlider": "Spillets lydstyrke",
   "gate.title": "Unblocked Games er ikke optimeret til mobiler",
   "gate.text": "Spil fra en telefon eller tablet kan forårsage fejl, og nogle spil reagerer ikke godt på berøring.",
   "gate.accept": "Forstået",

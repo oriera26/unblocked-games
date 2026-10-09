@@ -41,6 +41,8 @@
   "modal.close": "Tampar",
   "modal.fullscreen": "Pantalla completa",
   "modal.fullscreenExit": "Sortir de pantalla completa",
+  "modal.volume": "Volum",
+  "modal.volumeSlider": "Volum del jòc",
   "gate.title": "Unblocked Games es pas optimizat pels mobils",
   "gate.text": "En joguant dempuèi un mobil o una tauleta i pòt aver d'errors e uns jòcs respondon pas plan al tacte.",
   "gate.accept": "D'accòrd",

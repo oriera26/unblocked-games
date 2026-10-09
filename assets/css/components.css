@@ -498,11 +498,14 @@ td:last-child {
     box-shadow: 0 30px 70px rgba(0,0,0,0.45);
 }
 
-/* Els dos botons rodons de dalt a la dreta del joc: tancar i pantalla
-   completa. Comparteixen estil perquè siguin la mateixa peça visual;
-   el de pantalla completa va desplaçat a l'esquerra del de tancar. */
+/* Els tres botons rodons de dalt a la dreta del joc: tancar, pantalla
+   completa i volum. Comparteixen estil perquè són la mateixa peça
+   visual; cada un va desplaçat a l'esquerra de l'anterior. El de volum
+   és l'únic que no es posiciona sol: el situa `.volume-wrap`, que és el
+   que també aguanta el panell que es desplega cap avall. */
 .close-modal,
-.fullscreen-modal {
+.fullscreen-modal,
+.volume-modal {
     position: absolute; top: 16px; right: 16px;
     width: 42px; height: 42px;
     background: rgba(0, 0, 0, 0.55);
@@ -516,15 +519,123 @@ td:last-child {
     padding: 0;
 }
 .fullscreen-modal { right: 66px; /* 16 + 42 del de tancar + 8 de separació */ }
+.volume-wrap {
+    position: absolute; top: 16px; right: 116px;
+    /* 16 + 42 del tancar + 8 + 42 del de pantalla completa + 8. */
+    z-index: 2150;
+}
+.volume-modal { position: relative; top: auto; right: auto; }
 .close-modal:hover,
-.fullscreen-modal:hover { background: rgba(0, 0, 0, 0.75); transform: scale(1.05); }
+.fullscreen-modal:hover,
+.volume-modal:hover { background: rgba(0, 0, 0, 0.75); transform: scale(1.05); }
 .close-modal svg,
-.fullscreen-modal svg { width: 20px; height: 20px; }
+.fullscreen-modal svg,
+.volume-modal svg { width: 20px; height: 20px; }
 
 /* La icona canvia segons l'estat: maximitzar / minimitzar. */
 .fullscreen-modal .ico-min { display: none; }
 .fullscreen-modal.is-fullscreen .ico-max { display: none; }
 .fullscreen-modal.is-fullscreen .ico-min { display: block; }
+
+/* La icona de volum diu el nivell sense cap número: alt, baix o mut. */
+.volume-modal .ico-low,
+.volume-modal .ico-mute { display: none; }
+.volume-modal.is-low .ico-high,
+.volume-modal.is-muted .ico-high { display: none; }
+.volume-modal.is-low .ico-low { display: block; }
+.volume-modal.is-muted .ico-mute { display: block; }
+
+/* --- Panell de volum ------------------------------------------------
+   Es desplega cap avall des del botó i no porta ni una paraula: la
+   pista, el polsador i prou. `transform-origin: top center` és el que
+   fa que sembli que baixi del botó en lloc de aparèixer del no-res. */
+.volume-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    padding: 14px 10px;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: var(--glass-filter-small);
+    -webkit-backdrop-filter: var(--glass-filter-small);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 26px;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: top center;
+    animation: volume-panel-drop 0.16s ease;
+}
+.volume-panel[hidden] { display: none; }
+
+@keyframes volume-panel-drop {
+    from { opacity: 0; transform: translateY(-6px) scale(0.94); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Contenidor de la mida real del lliscant, perquè el que es gira no
+   es surti del panell ni sigui difícil d'encertar. */
+.volume-track {
+    position: relative;
+    width: 26px;
+    height: 124px;
+}
+
+/* Un lliscant horitzontal girat 90°: a dalt, el màxim.
+   
+   Es fa així i no amb `writing-mode: vertical-lr` perquè aquest només
+   el suporten els navegadors nous; girat, funciona a tot arreu i el
+   polsador continua sent el de sempre. `direction: ltr` fixa que el
+   sentit sigui físic (a dalt = més) en els idiomes de dreta a esquerra,
+   on per defecte un lliscant s'inverteix. */
+.volume-slider {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 124px; height: 26px;
+    margin: 0;
+    padding: 0;
+    direction: ltr;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    -webkit-appearance: none;
+    appearance: none;
+}
+.volume-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.26);
+}
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px; height: 18px;
+    margin-top: -6px; /* centra el polsador (18) sobre la via (6) */
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+}
+.volume-slider::-moz-range-track {
+    height: 6px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.26);
+}
+.volume-slider::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+}
+.volume-slider:focus { outline: none; }
+.volume-slider:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.75);
+    outline-offset: 4px;
+    border-radius: 999px;
+}
 
 /* El modal a pantalla completa ha d'omplir la pantalla: sense el `max`
    de la versió enfinestrada (88vh) ni la vora rodona, que en un

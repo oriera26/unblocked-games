@@ -41,6 +41,8 @@
   "modal.close": "Затвори",
   "modal.fullscreen": "Цел екран",
   "modal.fullscreenExit": "Излези од цел екран",
+  "modal.volume": "Јачина на звукот",
+  "modal.volumeSlider": "Јачина на звукот на играта",
   "gate.title": "Unblocked Games не е оптимизиран за мобилни уреди",
   "gate.text": "Играњето од телефон или таблет може да предизвика грешки, а некои игри не реагираат добро на допир.",
   "gate.accept": "Разбрав",

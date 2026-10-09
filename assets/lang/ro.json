@@ -41,6 +41,8 @@
   "modal.close": "Închide",
   "modal.fullscreen": "Ecran complet",
   "modal.fullscreenExit": "Ieși din ecranul complet",
+  "modal.volume": "Volum",
+  "modal.volumeSlider": "Volumul jocului",
   "gate.title": "Unblocked Games nu este optimizat pentru dispozitive mobile",
   "gate.text": "Jucând de pe un telefon sau o tabletă pot apărea erori, iar unele jocuri nu răspund bine la atingere.",
   "gate.accept": "Am înțeles",

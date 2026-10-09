@@ -41,6 +41,8 @@
   "modal.close": "Fechar",
   "modal.fullscreen": "Ecrã inteiro",
   "modal.fullscreenExit": "Sair do ecrã inteiro",
+  "modal.volume": "Volume",
+  "modal.volumeSlider": "Volume do jogo",
   "gate.title": "Unblocked Games não está otimizado para telemóveis",
   "gate.text": "Ao jogar a partir de um telemóvel ou de uma tablet, podem ocorrer erros e alguns jogos não reagem bem ao toque.",
   "gate.accept": "Compreendido",

@@ -41,6 +41,8 @@
   "modal.close": "Sulje",
   "modal.fullscreen": "Koko näyttö",
   "modal.fullscreenExit": "Poistu kokoruututilasta",
+  "modal.volume": "Äänenvoimakkuus",
+  "modal.volumeSlider": "Pelin äänenvoimakkuus",
   "gate.title": "Unblocked Games ei ole mobiililaitteille optimoitu",
   "gate.text": "Pelaaminen puhelimella tai tablettilla voi aiheuttaa virheitä, eivätkä kaikki pelit reagoi hyvin kosketukseen.",
   "gate.accept": "Selvä",

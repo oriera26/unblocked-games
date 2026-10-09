@@ -41,6 +41,8 @@
   "modal.close": "閉じる",
   "modal.fullscreen": "フルスクリーン",
   "modal.fullscreenExit": "フルスクリーンを終了",
+  "modal.volume": "音量",
+  "modal.volumeSlider": "ゲームの音量",
   "gate.title": "Unblocked Games はモバイルに最適化されていません",
   "gate.text": "スマートフォンやタブレットでプレイするとエラーが発生する場合があり、一部のゲームはタッチにうまく反応しません。",
   "gate.accept": "わかりました",
