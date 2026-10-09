@@ -7,12 +7,12 @@
  *   image  portada a assets/images/, o "" si el joc encara no en té
  *   type   categoria; ha de coincidir amb un id de config.js
  *
- * 1868 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
+ * 1864 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
  * només exporta la llista.
  *
  * El camp image l'omple tools/fetch-covers.mjs. Els jocs que no tenen
  * portada mostren la icona de mando que dibuixa ui.js, que és el que es
- * veu ara mateix a 1868 dels 1868 jocs.
+ * veu ara mateix a 1864 dels 1864 jocs.
  */
 
 export const GAMES = [
@@ -276,7 +276,6 @@ export const GAMES = [
    { name: "Grow Your Garden", url: "clgrowyourgarden.html", image: "assets/images/clgrowyourgarden.webp", type: "altres" },
    { name: "Growden.io", url: "clgrowdenio.html", image: "assets/images/clgrowdenio.webp", type: "accio" },
    { name: "Guess Their Answer", url: "clguesstheiranswer.html", image: "assets/images/clguesstheiranswer.webp", type: "puzle" },
-   { name: "GTA III", url: "clgta3.html", image: "assets/images/clgta3.webp", type: "accio" },
    { name: "GTA Vice City Online", url: "clgtavicecity.html", image: "assets/images/clgtavicecity.jpg", type: "accio" },
    { name: "Guncho", url: "clguncho.html", image: "assets/images/clguncho.webp", type: "accio" },
    { name: "Gun Night", url: "clgunnight.html", image: "assets/images/clgunnight.webp", type: "accio" },
@@ -1179,7 +1178,6 @@ export const GAMES = [
    { name: "Goodboy Galaxy", url: "clgoodboygalaxy.html", image: "assets/images/clgoodboygalaxy.webp", type: "retro" },
    { name: "Good Monkey Mart", url: "clgoodmonkeymart.html", image: "assets/images/clgoodmonkeymart.webp", type: "altres" },
    { name: "Grand Dad", url: "clgranddad.html", image: "assets/images/clgranddad.webp", type: "retro" },
-   { name: "Grand Theft Auto Advance", url: "clgrandtheftautoadvance.html", image: "assets/images/clgrandtheftautoadvance.webp", type: "accio" },
    { name: "Granny Original", url: "clgranny.html", image: "assets/images/clgranny.webp", type: "accio" },
    { name: "Granny VS Grandpa - Multiplayer", url: "clgranny2.html", image: "assets/images/clgranny2.webp", type: "accio" },
    { name: "Gran Turismo", url: "clgranturismo.html", image: "assets/images/clgranturismo.webp", type: "esports" },
@@ -1188,8 +1186,6 @@ export const GAMES = [
    { name: "Gravity Mod", url: "clgravitymod.html", image: "assets/images/clgravitymod.webp", type: "altres" },
    { name: "Grimace Birthday", url: "clgrimacebirthday.html", image: "assets/images/clgrimacebirthday.jpg", type: "retro" },
    { name: "Grand Theft Auto", url: "clgta.html", image: "assets/images/clgta.webp", type: "accio" },
-   { name: "Grand Theft Auto 2", url: "clgta2.html", image: "assets/images/clgta2.webp", type: "accio" },
-   { name: "Grand Theft Auto: Chinatown Wars", url: "clgtachina.html", image: "assets/images/clgtachina.webp", type: "accio" },
    { name: "Gunblood", url: "clgunblood.html", image: "assets/images/clgunblood.webp", type: "accio" },
    { name: "Gun Knight", url: "clgunknight.html", image: "assets/images/clgunknight.webp", type: "accio" },
    { name: "Gun Mayhem", url: "clgunmayhem.html", image: "assets/images/clgunmayhem.webp", type: "accio" },

@@ -10,7 +10,7 @@
 <head>
 	<script src="//www.google.com/jsapi"></script>
 	<script>
-		window.parent.maeExportApis_();
+		if (typeof window.parent.maeExportApis_ === 'function') window.parent.maeExportApis_();
 	</script>
 
 	<style>
@@ -85,7 +85,7 @@
                 EJS_color = "#000000";
                 EJS_startOnLoaded = true;
                 EJS_pathtodata = "https://cdn.jsdelivr.net/gh/a456pur/seraph@81f551ca0aa8e3d6018d32d8ac5904ac9bc78f76/storage/emulatorjs/data";
-                EJS_gameUrl = "https://bbcdn.githack.com/helloitadmin/smart/raw/main/Grand%20Theft%20Auto%20(USA).zip";
+                EJS_gameUrl = "https://bitbucket.org/helloitadmin/smart/raw/main/Grand%20Theft%20Auto%20(USA).zip";
                 loadGame();  
             }
             document.getElementById("startButton").addEventListener("click", startGame);

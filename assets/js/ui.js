@@ -350,9 +350,26 @@ export function shownCount() {
    Filtres
    ================================================================ */
 
+/**
+ * Noms alternatius per al cercador.
+ *
+ * Hi ha jocs que es coneixen per una abreviació que no apareix a la
+ * targeta («GTA» per a «Grand Theft Auto»). Aquí hi ha aquests àlies,
+ * amb l'URL del joc com a clau —estable encara que canviï el nom—, i
+ * `matches` els té en compte a més del nom.
+ */
+const SEARCH_ALIASES = {
+    'clgta.html': ['gta', 'gta i', 'gta 1']
+};
+
 function matches(game) {
     const term = filters.search;
-    const matchesSearch = !term || game.name.toLowerCase().includes(term);
+    const name = game.name.toLowerCase();
+    const aliases = SEARCH_ALIASES[game.url] ?? [];
+    const matchesSearch =
+        !term ||
+        name.includes(term) ||
+        aliases.some((alias) => alias.includes(term));
     const matchesCategory =
         filters.category === CATEGORY_ALL ||
         (game.type ?? '').toLowerCase() === filters.category;
