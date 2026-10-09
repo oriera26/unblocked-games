@@ -4,19 +4,30 @@
    ============================================================ */
 
 /* --- SEARCH --- */
+/* A repòs només s'ha de veure el botó. Si el contenidor hi pinta fons o
+   vora, el botó en queda dins i el conjunt sembla tenir dues vores. */
 .search-container {
     display: flex; align-items: center; position: relative;
-    background: var(--glass-bg-soft);
-    /* Sense vora: el botó de dins ja en porta una de pròpia i la del
-       contenidor li dibuixava un segon anell al voltant, que queia
-       com una vora extra damunt la cara del nav. */
+    background: transparent;
+    border: 1px solid transparent;
     border-radius: 30px;
-    padding: 2px 6px;
+    padding: 0;
     backdrop-filter: var(--glass-filter-small);
     -webkit-backdrop-filter: var(--glass-filter-small);
-    transition: background 0.2s ease;
+    transition: background 0.22s ease, border-color 0.22s ease, padding 0.22s ease;
 }
-.search-container:hover { background: var(--glass-bg); }
+
+/* Amb la cerca oberta (hover, focus o `.open`) el contenidor passa a ser
+   l'única superfície de vidre i el botó li cedeix la vora. */
+.search-container:hover,
+.search-container:focus-within,
+.search-container.open {
+    background: var(--glass-bg);
+    /* Vora neutra (blanca/grisa), la mateixa que porta el botó a repòs.
+       Sense padding: en passar-hi el ratolí la cerca només s'eixampla
+       cap a l'esquerra i no ha de canviar d'alçada. */
+    border-color: var(--glass-border-soft);
+}
 
 .search-bar {
     width: 0; opacity: 0; padding: 6px 0; background: transparent;
@@ -25,7 +36,11 @@
     transition: width 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
     pointer-events: none;
 }
+/* La expansió la fa la barra, no el contenidor: abans el selector
+   pintava l'amplada al `.search-container` i la barra quedava tancada i
+   visiblement inservible mentre el contenidor s'eixamplava sol. */
 .search-container:hover .search-bar,
+.search-container:focus-within .search-bar,
 .search-bar:focus {
     width: 140px; opacity: 1; padding: 6px 8px; margin-right: 4px;
     pointer-events: all;
@@ -41,19 +56,24 @@
     color: var(--text-main);
     opacity: 0.9;
     cursor: pointer;
-    width: 28px; height: 28px;
+    width: 32px; height: 32px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease, border-color 0.2s ease;
     -webkit-appearance: none;
     appearance: none;
     padding: 0;
     flex: none;
 }
+/* Quan la cerca és oberta la vora la porta el contenidor: el botó la
+   cedeix (i també el fons) perquè no es tornin a veure dues vores. */
 .search-trigger:hover,
+.search-container:hover .search-trigger,
+.search-container:focus-within .search-trigger,
 .search-container.open .search-trigger {
     opacity: 1;
-    background: var(--glass-bg);
+    background: transparent;
+    border-color: transparent;
 }
 .search-trigger svg { display: block; }
 
@@ -98,13 +118,18 @@
     top: calc(100% + 12px);
     right: 0;
     min-width: 260px;
-    background: var(--glass-bg-strong);
-    backdrop-filter: blur(14px) saturate(150%);
-    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    /* El desplegable no pot ser translúcid com la resta de vidres: sobre
+       una portada el text es perd. Fons propi i prou opac, + una mica de
+       blur perquè segueixi semblant vidre. */
+    background: var(--glass-menu-bg);
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
     border: 1px solid var(--glass-border-soft);
     border-radius: 20px;
     padding: 10px;
-    box-shadow: var(--glass-shadow);
+    box-shadow:
+        var(--glass-shadow),
+        inset 0 1px 0 var(--glass-highlight);
     z-index: 1200;
     opacity: 0;
     transform: translateY(-6px) scale(0.96);
@@ -112,6 +137,7 @@
     pointer-events: none;
     transition: opacity 0.18s ease, transform 0.22s ease;
 }
+
 .settings-menu.open {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -293,9 +319,9 @@ html[dir="rtl"] .lang-select {
     position: relative; width: 100%; aspect-ratio: 1;
     background: var(--glass-bg);
     display: flex; align-items: center; justify-content: center;
-    /* ⚡ OPT #3: blur reduït per les targetes */
-    backdrop-filter: blur(12px) saturate(150%);
-    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    /* Vidre líquid: menys blur perquè la portada es vegi nítida. */
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
     overflow: hidden;
     border-radius: 24%;
     border: 1px solid var(--glass-border-soft);
@@ -354,6 +380,30 @@ html[dir="rtl"] .lang-select {
 .fav-btn:hover { background: rgba(0, 0, 0, 0.75); color: #FFD60A; transform: scale(1.08); }
 .fav-btn svg { width: 18px; height: 18px; stroke-width: 1.5; }
 
+/* --- Jocs offline: indicador de descàrrega/estat --- */
+/* No rep clics (pointer-events: none): obrir la targeta ja decideix
+   entre baixar i jugar. Només explica en quin punt és. */
+.offline-btn {
+    position: absolute;
+    top: 10px; left: 10px; z-index: 15;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: var(--glass-filter-small);
+    -webkit-backdrop-filter: var(--glass-filter-small);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.95);
+    min-width: 32px; height: 32px;
+    padding: 0 8px;
+    border-radius: 30px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.20);
+}
+.offline-btn svg { width: 16px; height: 16px; stroke-width: 2; }
+.offline-btn[data-offline-state="ready"] { color: #7CFC9B; }
+.offline-btn[data-offline-state="error"] { color: #FF8A8A; }
+.offline-btn[data-offline-state="downloading"] { background: rgba(0, 0, 0, 0.7); }
+.offline-percent { font-size: 11px; font-weight: 700; letter-spacing: 0.2px; }
+
 .card-title {
     margin-top: 10px; font-size: 11px; font-weight: 600;
     opacity: 0.85; text-align: center;
@@ -370,14 +420,16 @@ html[dir="rtl"] .lang-select {
 
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
 .stat-card {
-    background: var(--glass-bg-strong);
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
     border: 1px solid var(--glass-border-soft);
     padding: 20px; border-radius: 24px;
-    backdrop-filter: blur(12px) saturate(150%);
-    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
     display: flex; flex-direction: column; gap: 8px;
     position: relative; overflow: hidden;
-    box-shadow: var(--glass-shadow);
+    box-shadow:
+        var(--glass-shadow),
+        inset 0 1px 0 var(--glass-highlight);
 }
 .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
 .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; font-weight: 700; }
@@ -405,13 +457,15 @@ html[dir="rtl"] .lang-select {
 }
 
 .history-section {
-    background: var(--glass-bg-strong);
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
     padding: 24px;
     border-radius: 28px;
     border: 1px solid var(--glass-border-soft);
-    backdrop-filter: blur(12px) saturate(150%);
-    -webkit-backdrop-filter: blur(12px) saturate(150%);
-    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    box-shadow:
+        var(--glass-shadow),
+        inset 0 1px 0 var(--glass-highlight);
 }
 .history-title { font-weight: 700; font-size: 18px; margin-bottom: 20px; }
 .table-container { overflow-x: auto; margin-top: 10px; }
@@ -476,8 +530,8 @@ td:last-child {
 .modal {
     position: fixed; inset: 0; z-index: 2000;
     background: rgba(0,0,0,0.45);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(115%);
+    -webkit-backdrop-filter: blur(14px) saturate(115%);
     display: none;
     align-items: center;
     justify-content: center;
@@ -488,14 +542,16 @@ td:last-child {
 
 .modal-content {
     width: 100%; height: 100%; max-width: 1200px; max-height: 88vh;
-    background: var(--glass-bg);
-    backdrop-filter: blur(14px) saturate(150%);
-    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
     border: 1px solid var(--glass-border-soft);
     border-radius: 28px;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 30px 70px rgba(0,0,0,0.45);
+    box-shadow:
+        0 30px 70px rgba(0,0,0,0.45),
+        inset 0 1px 0 var(--glass-highlight);
 }
 
 /* Els tres botons rodons de dalt a la dreta del joc: tancar, pantalla
@@ -652,9 +708,9 @@ td:last-child {
 
 .game-loader-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--glass-bg-strong);
-    backdrop-filter: blur(12px) saturate(150%);
-    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
     display: flex; align-items: center; justify-content: center;
     z-index: 2100; transition: opacity 0.4s ease; pointer-events: none;
     border-radius: 28px;
@@ -672,12 +728,14 @@ td:last-child {
 .error-container {
     padding: 60px 30px;
     text-align: center;
-    background: var(--glass-bg-strong);
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
     border: 1px solid var(--glass-border-soft);
     border-radius: 28px;
-    backdrop-filter: blur(12px) saturate(150%);
-    -webkit-backdrop-filter: blur(12px) saturate(150%);
-    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    box-shadow:
+        var(--glass-shadow),
+        inset 0 1px 0 var(--glass-highlight);
     max-width: 480px;
     margin: 80px auto 0;
 }
@@ -716,11 +774,13 @@ td:last-child {
     gap: 12px;
     padding: 14px 16px;
     border-radius: 20px;
-    background: var(--glass-bg-strong);
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
     border: 1px solid var(--glass-border-soft);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    box-shadow:
+        var(--glass-shadow),
+        inset 0 1px 0 var(--glass-highlight);
 
     animation: app-banner-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
 }
@@ -807,9 +867,9 @@ td:last-child {
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: var(--glass-bg-strong);
-    backdrop-filter: blur(14px) saturate(150%);
-    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
     border-radius: 28px;
     animation: mobile-gate-in 0.25s ease;
 }

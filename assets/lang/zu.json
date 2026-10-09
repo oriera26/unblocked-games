@@ -53,5 +53,10 @@
   "offline.text": "Ayikwazanga ukuxhumana neseva. Hlola inethiwayakho bese uzama futhi.",
   "offline.retry": "Zama uxhumano futhi",
   "offline.checking": "Iyahlola...",
-  "offline.reloading": "Iyalayisha kabusha..."
+  "offline.reloading": "Iyalayisha kabusha...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

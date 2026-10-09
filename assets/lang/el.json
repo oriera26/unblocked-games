@@ -53,5 +53,10 @@
   "offline.text": "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή. Έλεγξε το δίκτυο σου και δοκίμασε ξανά.",
   "offline.retry": "Επανάληψη σύνδεσης",
   "offline.checking": "Έλεγχος...",
-  "offline.reloading": "Ανανέωση..."
+  "offline.reloading": "Ανανέωση...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>reGTA3 DOS</title>
+
+  <!-- Ocultar el referrer a totes les peticions -->
+  <meta name="referrer" content="no-referrer">
+
+  <!-- CSS del js-dos (necessari perquè el launcher funcioni correctament) -->
+  <link rel="stylesheet" href="https://br.cdn.dos.zone/js-dos/latest/js-dos.css">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* El launcher ha d'existir perquè el joc es prepari, però el fem invisible */
+    .torrent-launcher {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0;
+      pointer-events: none; /* no interfereix amb clics */
+    }
+
+    /* L'iframe on es carrega el joc final */
+    #torrent-launcher-iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Launcher de torrents: conté les dades que el joc necessita -->
+  <div class="torrent-launcher"
+       data-torrent-id="gta3-assets"
+       data-torrent-name="reGTA3 Dos"
+       data-torrent-url="https://br.cdn.dos.zone/launcher/gta3-assets.1.torrent"
+       data-torrent-target-directory="/gta3-assets"
+       data-torrent-show-archive="1"
+       data-torrent-strict-check="1"
+       data-torrent-download-on-decline="0"
+       data-iframe-src="https://dos.zone/regta3/v3/index.html">
+  </div>
+
+  <!-- Iframe que el launcher farà servir per carregar el joc -->
+  <iframe id="torrent-launcher-iframe"
+          src="about:blank"
+          referrerpolicy="no-referrer"
+          allow="autoplay; fullscreen; gamepad; microphone; camera"
+          hidden></iframe>
+
+  <!-- Script que inicialitza el launcher i carrega el joc.
+       El /js/dynamics.js original era absolut a l'arrel del lloc que
+       allotjava el joc (dos.zone); aquí cal la URL completa, o el
+       navegador el buscaria a la nostra arrel i donaria 404. -->
+  <script src="https://dos.zone/js/dynamics.js"></script>
+
+</body>
+</html>

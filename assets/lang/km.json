@@ -53,5 +53,10 @@
   "offline.text": "មិនអាចភ្ជាប់ទៅម៉ាស៊ីនមេបានទេ។ ពិនិត្យបណ្តាញរបស់អ្នកហើយព្យាយាមម្តងទៀត។",
   "offline.retry": "ព្យាយាមភ្ជាប់ម្តងទៀត",
   "offline.checking": "កំពុងពិនិត្យ...",
-  "offline.reloading": "កំពុងផ្ទុកឡើងវិញ..."
+  "offline.reloading": "កំពុងផ្ទុកឡើងវិញ...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

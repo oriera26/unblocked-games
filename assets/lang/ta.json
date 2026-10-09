@@ -53,5 +53,10 @@
   "offline.text": "சேவையகத்துடன் இணைக்க முடியவில்லை. உங்கள் நெட்வொர்க்கைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.",
   "offline.retry": "மீண்டும் இணைக்க முயற்சிக்கவும்",
   "offline.checking": "சரிபார்க்கிறது...",
-  "offline.reloading": "மீண்டும் ஏற்றப்படுகிறது..."
+  "offline.reloading": "மீண்டும் ஏற்றப்படுகிறது...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

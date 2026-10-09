@@ -53,5 +53,10 @@
   "offline.text": "Server bilan aloqa o'rnatib bo'lmadi. Tarmoqingizni tekshiring va qayta urinib ko'ring.",
   "offline.retry": "Qayta ulanish",
   "offline.checking": "Tekshirilmoqda...",
-  "offline.reloading": "Qayta yuklanmoqda..."
+  "offline.reloading": "Qayta yuklanmoqda...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

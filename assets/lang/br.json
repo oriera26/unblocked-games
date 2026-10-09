@@ -53,5 +53,10 @@
   "offline.text": "Dibosupl kevreañ ouzh ar servijer. Sellit war ho rouedad ha klaskit en-dro.",
   "offline.retry": "Kevreañ adarre",
   "offline.checking": "O gwiriañ...",
-  "offline.reloading": "O adlañsañ..."
+  "offline.reloading": "O adlañsañ...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

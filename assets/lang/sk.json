@@ -53,5 +53,10 @@
   "offline.text": "Pripojenie k serveru sa nepodarilo nadviazať. Skontrolujte sieť a skúste to znova.",
   "offline.retry": "Skúsiť pripojenie znova",
   "offline.checking": "Kontrolujem...",
-  "offline.reloading": "Obnovujem..."
+  "offline.reloading": "Obnovujem...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

@@ -53,5 +53,10 @@
   "offline.text": "Hindi makakonekta sa server. Suriin ang iyong network at subukan muli.",
   "offline.retry": "Subukan ang koneksyon muli",
   "offline.checking": "Sinasuri...",
-  "offline.reloading": "Muling naglo-load..."
+  "offline.reloading": "Muling naglo-load...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

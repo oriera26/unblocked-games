@@ -207,9 +207,11 @@ jobs:
 
             ### Què conté
 
-            - **697 jocs** classificats per categories, amb cercador per
+            - **1.868 jocs** classificats per categories, amb cercador per
               nom, favorits i una pestanya d'estadístiques (ratxa, punts,
               nivell i historial de partida).
+            - **Jocs offline**: sis títols es poden descarregar des de la
+              mateixa app i jugar sense connexió.
             - **Tot va dins del paquet**: els HTML dels jocs i les seues
               portades es serveixen localment (`resources/site`), sense
               dependre de cap servidor extern per a mostrar el catàleg.

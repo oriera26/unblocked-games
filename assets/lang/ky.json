@@ -53,5 +53,10 @@
   "offline.text": "Сервер менен байланыш түзүлгөн жок. Тармагыңызды текшерип, кайра аракет көрүңүз.",
   "offline.retry": "Кайра туташуу",
   "offline.checking": "Текшерилүүдө...",
-  "offline.reloading": "Кайра жүктөлүүдө..."
+  "offline.reloading": "Кайра жүктөлүүдө...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

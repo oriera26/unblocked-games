@@ -53,5 +53,10 @@
   "offline.text": "Nije bilo moguće uspostaviti vezu sa serverom. Provjeri mrežu i pokušaj ponovo.",
   "offline.retry": "Pokušaj ponovo povezivanje",
   "offline.checking": "Provjeravam...",
-  "offline.reloading": "Ponovo učitavam..."
+  "offline.reloading": "Ponovo učitavam...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

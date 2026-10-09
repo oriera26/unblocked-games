@@ -53,5 +53,10 @@
   "offline.text": "సర్వర్‌కు కనెక్ట్ కాలేదు. మీ నెట్‌వర్క్ తనిఖీ చేసి మళ్లీ ప్రయత్నించండి.",
   "offline.retry": "మళ్లీ కనెక్ట్ చేయడానికి ప్రయత్నించండి",
   "offline.checking": "తనిఖీ చేస్తోంది...",
-  "offline.reloading": "మళ్లీ లోడ్ అవుతోంది..."
+  "offline.reloading": "మళ్లీ లోడ్ అవుతోంది...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

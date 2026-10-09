@@ -53,5 +53,10 @@
   "offline.text": "امکان برقراری اتصال با سرور وجود نداشت. شبکهٔ خود را بررسی کنید و دوباره تلاش کنید.",
   "offline.retry": "تلاش مجدد برای اتصال",
   "offline.checking": "در حال بررسی...",
-  "offline.reloading": "در حال بارگذاری مجدد..."
+  "offline.reloading": "در حال بارگذاری مجدد...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

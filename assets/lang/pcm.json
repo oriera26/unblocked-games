@@ -53,5 +53,10 @@
   "offline.text": "We no fit connect to di server. Check your network try again.",
   "offline.retry": "Try connect again",
   "offline.checking": "We dey check...",
-  "offline.reloading": "E dey reload..."
+  "offline.reloading": "E dey reload...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

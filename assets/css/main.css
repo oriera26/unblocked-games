@@ -10,17 +10,24 @@
     --accent: #007AFF;
     --bg-base: #eef1f6;
 
-    /* ⚡ OPT #3: blur reduït de 48px → 16px */
-    --glass-blur: 16px;
-    --glass-saturate: 160%;
+    /* Vidre líquid: menys blur i menys saturació perquè el fons es vegi
+       nítid a través del vidre, i fons menys blanc perquè no brilli. */
+    --glass-blur: 7px;
+    --glass-saturate: 115%;
 
-    --glass-bg: rgba(255, 255, 255, 0.22);
-    --glass-bg-strong: rgba(255, 255, 255, 0.28);
-    --glass-bg-soft: rgba(255, 255, 255, 0.14);
-    --glass-border-soft: rgba(255, 255, 255, 0.22);
+    --glass-bg: rgba(255, 255, 255, 0.16);
+    --glass-bg-strong: rgba(255, 255, 255, 0.22);
+    --glass-bg-soft: rgba(255, 255, 255, 0.10);
+    --glass-border-soft: rgba(255, 255, 255, 0.42);
     --glass-shadow:
-        0 12px 32px rgba(15, 20, 40, 0.10),
-        0 4px 10px rgba(15, 20, 40, 0.06);
+        0 8px 22px rgba(15, 20, 40, 0.10),
+        0 2px 6px rgba(15, 20, 40, 0.06);
+
+    /* Vora interior nítida del vidre i un fons propi, molt més opac, per
+       al desplegable de configuració: sobre una portada, un menú
+       translúcid senzillament no es pot llegir. */
+    --glass-highlight: rgba(255, 255, 255, 0.55);
+    --glass-menu-bg: rgba(247, 249, 253, 0.92);
 
     --pill-bg: rgba(0, 0, 0, 0.04);
     --table-hover: rgba(255, 255, 255, 0.28);
@@ -29,8 +36,8 @@
     --orb-opacity: 0.7;
 
     --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    --glass-filter-strong: blur(calc(var(--glass-blur) - 4px)) saturate(var(--glass-saturate));
-    --glass-filter-small: blur(8px) saturate(140%);
+    --glass-filter-strong: blur(calc(var(--glass-blur) - 3px)) saturate(var(--glass-saturate));
+    --glass-filter-small: blur(5px) saturate(112%);
 
     /* ⚡ OPT #4: --squircle-shadow eliminat (usem pseudo-element) */
 }
@@ -41,10 +48,12 @@
     --accent: #0A84FF;
     --bg-base: #05060a;
 
-    --glass-bg: rgba(26, 28, 34, 0.34);
-    --glass-bg-strong: rgba(30, 32, 40, 0.42);
-    --glass-bg-soft: rgba(28, 30, 38, 0.24);
-    --glass-border-soft: rgba(255, 255, 255, 0.10);
+    --glass-bg: rgba(26, 28, 34, 0.32);
+    --glass-bg-strong: rgba(30, 32, 40, 0.40);
+    --glass-bg-soft: rgba(28, 30, 38, 0.22);
+    --glass-border-soft: rgba(255, 255, 255, 0.14);
+    --glass-highlight: rgba(255, 255, 255, 0.09);
+    --glass-menu-bg: rgba(28, 30, 36, 0.94);
     --glass-shadow:
         0 12px 40px rgba(0, 0, 0, 0.45),
         0 4px 12px rgba(0, 0, 0, 0.28);
@@ -153,13 +162,16 @@ body.performance-mode {
     --glass-bg: #ffffff;
     --glass-bg-strong: #ffffff;
     --glass-bg-soft: #ffffff;
+    --glass-menu-bg: #ffffff;
     --glass-border-soft: rgba(0,0,0,0.08);
     --glass-shadow: 0 2px 8px rgba(15, 20, 40, 0.06);
+    --glass-highlight: transparent;
 }
 body.performance-mode.dark-theme {
     --glass-bg: #14161c;
     --glass-bg-strong: #14161c;
     --glass-bg-soft: #14161c;
+    --glass-menu-bg: #14161c;
     --glass-border-soft: rgba(255,255,255,0.08);
     --glass-shadow: 0 2px 8px rgba(0,0,0,0.40);
 }

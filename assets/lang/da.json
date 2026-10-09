@@ -53,5 +53,10 @@
   "offline.text": "Det var ikke muligt at oprette forbindelse til serveren. Tjek dit netværk og prøv igen.",
   "offline.retry": "Forsøg forbindelse igen",
   "offline.checking": "Tjekker...",
-  "offline.reloading": "Genindlæser..."
+  "offline.reloading": "Genindlæser...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

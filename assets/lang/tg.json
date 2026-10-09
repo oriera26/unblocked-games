@@ -53,5 +53,10 @@
   "offline.text": "Пайвастшавӣ бо сервер таъмин нашуд. Шабакаатонро санҷед ва бори дигар кӯшиш кунед.",
   "offline.retry": "Аз нав пайваст шудан",
   "offline.checking": "Санҷиш...",
-  "offline.reloading": "Аз нав бор шудан..."
+  "offline.reloading": "Аз нав бор шудан...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

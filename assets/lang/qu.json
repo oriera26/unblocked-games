@@ -53,5 +53,10 @@
   "offline.text": "Servidormanta suykuy manara tariqchu. Redesita qhawariy, kuttam kallariy.",
   "offline.retry": "Suykuyta kutiy kallariy",
   "offline.checking": "Tinkuchkanchu...",
-  "offline.reloading": "Kuttam yarqachkanchu..."
+  "offline.reloading": "Kuttam yarqachkanchu...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

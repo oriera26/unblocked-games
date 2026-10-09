@@ -53,5 +53,10 @@
   "offline.text": "Ezin izan da zerbitzariarekin konexiorik ezarri. Egiaztatu zure sarea eta saiatu berriro.",
   "offline.retry": "Berriro saiatu konektatzen",
   "offline.checking": "Egiaztatzen...",
-  "offline.reloading": "Birkargatzen..."
+  "offline.reloading": "Birkargatzen...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

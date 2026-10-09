@@ -53,5 +53,10 @@
   "offline.text": "Anyị enweghị ike ijikọta na seva. Lelee njikọ gị ma gbalị ọzọ.",
   "offline.retry": "Gbalị njikọ ọzọ",
   "offline.checking": "Na-ele anya...",
-  "offline.reloading": "Na-agbakwụnye ọzọ..."
+  "offline.reloading": "Na-agbakwụnye ọzọ...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

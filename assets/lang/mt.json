@@ -53,5 +53,10 @@
   "offline.text": "Ma setax jinstab konnessjoni mas-servizz. Iċċekkja n-netwerk tiegħek u erġa' ipprova.",
   "offline.retry": "Prova mill-ġdid",
   "offline.checking": "Qed jiġi verifikat...",
-  "offline.reloading": "Qed jerġa' jittella'..."
+  "offline.reloading": "Qed jerġa' jittella'...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

@@ -53,5 +53,10 @@
   "offline.text": "Es konnte keine Verbindung zum Server hergestellt werden. Überprüfe dein Netzwerk und versuche es erneut.",
   "offline.retry": "Verbindung erneut versuchen",
   "offline.checking": "Wird geprüft...",
-  "offline.reloading": "Wird neu geladen..."
+  "offline.reloading": "Wird neu geladen...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

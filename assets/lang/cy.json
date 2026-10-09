@@ -53,5 +53,10 @@
   "offline.text": "Methwyd cysylltu â'r gweinydd. Gwiriwch eich rhwydwaith a cheisiwch eto.",
   "offline.retry": "Ceisio cysylltu eto",
   "offline.checking": "Yn gwirio...",
-  "offline.reloading": "Yn ail-lwytho..."
+  "offline.reloading": "Yn ail-lwytho...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

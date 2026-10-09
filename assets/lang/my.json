@@ -53,5 +53,10 @@
   "offline.text": "ဆာဗာနှင့် ချိတ်ဆက်၍ မရပါ။ သင့် ကွန်ရက်ကို စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။",
   "offline.retry": "ချိတ်ဆက်မှု ပြန်စမ်းရန်",
   "offline.checking": "စစ်ဆေးနေပါသည်...",
-  "offline.reloading": "ပြန်လည်တင်နေပါသည်..."
+  "offline.reloading": "ပြန်လည်တင်နေပါသည်...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

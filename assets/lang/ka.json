@@ -53,5 +53,10 @@
   "offline.text": "სერვერთან კავშირი ვერ დამყარდა. შეამოწმეთ თქვენი ქსელი და სცადეთ თავიდან.",
   "offline.retry": "კავშირის თავიდან ცდა",
   "offline.checking": "მოწმდება...",
-  "offline.reloading": "თავიდან იტვირთება..."
+  "offline.reloading": "თავიდან იტვირთება...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

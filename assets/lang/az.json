@@ -53,5 +53,10 @@
   "offline.text": "Serverlə əlaqə qurmaq mümkün olmadı. Şəbəkənizi yoxlayın və yenidən cəhd edin.",
   "offline.retry": "Yenidən qoşul",
   "offline.checking": "Yoxlanılır...",
-  "offline.reloading": "Yenidən yüklənir..."
+  "offline.reloading": "Yenidən yüklənir...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

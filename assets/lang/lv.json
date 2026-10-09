@@ -53,5 +53,10 @@
   "offline.text": "Neizdevās izveidot savienojumu ar serveri. Pārbaudi tīklu un mēģini vēlreiz.",
   "offline.retry": "Atkārtot savienojumu",
   "offline.checking": "Pārbauda...",
-  "offline.reloading": "Ielādē vēlreiz..."
+  "offline.reloading": "Ielādē vēlreiz...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

@@ -53,5 +53,10 @@
   "offline.text": "Er kon geen verbinding met de server worden gemaakt. Controleer je netwerk en probeer het opnieuw.",
   "offline.retry": "Verbinding opnieuw proberen",
   "offline.checking": "Controleren...",
-  "offline.reloading": "Herladen..."
+  "offline.reloading": "Herladen...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

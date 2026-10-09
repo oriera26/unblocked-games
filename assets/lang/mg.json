@@ -53,5 +53,10 @@
   "offline.text": "Tsy afaka nifandraitra amin'ny mpizara. Jereo ny rireto aminao ary averiny.",
   "offline.retry": "Hanandrana indray",
   "offline.checking": "Mijery...",
-  "offline.reloading": "Hanomboka ihany..."
+  "offline.reloading": "Hanomboka ihany...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

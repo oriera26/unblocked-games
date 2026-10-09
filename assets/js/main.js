@@ -20,9 +20,11 @@ import {
     resetGrid,
     setActiveCategory,
     setVisibleGames,
-    updateLogo
+    updateLogo,
+    updateOfflineCard
 } from './ui.js';
 import { hydrateDataLucide } from './icons.js';
+import { initOffline, onOfflineChange } from './offline-games.js';
 import { currentView, go, startRouter } from './router.js';
 import { close, initGate, launch } from './player.js';
 import { checkStreak, filters, toggleFavorite } from './state.js';
@@ -221,6 +223,29 @@ function bindInfiniteScroll() {
     observer.observe(trigger);
 }
 
+/**
+ * La roda del ratolí ha de desplaçar la llista des de qualsevol punt de
+ * la pàgina, no només damunt de la columna de contingut. El contenidor
+ * ja ocupa tota l'amplada, però el nav i la barra de categories són
+ * elements fixos que el sobrevolen i no són dins seu: la roda que hi cau
+ * a sobre no el mouria. Aquí ho arreglem.
+ */
+function bindWheelForwarding() {
+    const container = byId('scrollContainer');
+    if (!container) return;
+
+    window.addEventListener('wheel', (event) => {
+        if (event.ctrlKey) return; // amb Ctrl la roda fa zoom
+        const target = event.target;
+        if (!target || typeof target.closest !== 'function') return;
+        // Dins del contenidor ja el mou el navegador tot sol.
+        if (!target.closest('nav, .category-container')) return;
+
+        // deltaMode 1 són línies (Firefox); la resta, píxels.
+        container.scrollTop += event.deltaY * (event.deltaMode === 1 ? 16 : 1);
+    }, { passive: true });
+}
+
 function bindFavorites() {
     bindGrid({
         onLaunch: launch,
@@ -265,6 +290,10 @@ async function start() {
     checkStreak();
 
     renderCategories(onCategorySelect);
+    // Marca la categoria activa (per defecte, Tots) un cop les píndoles
+    // existeixen: si es fa abans, no hi ha cap element on posar-hi la
+    // classe i el fons blau no es veu.
+    setActiveCategory(filters.category);
 
     // Les icones estàtiques del nav. Les del grid les demana el mateix
     // render que les crea.
@@ -276,6 +305,7 @@ async function start() {
     bindModal();
     bindFavorites();
     bindInfiniteScroll();
+    bindWheelForwarding();
     initGate();
 
     initSettings();
@@ -286,6 +316,12 @@ async function start() {
     // profund decideixi quina vista s'obre, i `onArrive` mantingui les
     // estadístiques al dia cada cop que hi arribem.
     const initial = startRouter({ onArrive: (id) => (id === 'stats' ? renderStats() : undefined) });
+
+    // L'estat dels jocs offline abans de dibuixar: així una targeta ja
+    // baixada surt amb el botó de jugar des del primer moment. Mentre
+    // baixa, els canvis arriben per `onOfflineChange`.
+    onOfflineChange((url, info) => updateOfflineCard(url, info));
+    await initOffline(GAMES);
 
     applyFilters();
 

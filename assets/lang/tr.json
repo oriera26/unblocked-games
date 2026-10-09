@@ -53,5 +53,10 @@
   "offline.text": "Sunucuyla bağlantı kurulamadı. Ağını kontrol et ve tekrar dene.",
   "offline.retry": "Bağlantıyı yeniden dene",
   "offline.checking": "Kontrol ediliyor...",
-  "offline.reloading": "Yeniden yükleniyor..."
+  "offline.reloading": "Yeniden yükleniyor...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

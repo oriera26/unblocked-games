@@ -53,5 +53,10 @@
   "offline.text": "Imeshindwa kuunganisha na seva. Angalia mtandao wako kisha jaribu tena.",
   "offline.retry": "Jaribu kuunganisha tena",
   "offline.checking": "Inachunguza...",
-  "offline.reloading": "Inapakuliwa upya..."
+  "offline.reloading": "Inapakuliwa upya...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

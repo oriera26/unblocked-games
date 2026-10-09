@@ -53,5 +53,10 @@
   "offline.text": "Det gick inte att ansluta till servern. Kontrollera ditt nätverk och försök igen.",
   "offline.retry": "Försök ansluta igen",
   "offline.checking": "Kontrollerar...",
-  "offline.reloading": "Laddar om..."
+  "offline.reloading": "Laddar om...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

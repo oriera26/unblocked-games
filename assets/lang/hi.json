@@ -53,5 +53,10 @@
   "offline.text": "सर्वर से कनेक्शन नहीं हो सका। अपना नेटवर्क जाँचें और फिर से प्रयास करें।",
   "offline.retry": "फिर से कनेक्शन आज़माएँ",
   "offline.checking": "जाँच हो रही है...",
-  "offline.reloading": "फिर से लोड हो रहा है..."
+  "offline.reloading": "फिर से लोड हो रहा है...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

@@ -53,5 +53,10 @@
   "offline.text": "Zolembedwa pa seva zakule. Onani netiweki yanu ndikuyesanso.",
   "offline.retry": "Yesani kulumikizana",
   "offline.checking": "Kuyendera...",
-  "offline.reloading": "Kuyambiranso..."
+  "offline.reloading": "Kuyambiranso...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

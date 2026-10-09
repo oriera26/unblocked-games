@@ -53,5 +53,10 @@
   "offline.text": "无法与服务器建立连接。请检查你的网络后重试。",
   "offline.retry": "重新连接",
   "offline.checking": "检查中...",
-  "offline.reloading": "重新加载中..."
+  "offline.reloading": "重新加载中...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

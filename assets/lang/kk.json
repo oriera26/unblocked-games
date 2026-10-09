@@ -53,5 +53,10 @@
   "offline.text": "Сервермен байланыс орнатылмады. Желіңізді тексеріп, қайта көріңіз.",
   "offline.retry": "Қайта қосылу",
   "offline.checking": "Тексерілуде...",
-  "offline.reloading": "Қайта жүктелуде..."
+  "offline.reloading": "Қайта жүктелуде...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

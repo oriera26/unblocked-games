@@ -53,5 +53,10 @@
   "offline.text": "Impossible d'établir une connexion avec le serveur. Vérifiez votre réseau et réessayez.",
   "offline.retry": "Réessayer la connexion",
   "offline.checking": "Vérification...",
-  "offline.reloading": "Rechargement..."
+  "offline.reloading": "Rechargement...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

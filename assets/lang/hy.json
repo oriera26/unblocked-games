@@ -53,5 +53,10 @@
   "offline.text": "Սերվերի հետ կապ հաստատել չստացվեց։ Ստուգեք ձեր ցանցը և կրկին փորձեք։",
   "offline.retry": "Կրկին միացնել կապը",
   "offline.checking": "Ստուգվում է...",
-  "offline.reloading": "Վերաբեռնվում է..."
+  "offline.reloading": "Վերաբեռնվում է...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

@@ -53,5 +53,10 @@
   "offline.text": "Det klarte ikke å koble til serveren. Sjekk nettverket ditt og prøv igjen.",
   "offline.retry": "Prøv å koble til på nytt",
   "offline.checking": "Sjekker...",
-  "offline.reloading": "Laster på nytt..."
+  "offline.reloading": "Laster på nytt...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

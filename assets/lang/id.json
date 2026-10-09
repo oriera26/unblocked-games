@@ -53,5 +53,10 @@
   "offline.text": "Tidak dapat terhubung ke server. Periksa jaringanmu dan coba lagi.",
   "offline.retry": "Coba sambungkan lagi",
   "offline.checking": "Memeriksa...",
-  "offline.reloading": "Memuat ulang..."
+  "offline.reloading": "Memuat ulang...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

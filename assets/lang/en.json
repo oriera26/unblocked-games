@@ -53,5 +53,10 @@
   "offline.text": "Could not connect to the server. Check your network and try again.",
   "offline.retry": "Retry connection",
   "offline.checking": "Checking...",
-  "offline.reloading": "Reloading..."
+  "offline.reloading": "Reloading...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

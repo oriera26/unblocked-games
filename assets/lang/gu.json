@@ -53,5 +53,10 @@
   "offline.text": "સર્વર સાથે કનેક્ટ થઈ શક્યું નથી. તમારું નેટવર્ક તપાસો અને ફરી પ્રયાસ કરો.",
   "offline.retry": "ફરી કનેક્ટ કરવાનો પ્રયાસ કરો",
   "offline.checking": "તપાસી રહ્યા છીએ...",
-  "offline.reloading": "ફરી લોડ થઈ રહ્યું છે..."
+  "offline.reloading": "ફરી લોડ થઈ રહ્યું છે...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

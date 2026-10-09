@@ -53,5 +53,10 @@
   "offline.text": "Nuk u arrit të lidhej me serverin. Kontrollo rrjetin tënd dhe provo përsëri.",
   "offline.retry": "Riprovo lidhjen",
   "offline.checking": "Duke kontrolluar...",
-  "offline.reloading": "Duke u rikarikuar..."
+  "offline.reloading": "Duke u rikarikuar...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

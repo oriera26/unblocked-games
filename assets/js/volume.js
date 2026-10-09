@@ -27,7 +27,7 @@
  *     d'àudio ja creats no.
  */
 
-import { GAMES_DIR } from './config.js';
+import { GAMES_DIR, OFFLINE_GAMES_DIR } from './config.js';
 import { getGameVolume, setGameVolume } from './state.js';
 
 /**
@@ -252,7 +252,12 @@ export function syncVolumeGame() {
  * @param {string} src ruta del fitxer, p. ex. `assets/games/clxxx.html`
  */
 export function bindVolumeGame(src) {
-    targetKey = src.startsWith(GAMES_DIR) ? src.slice(GAMES_DIR.length) : null;
+    // La clau és el nom del fitxer (el que `game-volume.js` dedueix de
+    // `location.pathname`), tant si el joc és a assets/games/ com si és
+    // a la carpeta offline.
+    if (src.startsWith(GAMES_DIR)) targetKey = src.slice(GAMES_DIR.length);
+    else if (src.startsWith(OFFLINE_GAMES_DIR)) targetKey = src.slice(OFFLINE_GAMES_DIR.length);
+    else targetKey = null;
     setPanelOpen(false);
     paint(targetKey === null ? 1 : getGameVolume(targetKey));
 }

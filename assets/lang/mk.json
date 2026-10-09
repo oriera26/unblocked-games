@@ -53,5 +53,10 @@
   "offline.text": "Не беше можно да се воспостави врска со серверот. Провери ја својата мрежа и обиди се повторно.",
   "offline.retry": "Повтори поврзување",
   "offline.checking": "Проверувам...",
-  "offline.reloading": "Освежувам..."
+  "offline.reloading": "Освежувам...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

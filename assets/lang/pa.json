@@ -53,5 +53,10 @@
   "offline.text": "ਸਰਵਰ ਨਾਲ ਕਨੈਕਟ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਆਪਣਾ ਨੈੱਟਵਰਕ ਜਾਂਚੋ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
   "offline.retry": "ਦੁਬਾਰਾ ਕਨੈਕਟ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
   "offline.checking": "ਜਾਂਚ ਹੋ ਰਹੀ ਹੈ...",
-  "offline.reloading": "ਦੁਬਾਰਾ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ..."
+  "offline.reloading": "ਦੁਬਾਰਾ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

@@ -53,5 +53,10 @@
   "offline.text": "Nie udało się połączyć z serwerem. Sprawdź swoją sieć i spróbuj ponownie.",
   "offline.retry": "Spróbuj połączyć ponownie",
   "offline.checking": "Sprawdzanie...",
-  "offline.reloading": "Ponowne ładowanie..."
+  "offline.reloading": "Ponowne ładowanie...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

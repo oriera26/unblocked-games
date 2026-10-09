@@ -53,5 +53,10 @@
   "offline.text": "Yhteyttä palvelimeen ei voitu muodostaa. Tarkista verkkoyhteytesi ja yritä uudelleen.",
   "offline.retry": "Yritä yhteyttä uudelleen",
   "offline.checking": "Tarkistetaan...",
-  "offline.reloading": "Ladataan uudelleen..."
+  "offline.reloading": "Ladataan uudelleen...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

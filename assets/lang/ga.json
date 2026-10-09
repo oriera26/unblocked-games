@@ -53,5 +53,10 @@
   "offline.text": "Níorbh fhéidir nasc a bhunú leis an bhfreastalaí. Seiceáil do líonra agus bain triail eile as.",
   "offline.retry": "Bain triail eile as an nasc",
   "offline.checking": "Ag seiceáil...",
-  "offline.reloading": "Ag athlódáil..."
+  "offline.reloading": "Ag athlódáil...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

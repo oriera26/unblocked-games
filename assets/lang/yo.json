@@ -53,5 +53,10 @@
   "offline.text": "A kò lè bá sẹ́va bánisọ̀rọ̀. Wò ìkọ̀nì rẹ, kí o sì gbìyànjú lẹ́ẹ̀kan sí i.",
   "offline.retry": "Tún bá ìbánisọ̀rọ̀ gbìyànjú",
   "offline.checking": "A ń wádìí...",
-  "offline.reloading": "A ń ṣe ìlọ́bọ̀..."
+  "offline.reloading": "A ń ṣe ìlọ́bọ̀...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

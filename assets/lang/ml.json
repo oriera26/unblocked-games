@@ -53,5 +53,10 @@
   "offline.text": "സെർവറുമായി ബന്ധപ്പെടാൻ കഴിഞ്ഞില്ല. നിങ്ങളുടെ നെറ്റ്‌വർക്ക് പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.",
   "offline.retry": "വീണ്ടും ബന്ധപ്പെടാൻ ശ്രമിക്കുക",
   "offline.checking": "പരിശോധിക്കുന്നു...",
-  "offline.reloading": "വീണ്ടും ലോഡ് ചെയ്യുന്നു..."
+  "offline.reloading": "വീണ്ടും ലോഡ് ചെയ്യുന്നു...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

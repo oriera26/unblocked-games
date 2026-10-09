@@ -53,5 +53,10 @@
   "offline.text": "سرور سے رابطہ نہیں ہو سکا۔ اپنا نیٹ ورک چیک کریں اور دوبارہ کوشش کریں۔",
   "offline.retry": "دوبارہ کوشش کریں",
   "offline.checking": "چیک ہو رہا ہے...",
-  "offline.reloading": "دوبارہ لوڈ ہو رہا ہے..."
+  "offline.reloading": "دوبارہ لوڈ ہو رہا ہے...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

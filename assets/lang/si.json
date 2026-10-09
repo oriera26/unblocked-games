@@ -53,5 +53,10 @@
   "offline.text": "සේවාදායකය සමඟ සම්බන්ධ විය නොහැකි විය. ඔබේ ජාලය පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
   "offline.retry": "නැවත සම්බන්ධ වීමට උත්සාහ කරන්න",
   "offline.checking": "පරීක්ෂා කරමින්...",
-  "offline.reloading": "නැවත පූරණය වෙමින්..."
+  "offline.reloading": "නැවත පූරණය වෙමින්...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

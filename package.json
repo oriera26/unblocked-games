@@ -9,13 +9,15 @@
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
+    "serve": "node tools/serve.mjs",
     "dist": "electron-builder --win --publish never",
     "dist:linux": "electron-builder --linux --publish never",
     "check": "node tools/check-all.mjs --no-open"
   },
   "devDependencies": {
     "electron": "44.5.1",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "playwright": "^1.64.0"
   },
   "build": {
     "appId": "com.oriera26.unblockedgames",

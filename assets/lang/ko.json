@@ -53,5 +53,10 @@
   "offline.text": "서버에 연결할 수 없습니다. 네트워크를 확인한 후 다시 시도하세요.",
   "offline.retry": "연결 다시 시도",
   "offline.checking": "확인 중...",
-  "offline.reloading": "다시 불러오는 중..."
+  "offline.reloading": "다시 불러오는 중...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

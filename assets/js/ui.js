@@ -21,6 +21,7 @@ import { filters, isFavorite, stats } from './state.js';
 import { getLevelForPoints } from './levels.js';
 import { iconMarkup } from './icons.js';
 import { localeOf, t } from './i18n.js';
+import { isOfflineGame, stateOf } from './offline-games.js';
 
 export const $ = (id) => document.getElementById(id);
 
@@ -54,6 +55,14 @@ export function renderCategories(onSelect) {
     if (!wrapper) return;
 
     wrapper.replaceChildren();
+
+    // `replaceChildren` s'emporta també el fons que remarca la categoria
+    // activa, i `moveActivePill` el necessita per pintar-lo sota la
+    // píndola triada. El tornem a crear sempre, abans de les píndoles.
+    const activeBg = document.createElement('div');
+    activeBg.className = 'category-active-bg';
+    activeBg.id = 'activePill';
+    wrapper.appendChild(activeBg);
 
     for (const category of CATEGORIES) {
         const pill = document.createElement('button');
@@ -172,12 +181,75 @@ function buildCard(game) {
         media.innerHTML = iconMarkup('gamepad-2', { size: 40, className: 'game-icon' });
     }
 
+    if (isOfflineGame(game)) media.appendChild(offlineBadge(game));
+
     const title = document.createElement('div');
     title.className = 'card-title';
     title.textContent = game.name;
 
     wrapper.append(favButton, media, title);
     return wrapper;
+}
+
+/**
+ * El botó de descàrrega/estat d'un joc offline.
+ *
+ * No rep clics (la targeta sencera ja decideix entre baixar i obrir):
+ * només és l'indicador de l'estat, que canvia en rebre l'avenç.
+ */
+function offlineBadge(game) {
+    const badge = document.createElement('span');
+    badge.className = 'offline-btn';
+    badge.setAttribute('role', 'img');
+    badge.tabIndex = -1;
+    paintOfflineBadge(badge, stateOf(game));
+    return badge;
+}
+
+function paintOfflineBadge(badge, info) {
+    badge.dataset.offlineState = info.state;
+
+    if (info.state === 'downloading') {
+        badge.innerHTML = `<span class="offline-percent">${info.percent || 0}%</span>`;
+        badge.title = t('offline.downloading');
+        badge.setAttribute('aria-label', t('offline.downloading'));
+        return;
+    }
+
+    if (info.state === 'ready') {
+        badge.innerHTML = iconMarkup('play', { size: 16, fill: 'currentColor' });
+        badge.title = t('offline.play');
+        badge.setAttribute('aria-label', t('offline.play'));
+        return;
+    }
+
+    if (info.state === 'error') {
+        badge.innerHTML = iconMarkup('rotate-cw', { size: 16 });
+        badge.title = t('offline.failed');
+        badge.setAttribute('aria-label', t('offline.failed'));
+        return;
+    }
+
+    badge.innerHTML = iconMarkup('download', { size: 16 });
+    badge.title = t('offline.download');
+    badge.setAttribute('aria-label', t('offline.download'));
+}
+
+/**
+ * Repinta el badge d'una targeta ja dibuixada, si és al DOM.
+ * (La virtualització en té poques de vives; la resta es pinten en
+ * construir-se amb l'estat que els toqui.)
+ */
+export function updateOfflineCard(url, info) {
+    const grid = $('gameGrid');
+    if (!grid) return;
+
+    for (const wrapper of grid.querySelectorAll('.card-wrapper')) {
+        if (wrapper.dataset.url !== url) continue;
+        const badge = wrapper.querySelector('.offline-btn');
+        if (badge) paintOfflineBadge(badge, info);
+        return;
+    }
 }
 
 /** Buida el grid i deixa el comptador a zero. */

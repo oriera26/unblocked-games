@@ -53,5 +53,10 @@
   "offline.text": "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ ตรวจสอบเครือข่ายของคุณแล้วลองอีกครั้ง",
   "offline.retry": "ลองเชื่อมต่ออีกครั้ง",
   "offline.checking": "กำลังตรวจสอบ...",
-  "offline.reloading": "กำลังโหลดใหม่..."
+  "offline.reloading": "กำลังโหลดใหม่...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

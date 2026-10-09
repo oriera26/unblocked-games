@@ -53,5 +53,10 @@
   "offline.text": "Ùn si pò mai stabilisce una cunnessione cù u servidori. Verificà a vostra retè è pruvate torna.",
   "offline.retry": "Pruvà torna a cunnette",
   "offline.checking": "Verificendu...",
-  "offline.reloading": "Ricaricendu..."
+  "offline.reloading": "Ricaricendu...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

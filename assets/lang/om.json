@@ -53,5 +53,10 @@
   "offline.text": "Sevaritti walqannoo hin barre. Shamilikaa kee ilaali eegalii kenne.",
   "offline.retry": "Dubanne yaali",
   "offline.checking": "Mirkaneeffachuu...",
-  "offline.reloading": "Deebi'achuu..."
+  "offline.reloading": "Deebi'achuu...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

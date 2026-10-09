@@ -53,5 +53,10 @@
   "offline.text": "Ndotákovéima servidorre jerovia. Ehecha nde red de, ha jey eipuru.",
   "offline.retry": "Jerovia jey eipuru",
   "offline.checking": "Ohechávo...",
-  "offline.reloading": "Oñemyndývo..."
+  "offline.reloading": "Oñemyndývo...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

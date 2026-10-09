@@ -53,5 +53,10 @@
   "offline.text": "تعذّر إنشاء اتصال بالخادم. تحقق من شبكتك وحاول مرة أخرى.",
   "offline.retry": "إعادة محاولة الاتصال",
   "offline.checking": "جارٍ التحقق...",
-  "offline.reloading": "جارٍ إعادة التحميل..."
+  "offline.reloading": "جارٍ إعادة التحميل...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

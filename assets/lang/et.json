@@ -53,5 +53,10 @@
   "offline.text": "Serveriga ühendust ei õnnestunud luua. Kontrolli oma võrku ja proovi uuesti.",
   "offline.retry": "Proovi ühendust uuesti",
   "offline.checking": "Kontrollin...",
-  "offline.reloading": "Laadin uuesti..."
+  "offline.reloading": "Laadin uuesti...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

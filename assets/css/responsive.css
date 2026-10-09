@@ -224,7 +224,9 @@
 @media (min-width: 1440px) {
     /* En un monitor de 2K la graella pot aprofitar més ample en
        lloc de deixar barreres als costats. */
-    .container { max-width: 1200px; }
+    /* L'amplada ara viu al `.view` centrat dins del contenidor d'ample
+       complet, que és qui rep la roda del ratolí. */
+    .container > .view { max-width: 1200px; }
     .grid,
     .grid.skeleton-grid {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -246,6 +248,15 @@
        a l'últim element tocat i obre la barra soles. Només la obre
        la classe `.open` (`:not` per no treure-li l'efecte a la
        classe, que té la mateixa especificitat). */
+    .search-container:not(.open):not(:focus-within):hover {
+        background: transparent;
+        border-color: transparent;
+        padding: 0;
+    }
+    .search-container:not(.open):hover .search-trigger {
+        background: var(--glass-bg-soft);
+        border-color: var(--glass-border-soft);
+    }
     .search-container:not(.open):hover .search-bar {
         width: 0;
         opacity: 0;

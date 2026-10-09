@@ -11,9 +11,14 @@
  * about:blank: no s'ha demanat cap joc encara.
  */
 
-import { FALLBACK_DURATION, GAMES_DIR, LOADER_DURATION, OFFLINE_URL } from './config.js';
+import { FALLBACK_DURATION, LOADER_DURATION, OFFLINE_URL } from './config.js';
 import { recordPlay, recordSession } from './state.js';
 import { bindVolumeGame, clearVolumeGame, syncVolumeGame, watchVolumeGame } from './volume.js';
+import { gameSrc } from './game-path.js';
+import { downloadGame, isOfflineGame, isOfflineReady } from './offline-games.js';
+
+// Es reexporta perquè les eines (tools/test-server.mjs) l'importen d'aquí.
+export { gameSrc } from './game-path.js';
 
 let loaderTimeout = null;
 let fallbackTimeout = null;
@@ -33,24 +38,6 @@ let currentGame = null;
  * següent, amagant el spinner del joc nou quan encara no havia carregat.
  */
 let onIframeLoad = null;
-
-/**
- * URL del fitxer d'un joc.
- *
- * Al llistat hi ha tres formes de nom i s'han d respected totes:
- *
- *   crossbarchallenge.html  -> tal qual
- *   clextremerun3d          -> sense extensió, hi afegim .html
- *   clsuperkidadventure.htm -> extensió .htm, NO hi afegim .html
- *
- * El cas .htm és el que fa que no es pugui decidir amb un `endsWith('.html')`:
- * hi ha un joc que es diu exactament així i el fitxer real és
- * `clsuperkidadventure.htm`. Afegir-hi .html donava un 404.
- */
-export function gameSrc(url) {
-    const hasExtension = /\.[a-z0-9]+$/i.test(url);
-    return `${GAMES_DIR}${hasExtension ? url : `${url}.html`}`;
-}
 
 function clearTimer(handle) {
     if (handle) clearTimeout(handle);
@@ -154,10 +141,18 @@ export function launch(game) {
     cancelTimers();
     hideLoader();
 
+    // Un joc offline que encara no s'ha baixat no s'obre: s'engega la
+    // baixada i prou. La targeta n'ensenya el progrés i, quan acaba, el
+    // joc ja es pot obrir. Així no es baixen 50 MB per accident.
+    if (isOfflineGame(game) && !isOfflineReady(game)) {
+        downloadGame(game);
+        return;
+    }
+
     // El volum és de cada joc i la interfície l'ha de tenir abans que
     // l'usuari pugui pitjar res: també quan encara només hi ha l'avís
     // de mòbil a pantalla i el joc no s'ha carregat.
-    bindVolumeGame(gameSrc(game.url));
+    bindVolumeGame(gameSrc(game));
 
     if (needsGate()) {
         showGate(game);
@@ -180,7 +175,7 @@ function openGame(game) {
     currentGame = game;
     sessionStart = Date.now();
 
-    iframe.src = gameSrc(game.url);
+    iframe.src = gameSrc(game);
     modal.classList.add('active');
     showLoader();
 
@@ -198,7 +193,10 @@ function openGame(game) {
 
     // Si passat FALLBACK_DURATION no tenim res carregat, el joc no
     // funciona i és millor mostrar la pàgina d'error que un spinner
-    // perpetu.
+    // perpetu. Els jocs offline són molt grossos i triguen més a
+    // analitzar-se: amb el mateix termini es marcaria com a trencat un
+    // joc que encara s'està carregant.
+    const fallbackMs = isOfflineGame(game) ? FALLBACK_DURATION * 4 : FALLBACK_DURATION;
     fallbackTimeout = setTimeout(() => {
         fallbackTimeout = null;
         try {
@@ -210,7 +208,7 @@ function openGame(game) {
             // trencat i mostrem l'error.
             showOffline();
         }
-    }, FALLBACK_DURATION);
+    }, fallbackMs);
 
     if (onIframeLoad) iframe.removeEventListener('load', onIframeLoad);
     onIframeLoad = () => {

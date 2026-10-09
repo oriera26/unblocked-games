@@ -53,5 +53,10 @@
   "offline.text": "Nu s-a putut stabili conexiunea cu serverul. Verifică rețeaua și încearcă din nou.",
   "offline.retry": "Reîncearcă conectarea",
   "offline.checking": "Se verifică...",
-  "offline.reloading": "Se reîncarcă..."
+  "offline.reloading": "Se reîncarcă...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

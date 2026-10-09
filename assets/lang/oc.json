@@ -53,5 +53,10 @@
   "offline.text": "S'a pas pogut connectar al servidor. Verifica ta ret e torna a ensajar.",
   "offline.retry": "Tornar a connectar",
   "offline.checking": "Verificant...",
-  "offline.reloading": "Recargant..."
+  "offline.reloading": "Recargant...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

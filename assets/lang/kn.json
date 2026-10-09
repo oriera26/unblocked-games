@@ -53,5 +53,10 @@
   "offline.text": "ಸರ್ವರ್‌ಗೆ ಸಂಪರ್ಕಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ನಿಮ್ಮ ನೆಟ್‌ವರ್ಕ್ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
   "offline.retry": "ಮತ್ತೆ ಸಂಪರ್ಕಿಸಲು ಪ್ರಯತ್ನಿಸಿ",
   "offline.checking": "ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...",
-  "offline.reloading": "ಮತ್ತೆ ಲೋಡ್ ಆಗುತ್ತಿದೆ..."
+  "offline.reloading": "ಮತ್ತೆ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

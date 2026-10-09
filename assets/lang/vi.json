@@ -53,5 +53,10 @@
   "offline.text": "Không thể kết nối với máy chủ. Hãy kiểm tra mạng của bạn và thử lại.",
   "offline.retry": "Thử kết nối lại",
   "offline.checking": "Đang kiểm tra...",
-  "offline.reloading": "Đang tải lại..."
+  "offline.reloading": "Đang tải lại...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

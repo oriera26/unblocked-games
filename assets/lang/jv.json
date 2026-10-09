@@ -53,5 +53,10 @@
   "offline.text": "Ora bisa nyambung karo server. Priksa jaringanmu banjur coba manèh.",
   "offline.retry": "Coba manèh nyambung",
   "offline.checking": "Mriksa...",
-  "offline.reloading": "Ngmuat ulang..."
+  "offline.reloading": "Ngmuat ulang...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

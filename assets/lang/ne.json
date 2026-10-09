@@ -53,5 +53,10 @@
   "offline.text": "सर्भरसँग जडान गर्न सकिएन। आफ्नो नेटवर्क जाँच गरी फेरि प्रयास गर्नुहोस्।",
   "offline.retry": "फेरि प्रयास गर्नुहोस्",
   "offline.checking": "जाँच गर्दै...",
-  "offline.reloading": "पुनः लोड हुँदै..."
+  "offline.reloading": "पुनः लोड हुँदै...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

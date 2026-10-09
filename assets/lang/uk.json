@@ -53,5 +53,10 @@
   "offline.text": "Не вдалося встановити з'єднання з сервером. Перевірте мережу та спробуйте ще раз.",
   "offline.retry": "Повторити з'єднання",
   "offline.checking": "Перевірка...",
-  "offline.reloading": "Перезавантаження..."
+  "offline.reloading": "Перезавантаження...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

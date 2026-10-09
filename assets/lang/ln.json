@@ -53,5 +53,10 @@
   "offline.text": "Tosákoli kosákana na seva. Lanza interineti na yo mpe koya lisusu.",
   "offline.retry": "Kosákana lisusu",
   "offline.checking": "Koluka...",
-  "offline.reloading": "Kosala lisusu..."
+  "offline.reloading": "Kosala lisusu...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

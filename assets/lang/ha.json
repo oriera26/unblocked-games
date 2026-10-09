@@ -53,5 +53,10 @@
   "offline.text": "Ba mu iya haɗawa da uwar gida. Duba intanetinka sannan a sake gwadawa.",
   "offline.retry": "Sake haɗawa",
   "offline.checking": "Ana bincika...",
-  "offline.reloading": "Ana sake loda..."
+  "offline.reloading": "Ana sake loda...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

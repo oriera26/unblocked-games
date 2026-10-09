@@ -53,5 +53,10 @@
   "offline.text": "Serwer bilen baglanyşyk düzedip bolmady. Torlaryňyzy barlaň we täzeden synanyşyň.",
   "offline.retry": "Täzeden baglanyşmak",
   "offline.checking": "Barlanýar...",
-  "offline.reloading": "Täzeden yüklenýär..."
+  "offline.reloading": "Täzeden yüklenýär...",
+  "cat.offline": "Offline",
+  "offline.download": "Download",
+  "offline.downloading": "Downloading...",
+  "offline.play": "Play",
+  "offline.failed": "Retry"
 }

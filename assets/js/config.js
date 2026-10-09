@@ -31,6 +31,7 @@ export const CATEGORIES = [
     { id: 'puzle', label: 'Puzle', key: 'cat.puzle', icon: 'brain' },
     { id: 'esports', label: 'Esports', key: 'cat.esports', icon: 'trophy' },
     { id: 'retro', label: 'Retro', key: 'cat.retro', icon: 'joystick' },
+    { id: 'offline', label: 'Offline', key: 'cat.offline', icon: 'download' },
     { id: 'altres', label: 'Altres', key: 'cat.altres', icon: 'more-horizontal' }
 ];
 
@@ -89,6 +90,24 @@ export const DEFAULT_STATS = {
 /* --- Rutes --------------------------------------------------------- */
 
 export const GAMES_DIR = 'assets/games/';
+
+/**
+ * Els jocs offline viuen en una carpeta pròpia.
+ *
+ * No és un detall estètic: el service worker reconeix aquesta carpeta i
+ * els serveix sense el pedaç de volum (que exigiria llegir 50 MB de text
+ * a cada obertura) i sense desar-los a la memòria cau automàticament.
+ * Només s'hi baixen quan l'usuari pitja el botó de descàrrega.
+ */
+export const OFFLINE_GAMES_DIR = 'assets/offline/';
+
+/**
+ * Nom de la memòria cau dels jocs offline (Cache Storage).
+ *
+ * El service worker no pot importar aquest mòdul i porta el mateix
+ * literal escrit a mà; si es canvia, cal canviar-lo als dos llocs.
+ */
+export const OFFLINE_CACHE_NAME = 'ula-offline-games';
 
 /**
  * Rutes relatives, no absolutes. Amb `/offline.html` l'aplicació només

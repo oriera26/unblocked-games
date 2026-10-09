@@ -53,5 +53,10 @@
   "offline.text": "No s'ha pogut establir connexió amb el servidor. Comprova la teva xarxa i torna-ho a provar.",
   "offline.retry": "Reintentar connexió",
   "offline.checking": "Comprovant...",
-  "offline.reloading": "Recarregant..."
+  "offline.reloading": "Recarregant...",
+  "cat.offline": "Offline",
+  "offline.download": "Descarrega",
+  "offline.downloading": "Descarregant...",
+  "offline.play": "Juga",
+  "offline.failed": "Reintenta"
 }
