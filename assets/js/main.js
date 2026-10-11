@@ -26,7 +26,7 @@ import {
 import { hydrateDataLucide } from './icons.js';
 import { initOffline, onOfflineChange } from './offline-games.js';
 import { currentView, go, startRouter } from './router.js';
-import { close, initGate, launch } from './player.js';
+import { close, initGate, isGameOpen, launch } from './player.js';
 import { checkStreak, filters, toggleFavorite } from './state.js';
 import { initCacheControl, initLangSelect, initSettings, registerServiceWorker } from './settings.js';
 import { startDetection } from './detection.js';
@@ -91,12 +91,16 @@ function bindSearch() {
     const container = byId('searchContainer');
     const trigger = container?.querySelector('.search-trigger');
 
-    // Es filtra en cada pulsació. Amb 697 jocs és una filtració lineal de
-    // poc cost, i un debounce aquí només afegiria complexitat per estalviar
-    // unes poques centèsimes de mil·lisegon.
+    // Es filtra amb un debounce curt. Amb 1.864 jocs, fer la filtració a
+    // cada pulsació treballa el fil principal per cada tecla i repinta la
+    // graella; esperar 120 ms no es nota i estalvia molts repintats.
+    let searchTimer = 0;
     search?.addEventListener('input', () => {
-        filters.search = search.value.trim().toLowerCase();
-        applyFilters();
+        clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(() => {
+            filters.search = search.value.trim().toLowerCase();
+            applyFilters();
+        }, 120);
     });
 
     // El botó obre i tanca la barra. Obre-la el clic i no l'hover: en
@@ -280,6 +284,19 @@ function onLanguageChange() {
     if (currentView() === 'stats') renderStats();
 }
 
+/**
+ * En arribar a una vista: tanca el joc si no som a l'arcade i manten les
+ * estadístiques al dia.
+ *
+ * Si s'obre un joc i es canvia de vista, el joc no ha de continuar
+ * executant-se en segon pla: tancar-lo elimina l'iframe i el navegador
+ * n'allibera els timers, els workers i l'àudio.
+ */
+function onViewArrive(id) {
+    if (id !== 'arcade' && isGameOpen()) close();
+    if (id === 'stats') renderStats();
+}
+
 async function start() {
     // L'idioma abans de res: categories i estadístiques es dibuixen
     // amb `t()`, i corregir-les després seria un parpelleig.
@@ -315,7 +332,7 @@ async function start() {
     // El routing s'arrenca abans de la primera càrrega perquè l'enllaç
     // profund decideixi quina vista s'obre, i `onArrive` mantingui les
     // estadístiques al dia cada cop que hi arribem.
-    const initial = startRouter({ onArrive: (id) => (id === 'stats' ? renderStats() : undefined) });
+    const initial = startRouter({ onArrive: onViewArrive });
 
     // L'estat dels jocs offline abans de dibuixar: així una targeta ja
     // baixada surt amb el botó de jugar des del primer moment. Mentre

@@ -280,11 +280,20 @@ export function initVolume() {
 
     button.addEventListener('click', () => setPanelOpen(!isPanelOpen()));
 
+    // El lliscant dispara `input` a cada píxel mogut. El pintat es fa de
+    // seguida (feedback immediat), però desar el valor i enviar-lo al joc
+    // s'ajunta en un sol fotograma: enviar un postMessage per píxel és
+    // inútil si el joc no pot pintar més de pressa que la pantalla.
+    let volumeFrame = 0;
     slider.addEventListener('input', () => {
-        const volume = sliderVolume();
-        if (targetKey !== null) setGameVolume(targetKey, volume);
-        paint(volume);
-        sendValue();
+        paint(sliderVolume());
+        if (volumeFrame) return;
+
+        volumeFrame = requestAnimationFrame(() => {
+            volumeFrame = 0;
+            if (targetKey !== null) setGameVolume(targetKey, sliderVolume());
+            sendValue();
+        });
     });
 
     // Escape, en fase de captura: primer es plega el panell i el giny no

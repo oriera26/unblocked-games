@@ -160,19 +160,35 @@ export function initOffline(games) {
 function retryWhenControlled(offline) {
     if (typeof navigator === 'undefined' || !navigator.serviceWorker) return;
 
+    const refresh = () => {
+        if (canGateOffline()) {
+            for (const game of offline) readState(game);
+        }
+    };
+
+    // El canvi de controlador és el senyal bo; el `controllerchange` pot
+    // arribar tard (clients.claim() i la propietat del navegador no van
+    // lligats), així que a més es prova unes quantes vegades amb espera
+    // creixent fins que hi hagi gating —i prou, en lloc d'un sondeig
+    // fix cada 150 ms durant 5 segons.
+    navigator.serviceWorker.addEventListener?.('controllerchange', refresh);
+
     navigator.serviceWorker.ready
-        .then(() => {
-            const poll = setInterval(() => {
-                if (canGateOffline()) {
-                    clearInterval(poll);
-                    for (const game of offline) readState(game);
-                }
-            }, 150);
-            setTimeout(() => clearInterval(poll), 5000);
-        })
+        .then(refresh)
         .catch(() => {
             /* sense SW actiu: el mode no es pot activar, tampoc cal gating */
         });
+
+    let attempts = 0;
+    const probe = () => {
+        if (canGateOffline()) {
+            refresh();
+            return;
+        }
+        if (++attempts >= 12) return;
+        setTimeout(probe, 200 + attempts * 150);
+    };
+    setTimeout(probe, 200);
 }
 
 /**
@@ -268,30 +284,31 @@ async function downloadInPage(abs, url) {
 
     const type = response.headers.get('content-type') || 'text/html';
     const total = Number(response.headers.get('content-length')) || 0;
-    let blob;
+    const cache = await caches.open(OFFLINE_CACHE_NAME);
 
-    if (response.body && typeof response.body.getReader === 'function') {
-        const reader = response.body.getReader();
-        const chunks = [];
+    // Amb un TransformStream el cos arriba a la cau a mesura que es rep i
+    // no es queda cap còpia sencera a memòria (abans: tots els trossos en
+    // un array + el Blob resultant, el doble de RAM per un joc gran).
+    if (response.body && typeof TransformStream === 'function') {
         let received = 0;
 
-        for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            received += value.length;
-            if (total) {
-                const percent = Math.min(99, Math.floor((received / total) * 100));
-                setState(url, { state: 'downloading', percent, bytes: received });
+        const counter = new TransformStream({
+            transform(chunk, controller) {
+                received += chunk.byteLength;
+                if (total) {
+                    const percent = Math.min(99, Math.floor((received / total) * 100));
+                    setState(url, { state: 'downloading', percent, bytes: received });
+                }
+                controller.enqueue(chunk);
             }
-        }
+        });
 
-        blob = new Blob(chunks, { type });
-    } else {
-        blob = await response.blob();
+        const streamed = response.body.pipeThrough(counter);
+        await cache.put(abs, new Response(streamed, { status: 200, headers: { 'Content-Type': type } }));
+        return;
     }
 
-    const cache = await caches.open(OFFLINE_CACHE_NAME);
+    const blob = await response.blob();
     await cache.put(abs, new Response(blob, { status: 200, headers: { 'Content-Type': type } }));
 }
 

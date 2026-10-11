@@ -238,6 +238,35 @@ function cancelTimers() {
     fallbackTimeout = null;
 }
 
+/* --- L'iframe ------------------------------------------------------ */
+
+/**
+ * Crea l'iframe del joc de zero, amb els atributs que toca.
+ *
+ * Es fa servir per substituir l'iframe vell en tancar: així el
+ * navegador destrueix del tot el document del joc en lloc de quedar-se'l
+ * en memòria. Els atributs han de coincidir amb el markup d'index.html.
+ */
+function createGameIframe() {
+    const iframe = document.createElement('iframe');
+    iframe.id = 'gameIframe';
+    iframe.title = 'Joc';
+    iframe.allow = 'autoplay; fullscreen';
+    iframe.referrerPolicy = 'no-referrer';
+    iframe.src = 'about:blank';
+    return iframe;
+}
+
+/** Substitueix l'iframe actual per un de nou i el retorna. */
+function replaceGameIframe() {
+    const old = document.getElementById('gameIframe');
+    if (!old || !old.parentNode) return old;
+
+    const fresh = createGameIframe();
+    old.parentNode.replaceChild(fresh, old);
+    return fresh;
+}
+
 /* --- Tancament ----------------------------------------------------- */
 
 export function close() {
@@ -258,19 +287,25 @@ export function close() {
     if (modal) modal.classList.remove('active');
 
     const iframe = document.getElementById('gameIframe');
-    if (iframe) {
-        if (onIframeLoad) {
-            iframe.removeEventListener('load', onIframeLoad);
-            onIframeLoad = null;
-        }
-        // `src = ''` fa que alguns navegadors tornin a carregar el
-        // document actual dins de l'iframe. 'about:blank' és el buit
-        // explícit i no genera cap petició.
-        iframe.src = 'about:blank';
+    if (iframe && onIframeLoad) {
+        iframe.removeEventListener('load', onIframeLoad);
     }
+    onIframeLoad = null;
+
+    // Eliminar l'iframe (i no només buidar-ne la `src`) força el
+    // navegador a destruir el document del joc: s'aturen així els
+    // setInterval, els requestAnimationFrame, els Web Worker i els
+    // AudioContext que amb un `about:blank` podien sobreviure qui sap
+    // quant. El proper joc parteix sempre d'un iframe net.
+    replaceGameIframe();
 }
 
 /** Estat per a les proves. */
 export function currentSession() {
     return { game: currentGame, startedAt: sessionStart };
+}
+
+/** Hi ha un joc obert ara mateix? */
+export function isGameOpen() {
+    return currentGame !== null;
 }

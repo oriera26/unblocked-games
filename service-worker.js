@@ -17,6 +17,13 @@ const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
  */
 const OFFLINE_CACHE = 'ula-offline-games';
 
+/* Sostres de les caches. `cache.put()` no té límit i, sense podar-les,
+   les caches de jocs i d'assets creixien indefinidament a cada visita.
+   Es trauen les entrades més antigues (la Cache API retorna les claus en
+   ordre d'inserció, que és el més a prop d'un LRU que hi ha). */
+const GAMES_CACHE_MAX = 40;
+const RUNTIME_CACHE_MAX = 80;
+
 /**
  * Tot es resol respecte d'aquest mateix fitxer.
  *
@@ -165,13 +172,34 @@ function headEndIndex(html) {
  * @param {Request} request
  * @param {URL} url
  */
+/**
+ * Poda una cau si passa del màxim, traient les entrades més antigues.
+ *
+ * @param {string} cacheName
+ * @param {number} max
+ */
+async function trimCache(cacheName, max) {
+    try {
+        const cache = await caches.open(cacheName);
+        const keys = await cache.keys();
+        if (keys.length <= max) return;
+        const excess = keys.length - max;
+        await Promise.all(keys.slice(0, excess).map((key) => cache.delete(key)));
+    } catch (err) {
+        console.warn('[SW] no s\'ha pogut podar la cau', cacheName, err);
+    }
+}
+
 async function serveGame(request, url) {
     const cache = await caches.open(GAMES_CACHE);
     let response = await cache.match(request);
 
     if (!response) {
         response = await fetch(request);
-        if (response.ok) cache.put(request, response.clone());
+        if (response.ok) {
+            await cache.put(request, response.clone());
+            trimCache(GAMES_CACHE, GAMES_CACHE_MAX);
+        }
     }
 
     return withVolumeTag(response, url);
@@ -247,8 +275,11 @@ function postToClient(client, data) {
 /**
  * Baixa un joc offline amb avenç i el desa a la cau.
  *
- * Es llegeix el cos a poc a poc (per poder informar del progrés) i es
- * reconstrueix una resposta per desar-la. Al final s'avisa el client.
+ * El cos es compta mentre passa i s'entrega a la cau tal qual, sense
+ * retenir-lo sencer a memòria. Abans s'acumulaven tots els trossos en un
+ * array i al final es feia un Blob: per un joc de 50 MB això volia dir
+ * uns 50 MB a RAM (o més, si el Blob copiava). Els avisos de progrés es
+ * limiten per temps perquè un fitxer gran no generi milers de missatges.
  */
 async function downloadOffline(absUrl, client) {
     try {
@@ -258,36 +289,39 @@ async function downloadOffline(absUrl, client) {
 
         const type = response.headers.get('content-type') || 'text/html';
         const total = Number(response.headers.get('content-length')) || 0;
-        const reader = response.body && typeof response.body.getReader === 'function'
-            ? response.body.getReader()
-            : null;
 
-        let blob;
-        if (reader) {
-            const chunks = [];
-            let received = 0;
-            let lastTick = 0;
+        let bytes = 0;
+        let lastTick = 0;
+        let body = response.body;
 
-            for (;;) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                chunks.push(value);
-                received += value.length;
+        if (body && typeof TransformStream === 'function') {
+            const counter = new TransformStream({
+                transform(chunk, controller) {
+                    bytes += chunk.byteLength;
 
-                const now = Date.now();
-                if (now - lastTick > 150) {
-                    lastTick = now;
-                    postToClient(client, { type: 'OFFLINE_PROGRESS', url: absUrl, received, total });
+                    const now = Date.now();
+                    if (now - lastTick > 150) {
+                        lastTick = now;
+                        postToClient(client, { type: 'OFFLINE_PROGRESS', url: absUrl, received: bytes, total });
+                    }
+
+                    controller.enqueue(chunk);
                 }
-            }
-
-            blob = new Blob(chunks, { type });
-        } else {
-            blob = await response.blob();
+            });
+            body = body.pipeThrough(counter);
         }
 
-        await cache.put(absUrl, new Response(blob, { status: 200, headers: { 'Content-Type': type } }));
-        postToClient(client, { type: 'OFFLINE_DONE', url: absUrl, bytes: blob.size });
+        let storable;
+        if (body) {
+            storable = new Response(body, { status: 200, headers: { 'Content-Type': type } });
+        } else {
+            const blob = await response.blob();
+            bytes = blob.size;
+            storable = new Response(blob, { status: 200, headers: { 'Content-Type': type } });
+        }
+
+        await cache.put(absUrl, storable);
+        postToClient(client, { type: 'OFFLINE_DONE', url: absUrl, bytes: total || bytes });
     } catch (err) {
         console.warn('[SW] baixada offline fallida:', absUrl, err);
         postToClient(client, { type: 'OFFLINE_ERROR', url: absUrl });
@@ -326,7 +360,9 @@ self.addEventListener('fetch', (event) => {
             fetch(request)
                 .then((response) => {
                     const copy = response.clone();
-                    caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+                    caches
+                        .open(RUNTIME_CACHE)
+                        .then((cache) => cache.put(request, copy).then(() => trimCache(RUNTIME_CACHE, RUNTIME_CACHE_MAX)));
                     return response;
                 })
                 .catch(() => {
@@ -344,7 +380,9 @@ self.addEventListener('fetch', (event) => {
             return cache.match(request).then((cached) => {
                 const fetchPromise = fetch(request)
                     .then((response) => {
-                        if (response && response.ok) cache.put(request, response.clone());
+                        if (response && response.ok) {
+                            cache.put(request, response.clone()).then(() => trimCache(RUNTIME_CACHE, RUNTIME_CACHE_MAX));
+                        }
                         return response;
                     })
                     .catch(() => cached);
