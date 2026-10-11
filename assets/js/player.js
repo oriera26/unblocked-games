@@ -246,11 +246,22 @@ function cancelTimers() {
  * Es fa servir per substituir l'iframe vell en tancar: així el
  * navegador destrueix del tot el document del joc en lloc de quedar-se'l
  * en memòria. Els atributs han de coincidir amb el markup d'index.html.
+ *
+ * El `sandbox` porta `allow-same-origin` perquè els jocs necessiten el
+ * mateix origen (storage, el pedaç de volum), de manera que NO és un
+ * aïllament real: un joc es pot treure l'atribut amb
+ * `window.frameElement`. Serveix per limitar accidents (navegar la
+ * finestra de dalt, popups i descàrregues fora de control).
  */
+const GAME_SANDBOX =
+    'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock ' +
+    'allow-orientation-lock allow-modals allow-downloads allow-presentation';
+
 function createGameIframe() {
     const iframe = document.createElement('iframe');
     iframe.id = 'gameIframe';
     iframe.title = 'Joc';
+    iframe.setAttribute('sandbox', GAME_SANDBOX);
     iframe.allow = 'autoplay; fullscreen';
     iframe.referrerPolicy = 'no-referrer';
     iframe.src = 'about:blank';

@@ -82,6 +82,14 @@ npm run dist:linux      # genera el paquet de Debian/Ubuntu (.deb)
 - **`electron/` + `electron-builder`** per empaquetar l'aplicació d'escriptori.
 - Un fitxer JSON per idioma a **`assets/lang/`** (100 llengües).
 
+## 🔒 Seguretat
+
+- **Política de contingut (CSP) estricta** en tota l'aplicació: només s'executa codi propi (`script-src 'self'`), sense `object`, sense `base` i sense enviaments de formularis. A GitHub Pages s'aplica mitjançant el `<meta http-equiv="Content-Security-Policy">` d'`index.html`; al servidor local i a Electron, a més, s'hi envien capçaleres HTTP (`server.js`).
+- **Capçaleres HTTP** al servidor local i a Electron: `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` i `Cross-Origin-Resource-Policy`. **No** s'envia `Cross-Origin-Embedder-Policy`: un document amb COEP només pot incrustar marcs que també en portin i faria fallar l'iframe del joc.
+- **Els jocs comparteixen el mateix origen que l'aplicació** (cal perquè el pedaç de volum i l'`storage` funcionin). Per això **no hi ha un aïllament real**: l'iframe porta un `sandbox` que limita navegacions de la finestra de dalt, popups i descàrregues fora de control, però un joc pot treure-se'l amb `window.frameElement`. És una mitigació d'accidents, no una frontera de seguretat.
+- **El service worker valida** l'origen dels missatges (`ev.source === window.parent`), que les ordres vinguin de l'aplicació i que les URLs del joc siguin del propi origen.
+- **`offline.html` no carrega res de cap CDN**: tot el seu CSS i JS viu al repositori, de manera que la pàgina d'error funciona sense xarxa.
+
 ## 📁 Estructura
 
 ```

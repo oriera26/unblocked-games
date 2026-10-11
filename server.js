@@ -68,7 +68,13 @@ function mimeOf(filePath) {
    Només s'apliquen aquí (servidor local i Electron). A GitHub Pages no
    es poden enviar capçaleres: allà l'equivalent és el <meta
    http-equiv="Content-Security-Policy"> d'index.html, que no cobreix
-   `frame-ancestors`, COOP, COEP ni CORP perquè el meta no els admet.
+   `frame-ancestors`, COOP ni CORP perquè el meta no els admet.
+
+   NO s'hi posa `Cross-Origin-Embedder-Policy` (ni `credentialless`): en
+   Chromium, un document amb COEP només pot incrustar marcs que també en
+   portin, i això faria fallar l'iframe del joc amb
+   `ERR_BLOCKED_BY_RESPONSE`. Com que l'aplicació no necessita aïllament
+   d'origen creuat, s'omet i s'hi confia en `COOP` i `CORP`.
 
    `img-src` inclou `data:` i `blob:` per les portades incrustades i els
    SVG; `style-src` necessita `'unsafe-inline'` pels estils en línia que
@@ -97,9 +103,6 @@ const APP_SECURITY_HEADERS = {
     'Referrer-Policy': 'no-referrer',
     'Permissions-Policy': 'geolocation=(), camera=(), microphone=(), usb=()',
     'Cross-Origin-Opener-Policy': 'same-origin',
-    // `credentialless` i no `require-corp`: els jocs es poden servir des
-    // d'un altre origen més endavant i no sempre hi podrem posar CORP.
-    'Cross-Origin-Embedder-Policy': 'credentialless',
     'Cross-Origin-Resource-Policy': 'same-origin'
 };
 

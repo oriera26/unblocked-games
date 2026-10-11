@@ -6,7 +6,7 @@
     <!-- Política de seguretat per a GitHub Pages, que no permet capçaleres
          HTTP. És la mateixa que envia server.js tret de `frame-ancestors`,
          que el <meta> no admet; al servidor local i a Electron, a més,
-         s'hi afegeixen COOP/COEP/CORP. -->
+         s'hi afegeixen COOP/CORP. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; frame-src 'self'; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>UnblockedGames by Ula</title>
     <script src="assets/vendor/lucide.min.js"></script>
@@ -197,7 +197,13 @@
             </button>
             <!-- src="about:blank" i no src="": amb la src buida alguns navegadors
                  tornen a carregar el document actual dins de l'iframe. -->
-            <iframe id="gameIframe" src="about:blank" allow="autoplay; fullscreen" referrerpolicy="no-referrer" title="Joc"></iframe>
+            <!-- `sandbox` amb `allow-same-origin`: els jocs necessiten el
+                 mateix origen (storage, el pedaç de volum, tecles...), així
+                 que NO és un aïllament real —un joc pot treure's l'atribut
+                 amb window.frameElement. Serveix per aturar accidents: que
+                 un joc no navegui la finestra de dalt, no obri formularis
+                 fora, no baixi fitxers ni obri popups sense control. -->
+            <iframe id="gameIframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-orientation-lock allow-modals allow-downloads allow-presentation" allow="autoplay; fullscreen" referrerpolicy="no-referrer" title="Joc"></iframe>
             <div id="loaderOverlay" class="game-loader-overlay" style="display: none;">
                 <div class="spinner"></div>
             </div>
