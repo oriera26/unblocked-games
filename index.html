@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Política de seguretat per a GitHub Pages, que no permet capçaleres
+         HTTP. És la mateixa que envia server.js tret de `frame-ancestors`,
+         que el <meta> no admet; al servidor local i a Electron, a més,
+         s'hi afegeixen COOP/COEP/CORP. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; frame-src 'self'; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>UnblockedGames by Ula</title>
     <script src="assets/vendor/lucide.min.js"></script>
     <link rel="icon" type="image/x-icon" href="assets/icons/icon.ico">
@@ -192,7 +197,7 @@
             </button>
             <!-- src="about:blank" i no src="": amb la src buida alguns navegadors
                  tornen a carregar el document actual dins de l'iframe. -->
-            <iframe id="gameIframe" src="about:blank" allow="autoplay; fullscreen; gamepad" title="Joc"></iframe>
+            <iframe id="gameIframe" src="about:blank" allow="autoplay; fullscreen" referrerpolicy="no-referrer" title="Joc"></iframe>
             <div id="loaderOverlay" class="game-loader-overlay" style="display: none;">
                 <div class="spinner"></div>
             </div>

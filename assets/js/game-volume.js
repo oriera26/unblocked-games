@@ -321,6 +321,8 @@
     // control: per si localStorage està bloquejat i `storage` no arriba.
     window.addEventListener('message', function (event) {
         if (event.origin !== window.location.origin) return;
+        // Només la finestra mare: cap altra pestanya ni iframe germà.
+        if (event.source !== window.parent) return;
         if (!event.data || event.data.type !== 'ula.volume') return;
         setVolume(event.data.value);
     });

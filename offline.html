@@ -1,157 +1,177 @@
 <!DOCTYPE html>
-<html lang="ca" class="dark">
+<html lang="ca">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- La CSP també va al meta perquè GitHub Pages no permet capçaleres.
+         El meta no admet `frame-ancestors`; la resta és igual que la de
+         server.js. offline.html es mostra dins de l'iframe del joc, així
+         que tampoc no l'hi volem. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; frame-src 'self'; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>Sense connexió</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-                    },
-                    animation: {
-                        'fade-in-up': 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(24px) scale(0.98)' },
-                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; }
+
+        html, body { height: 100%; }
+
         body {
-            font-family: 'Inter', sans-serif;
+            margin: 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: #09090b;
             color: #fafafa;
             overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
         }
-        /* Custom smooth focus and selection */
-        ::selection {
-            background: rgba(255, 255, 255, 0.2);
+
+        ::selection { background: rgba(255, 255, 255, 0.2); }
+
+        /* Fons ambiental: dues taques difuses que respiren. */
+        .ambient {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .ambient span {
+            position: absolute;
+            left: 50%;
+            border-radius: 50%;
+            filter: blur(110px);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        .ambient .a {
+            top: 25%;
+            width: 24rem;
+            height: 24rem;
+            transform: translate(-50%, -50%);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .ambient .b {
+            bottom: 25%;
+            width: 20rem;
+            height: 20rem;
+            transform: translate(-50%, 50%);
+            background: rgba(139, 92, 246, 0.1);
+            animation-delay: 2s;
+        }
+
+        main {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 28rem;
+            margin: 0 auto;
+            text-align: center;
+            opacity: 0;
+            animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        h1 {
+            margin: 0 0 0.75rem;
+            font-size: 1.875rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        p {
+            margin: 0 auto 2rem;
+            max-width: 24rem;
+            color: #a1a1aa;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.75rem;
+            background: #fff;
+            color: #0a0a0a;
+            font: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            letter-spacing: 0.025em;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(255, 255, 255, 0.05);
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        button:hover { background: #e5e5e5; }
+        button:active { transform: scale(0.98); }
+        button[disabled] { opacity: 0.8; pointer-events: none; }
+
+        button svg {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .spin { animation: spin 1s linear infinite; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        @media (min-width: 640px) {
+            button { width: auto; }
+            .actions { flex-direction: row; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .ambient span, main { animation: none; }
+            main { opacity: 1; }
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 selection:bg-neutral-800 selection:text-white relative">
-
-    <!-- Subtle ambient background gradients -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] animate-pulse-slow"></div>
-        <div class="absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2 w-80 h-80 bg-violet-500/10 rounded-full blur-[100px] animate-pulse-slow" style="animation-delay: 2s;"></div>
+<body>
+    <div class="ambient" aria-hidden="true">
+        <span class="a"></span>
+        <span class="b"></span>
     </div>
 
-    <!-- Main Card Container with Premium Entrance Animation -->
-    <main class="relative z-10 w-full max-w-md mx-auto text-center opacity-0 animate-fade-in-up">
-        
-        <!-- Headings -->
-        <h1 id="offlineTitle" class="text-3xl font-semibold tracking-tight text-white mb-3">
-            Sense connexió
-        </h1>
-        <p id="offlineText" class="text-neutral-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto font-normal">
-            No s'ha pogut establir connexió amb el servidor. Comprova la teva xarxa i torna-ho a provar.
-        </p>
+    <main>
+        <h1 id="offlineTitle">Sense connexió</h1>
+        <p id="offlineText">No s'ha pogut establir connexió amb el servidor. Comprova la teva xarxa i torna-ho a provar.</p>
 
-        <!-- Interactive Actions -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button onclick="handleRetry(this)" id="retryBtn" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white text-neutral-950 font-medium text-sm tracking-wide shadow-lg shadow-white/5 hover:bg-neutral-200 active:scale-[0.98] transition-all duration-200 cursor-pointer">
-                <svg id="retryIcon" class="w-4 h-4 mr-2 transition-transform duration-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <div class="actions">
+            <button id="retryBtn" type="button">
+                <svg id="retryIcon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
                 </svg>
                 <span id="btnText">Reintentar connexió</span>
             </button>
         </div>
-
     </main>
 
-    <script>
-        /* Traducció. Aquesta pàgina es carrega sola dins de la iframe del joc
-           quan no hi ha xarxa, així que no pot importar el mòdul i18n.js: es
-           fa una càrrega pròpia. Si el fitxer de l'idioma no es pot obtenir —
-           que és justament quan es veu aquesta pàgina — es queda el català que
-           ja ve al HTML. Les claus són les mateixes que a assets/lang/ca.json. */
-        const OFFLINE = {
-            retry: 'Reintentar connexió',
-            checking: 'Comprovant...',
-            reloading: 'Recarregant...'
-        };
-        const OFFLINE_RTL = ['ar', 'he', 'ur', 'fa', 'ps'];
-
-        (async () => {
-            const lang = localStorage.getItem('ulaLang') || 'ca';
-            if (lang === 'ca') return;
-
-            try {
-                const res = await fetch('assets/lang/' + lang + '.json');
-                if (!res.ok) return;
-                const dict = await res.json();
-                const get = (key) => (typeof dict[key] === 'string' ? dict[key] : null);
-
-                const title = get('offline.title');
-                if (title) {
-                    document.title = title;
-                    document.getElementById('offlineTitle').textContent = title;
-                    document.documentElement.lang = lang;
-                    if (OFFLINE_RTL.includes(lang)) document.documentElement.dir = 'rtl';
-                }
-
-                const text = get('offline.text');
-                if (text) document.getElementById('offlineText').textContent = text;
-
-                const retry = get('offline.retry');
-                if (retry) {
-                    OFFLINE.retry = retry;
-                    document.getElementById('btnText').textContent = retry;
-                }
-
-                OFFLINE.checking = get('offline.checking') ?? OFFLINE.checking;
-                OFFLINE.reloading = get('offline.reloading') ?? OFFLINE.reloading;
-            } catch {
-                // Sense xarxa: el català de fàbrica ja hi és al HTML.
-            }
-        })();
-
-        // Interactive retry handler with smooth animation and network check simulation
-        function handleRetry(btn) {
-            const icon = document.getElementById('retryIcon');
-            const btnText = document.getElementById('btnText');
-             
-            // Disable button temporarily & spin icon
-            btn.style.opacity = '0.8';
-            btn.style.pointerEvents = 'none';
-            icon.classList.add('animate-spin');
-            btnText.textContent = OFFLINE.checking;
-
-            setTimeout(() => {
-                if (navigator.onLine) {
-                    btnText.textContent = OFFLINE.reloading;
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
-                } else {
-                    // Reset state if still offline
-                    btn.style.opacity = '1';
-                    btn.style.pointerEvents = 'auto';
-                    icon.classList.remove('animate-spin');
-                    btnText.textContent = OFFLINE.retry;
-                }
-            }, 1000);
-        }
-
-        // Listen for online status updates in real-time
-        window.addEventListener('online', () => {
-            window.location.reload();
-        });
-    </script>
+    <!-- Sense codi en línia: la CSP no ho permet i aquí no cal. -->
+    <script src="assets/js/offline.js"></script>
 </body>
 </html>

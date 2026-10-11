@@ -145,6 +145,27 @@ async function clearServiceWorkerCache() {
 }
 
 /**
+ * Esborra només les dades d'aquesta aplicació.
+ *
+ * Abans era `localStorage.clear()`, que matava TOTES les claus de
+ * l'origen: si un dia hi ha una altra app a oriera26.github.io, la
+ * neteja de la cau d'aquesta se l'enduria. Les nostres claus comencen
+ * totes per `ula` (vegeu STORAGE_KEYS).
+ */
+function clearUlaStorage() {
+    try {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('ula')) keys.push(key);
+        }
+        for (const key of keys) localStorage.removeItem(key);
+    } catch (err) {
+        console.warn('[ula] no s\'ha pogut buidar localStorage', err);
+    }
+}
+
+/**
  * Neteja tota la memòria cau i torna a carregar.
  *
  * El `alert` i el `location.reload` eren l'única forma de buidar-ho.
@@ -163,19 +184,19 @@ export function initCacheControl(buttonId = 'clearCacheBtn', message = null) {
     if (!button) return;
 
     button.addEventListener('click', async () => {
+        // Primer es confirma i després es neteja: abans es buidava
+        // l'emmagatzematge i tot seguit es demanava confirmació, de
+        // manera que qui cancel·lava ja ho havia perdut tot.
+        // En un entorn sense `confirm` (una finestra d'Electron, per
+        // exemple) es neteja igual.
+        if (typeof confirm === 'function' && !confirm(message ?? t('settings.cache.confirm'))) {
+            return;
+        }
+
         button.disabled = true;
 
         await clearServiceWorkerCache();
-        try {
-            localStorage.clear();
-        } catch (err) {
-            console.warn('[ula] no s\'ha pogut buidar localStorage', err);
-        }
-
-        if (typeof confirm === 'function' && !confirm(message ?? t('settings.cache.confirm'))) {
-            button.disabled = false;
-            return;
-        }
+        clearUlaStorage();
 
         window.location.reload();
     });

@@ -145,6 +145,21 @@ export function showSkeleton(count = CHUNK_SIZE) {
  * l'apòstrof trenqués l'atribut onclick de la estrella i, amb un nom
  * amb cometa, trenqués tot el markup.
  */
+/**
+ * Només acceptem portades locals sota `assets/images/` amb una extensió
+ * d'imatge coneguda.
+ *
+ * `gameList.js` és dades controlades, però si mai una entrada arribés
+ * amb `javascript:` o `data:` maliciós, `img.src = game.image` el
+ * carregaria. El filtre el deixa fora.
+ */
+function safeCoverImage(src) {
+    if (typeof src !== 'string') return null;
+    if (!src.startsWith('assets/images/')) return null;
+    if (src.includes('..')) return null;
+    return /\.(webp|jpe?g|png|gif|avif)$/i.test(src) ? src : null;
+}
+
 function buildCard(game) {
     const favorite = isFavorite(game.url);
 
@@ -164,9 +179,10 @@ function buildCard(game) {
     const media = document.createElement('div');
     media.className = 'card';
 
-    if (game.image) {
+    const cover = game.image ? safeCoverImage(game.image) : null;
+    if (cover) {
         const img = document.createElement('img');
-        img.src = game.image;
+        img.src = cover;
         img.loading = 'lazy';
         img.decoding = 'async';
         img.alt = '';

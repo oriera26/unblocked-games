@@ -52,14 +52,24 @@ const VOLUME_SRC = new URL('./assets/js/game-volume.js', self.location.href).hre
 /** Marca que deixa el pedaç al document, per no ficar-lo dues vegades. */
 const VOLUME_TAG_ID = '__ulaVolumeTag';
 
-/* Recursos essencials per funcionar offline */
+/* Recursos essencials per funcionar offline.
+
+   Els CSS hi són perquè, sense ells, la primera visita sense xarxa
+   mostraria index.html sense estil. offline.js també, que la pàgina
+   «sense connexió» no pot córrer amb scripts en línia. */
 const PRECACHE_URLS = [
     './',
     './index.html',
     './offline.html',
     './manifest.json',
+    './assets/css/main.css',
+    './assets/css/layout.css',
+    './assets/css/components.css',
+    './assets/css/skeleton.css',
+    './assets/css/responsive.css',
     './assets/js/gameList.js',
     './assets/js/game-volume.js',
+    './assets/js/offline.js',
     './assets/vendor/lucide.min.js',
     './assets/images/orb-blurred.webp',
     './assets/icons/icon-256x256.png',
@@ -75,13 +85,21 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(STATIC_CACHE)
             .then((cache) => {
+                const failures = [];
                 return Promise.all(
-                    PRECACHE_URLS.map((url) => {
-                        return cache.add(url).catch((err) => {
+                    PRECACHE_URLS.map((url) =>
+                        cache.add(url).catch((err) => {
+                            failures.push(url);
                             console.warn('[SW] No s\'ha pogut precachejar:', url, err);
-                        });
-                    })
-                );
+                        })
+                    )
+                ).then(() => {
+                    // Un sol avís agregat: si alguna cosa no s'ha pogut
+                    // precachejar, ha de quedar clar quina.
+                    if (failures.length) {
+                        console.warn(`[SW] precache incomplet (${failures.length}):`, failures.join(', '));
+                    }
+                });
             })
             .then(() => self.skipWaiting())
     );
@@ -339,13 +357,69 @@ self.addEventListener('fetch', (event) => {
 /* ============================================================
    MISSATGES · Neteja de cache des de l'app
    ============================================================ */
+/**
+ * El missatge ve de la pàgina de l'aplicació i no d'un joc.
+ *
+ * Els jocs viuen al mateix origen i també són clients del service
+ * worker: sense aquest filtre, un joc qualsevol podria enviar
+ * `CLEAR_CACHE`, `DOWNLOAD_OFFLINE` o `SKIP_WAITING` i abusar dels
+ * privilegis del SW (DoS buidant caches, forçar una actualització...).
+ * Es descarten els clients la URL dels quals és un joc.
+ */
+function isAppClient(event) {
+    const source = event.source;
+    if (!source || typeof source.url !== 'string' || !source.url) return false;
+
+    let pathname;
+    try {
+        pathname = new URL(source.url).pathname;
+    } catch {
+        return false;
+    }
+
+    return !pathname.startsWith(GAMES_PATH) && !pathname.startsWith(OFFLINE_GAMES_PATH);
+}
+
+/**
+ * L'URL és un joc offline legítim: mateix origen, dins de
+ * `assets/offline/` i un fitxer directe de la carpeta (ni `..` ni
+ * subcarpetes). Així un joc no pot fer que el SW baixi o esborri res
+ * de fora d'aquella carpeta.
+ */
+function isOfflineGameUrl(rawUrl) {
+    if (typeof rawUrl !== 'string') return false;
+
+    let url;
+    try {
+        url = new URL(rawUrl);
+    } catch {
+        return false;
+    }
+
+    if (url.origin !== self.location.origin) return false;
+    if (!url.pathname.startsWith(OFFLINE_GAMES_PATH)) return false;
+    if (url.pathname.includes('..')) return false;
+
+    const rest = url.pathname.slice(OFFLINE_GAMES_PATH.length);
+    return rest.length > 0 && !rest.includes('/');
+}
+
 self.addEventListener('message', (event) => {
     if (!event.data) return;
+
+    // Els missatges privilegiats només s'accepten de la pàgina de
+    // l'aplicació, mai d'un joc.
+    if (!isAppClient(event)) return;
 
     if (event.data.type === 'CLEAR_CACHE') {
         event.waitUntil(
             caches.keys()
-                .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+                .then((keys) =>
+                    // Només les caches d'aquesta aplicació: `caches.keys()`
+                    // les retorna totes les de l'origen i esborrar-les totes
+                    // mataria les d'altres apps que hi visquin.
+                    Promise.all(keys.filter((k) => k.startsWith('ula-')).map((k) => caches.delete(k)))
+                )
                 .then(() => {
                     if (event.source && event.source.postMessage) {
                         event.source.postMessage({ type: 'CACHE_CLEARED' });
@@ -358,11 +432,13 @@ self.addEventListener('message', (event) => {
         self.skipWaiting();
     }
 
-    if (event.data.type === 'DOWNLOAD_OFFLINE' && event.data.url) {
+    if (event.data.type === 'DOWNLOAD_OFFLINE') {
+        if (!isOfflineGameUrl(event.data.url)) return;
         event.waitUntil(downloadOffline(event.data.url, event.source));
     }
 
-    if (event.data.type === 'DELETE_OFFLINE' && event.data.url) {
+    if (event.data.type === 'DELETE_OFFLINE') {
+        if (!isOfflineGameUrl(event.data.url)) return;
         event.waitUntil(caches.open(OFFLINE_CACHE).then((cache) => cache.delete(event.data.url)));
     }
 });

@@ -23,7 +23,7 @@
 
 import { createServer } from 'node:http';
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
-import { extname, join, normalize, resolve, sep } from 'node:path';
+import { basename, extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)));
@@ -62,6 +62,71 @@ const MIME = {
 function mimeOf(filePath) {
     return MIME[extname(filePath).toLowerCase()] ?? null;
 }
+
+/* Capçaleres de seguretat.
+
+   Només s'apliquen aquí (servidor local i Electron). A GitHub Pages no
+   es poden enviar capçaleres: allà l'equivalent és el <meta
+   http-equiv="Content-Security-Policy"> d'index.html, que no cobreix
+   `frame-ancestors`, COOP, COEP ni CORP perquè el meta no els admet.
+
+   `img-src` inclou `data:` i `blob:` per les portades incrustades i els
+   SVG; `style-src` necessita `'unsafe-inline'` pels estils en línia que
+   posa l'aplicació (display del loader, delays de revelat...). */
+function csp(frameAncestors) {
+    return [
+        "default-src 'self'",
+        "script-src 'self'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob:",
+        "media-src 'self' blob:",
+        "font-src 'self'",
+        "frame-src 'self'",
+        "connect-src 'self'",
+        "worker-src 'self' blob:",
+        "object-src 'none'",
+        "base-uri 'none'",
+        "form-action 'none'",
+        `frame-ancestors ${frameAncestors}`
+    ].join('; ');
+}
+
+const APP_SECURITY_HEADERS = {
+    'Content-Security-Policy': csp("'none'"),
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+    'Permissions-Policy': 'geolocation=(), camera=(), microphone=(), usb=()',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    // `credentialless` i no `require-corp`: els jocs es poden servir des
+    // d'un altre origen més endavant i no sempre hi podrem posar CORP.
+    'Cross-Origin-Embedder-Policy': 'credentialless',
+    'Cross-Origin-Resource-Policy': 'same-origin'
+};
+
+/* offline.html es mostra DINS de l'iframe del joc quan un joc no
+   carrega: si portés `frame-ancestors 'none'` com la resta, el navegador
+   es negaria a pintar-la dins de l'aplicació. Per això se serveix amb
+   `'self'`. */
+const FRAMABLE_SECURITY_HEADERS = {
+    ...APP_SECURITY_HEADERS,
+    'Content-Security-Policy': csp("'self'")
+};
+
+/** Capçaleres que toquen a un fitxer servit (offline.html és el cas especial). */
+function securityHeadersFor(filePath) {
+    return basename(filePath).toLowerCase() === 'offline.html'
+        ? FRAMABLE_SECURITY_HEADERS
+        : APP_SECURITY_HEADERS;
+}
+
+/* Els jocs són codi de tercers: una CSP estricta els trencaria (inline,
+   eval, wasm, CDNs propis...). Només se'ls impedeix que una altra web
+   els embedeixi. */
+const GAME_SECURITY_HEADERS = {
+    'Content-Security-Policy': "frame-ancestors 'self'",
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer'
+};
 
 /* Volum: els HTML dels jocs surten amb el pedaç de volum a dins.
 
@@ -119,6 +184,7 @@ function send(response, status, body, headers = {}) {
     response.writeHead(status, {
         'Content-Type': 'text/plain; charset=utf-8',
         'Content-Length': Buffer.byteLength(body),
+        ...APP_SECURITY_HEADERS,
         ...headers
     });
     response.end(body);
@@ -166,7 +232,8 @@ export function createStaticServer() {
             if (existsSync(offline)) {
                 response.writeHead(404, {
                     'Content-Type': MIME['.html'],
-                    'Cache-Control': 'no-cache'
+                    'Cache-Control': 'no-cache',
+                    ...FRAMABLE_SECURITY_HEADERS
                 });
                 if (request.method === 'HEAD') {
                     response.end();
@@ -199,7 +266,7 @@ export function createStaticServer() {
                 'Content-Type': type,
                 'Content-Length': body.length,
                 'Cache-Control': 'no-cache',
-                'X-Content-Type-Options': 'nosniff'
+                ...GAME_SECURITY_HEADERS
             });
 
             if (request.method === 'HEAD') {
@@ -217,9 +284,7 @@ export function createStaticServer() {
             // L'aplicació es desa durant la sessió, però els fitxers es
             // poden tornar a baixar si l'usuari neteja la memòria cau.
             'Cache-Control': 'no-cache',
-            // Un joc carregat dins d'un iframe hauria de poder dibuixar
-            // i llegir del mateix origen que la resta de l'app.
-            'X-Content-Type-Options': 'nosniff'
+            ...securityHeadersFor(file)
         });
 
         if (request.method === 'HEAD') {
