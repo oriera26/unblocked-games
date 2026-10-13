@@ -1,0 +1,74 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // Què es guarda on
+    // =========================================================================
+    //
+    //   users/{uid}                     metadades del compte (correu, nom,
+    //                                   quan s'ha vist per darrer cop)
+    //   users/{uid}/state/{clau}        progrés de l'aplicació: una entrada
+    //                                   per clau `ula*` de localStorage, així
+    //                                   el que és petit va sol i el que és gran
+    //                                   no arrossega la resta
+    //   users/{uid}/saves/{joc}         els saves d'un joc concret, amb el
+    //                                   joc com a identificador
+    //
+    // Tot és per sota de users/{uid}: la regla de dalt és l'única que cal.
+    //
+    // =========================================================================
+    // Per què és segur així i no amb més coses
+    // =========================================================================
+    //
+    //  · El {uid} del camí ha de coincidir amb el del token d'autenticació.
+    //    Un usuari no pot escriure a /users/altraGent/, perquè el seu token
+    //    porta un uid diferent del que demana el camí.
+    //
+    //  · No hi ha cap altra regla permissiva. Si algú inventa una
+    //    col·lecció nova (/secrets, /config, /tmp, el que sigui), cau al
+    //    `match /{document=**}` de baix, que és un `if false` rotund.
+    //    Sense aquesta línia, les col·leccions noves no tindrien regla i
+    //    el comportament per defecte no és pas el que un s'imagina.
+    //
+    //  · L'usuari ha d'estar autenticat. Sense sessió, no es llegeix
+    //    res, ni tan sols lo seu.
+    //
+    // Què NO es pot fer amb regles, i ho recordo perquè és fàcil
+    // d'oblidar:
+    //
+    //  · No es pot limitar la mida del document. Firestore ja posa 1 MiB
+    //    de sostre; les regles no tenen manera de mesurar bytes. Per això
+    //    els saves es parteixen per joc (un document per joc, no un de
+    //    sol per a tot) i hi ha un avís a l'hora d'engreixar-los.
+    //
+    //  · No es pot limitar la freqüència d'escriptura. Els 20.000
+    //    escrits/dia del pla gratuït es gestionen agrupant i retardant
+    //    les escriptures des del client, no des d'aquí.
+    //
+    // =========================================================================
+    // Prova local de les regles
+    // =========================================================================
+    //
+    // Les regles no es poden provar mirant-les: cal un motor que les
+    // avaluï. Aquest és el que fa l'emulador de Firestore (necessita Java):
+    //
+    //   firebase emulators:start --only firestore --project unblocked-games-by-ula
+    //
+    // i llavors, amb dos usuaris de mentida A i B, es comprova que
+    // A pot llegir /users/A i no pot llegir /users/B. Les comprovacions
+    // estructurals que sí que es fan sense navegador són a
+    // `tools/check-firebase.mjs`, que corre amb `node tools/check-all.mjs`.
+    // =========================================================================
+
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Tot lo altre: prohibit. Això ha de ser l'última línia del fitxer.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

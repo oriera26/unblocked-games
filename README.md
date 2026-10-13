@@ -90,6 +90,70 @@ npm run dist:linux      # genera el paquet de Debian/Ubuntu (.deb)
 - **El service worker valida** l'origen dels missatges (`ev.source === window.parent`), que les ordres vinguin de l'aplicació i que les URLs del joc siguin del propi origen.
 - **`offline.html` no carrega res de cap CDN**: tot el seu CSS i JS viu al repositori, de manera que la pàgina d'error funciona sense xarxa.
 
+## ☁️ Compte de Firebase
+
+L'aplicació està preparada per tenir **compte propi** (correu i Google) i per sincronitzar el progrés entre dispositius. Aquesta secció descriu la **configuració del projecte**, que ja existeix i és comprovable localment. La implementació de la sincronització arriba per fases: primer el login, després el progrés de l'aplicació, després els saves dels jocs i, per últim, l'exportació i la importació.
+
+### El projecte
+
+| Camp | Valor |
+| --- | --- |
+| Projecte | `unblocked-games-by-ula` (Unblocked Games by Ula) |
+| Consola | [console.firebase.google.com/project/unblocked-games-by-ula](https://console.firebase.google.com/project/unblocked-games-by-ula) |
+| App web | *Unblocked Games Web* |
+
+### On viu la configuració
+
+| Fitxer | Què hi fa |
+| --- | --- |
+| `assets/js/firebase-config.js` | La configuració pública que el navegador necessita per parlar amb Firebase. Es genera amb `tools/tmp/gen-firebase-config.mjs` a partir de l'sdkconfig de la CLI, i s'hi exporten `FIREBASE_CONFIG`, `IS_CONFIGURED` i `SESSION_MODE`. |
+| `.firebaserc` | El projecte per defecte de la línia d'ordres |
+| `firebase.json` | Apunta a les regles i als índexs de Firestore |
+| `firestore.rules` | Qui pot llegir i escriure. L'única font de seguretat de debò. |
+| `firestore.indexes.json` | Índexs compostos (buit de moment: no cal cap) |
+| `assets/vendor/firebase-*.js` | El SDK de Firebase, baixat del CDN amb els imports reescrits perquè es carregui del **propi origen**. La CSP diu `script-src 'self'`, així que un CDN no aniria. |
+
+> **La clau d'API de `firebase-config.js` és pública per disseny.** És el que el navegador ha de rebre per poder parlar amb els serveis de Firebase, i com que no hi ha cap pas de compilació (GitHub Pages serveix els fitxers tal com estan), viu al repositori. El que protegeix les dades és `firestore.rules`, no amagar aquesta clau.
+>
+> El que **mai no s'ha de tocar** aquest repositori són les credencials de compte de servei (`.json` de `service account`), els secrets del client OAuth i qualsevol token d'accés. `node tools/check-firebase.mjs` ho comprova a cada passada.
+
+### Com es guarden les dades
+
+Tot és per sota de l'usuari, i la regla és que cadascú només toca lo seu:
+
+```
+users/{uid}                 Metadades del compte
+users/{uid}/state/{clau}    Progrés de l'aplicació: una entrada per clau `ula*` de localStorage
+users/{uid}/saves/{joc}     Els saves d'un joc concret, un document per joc
+```
+
+Límits del pla gratuït que cal tenir presents: **1 MiB per document** i **20.000 escriptures al dia**. D'aquí ve que els saves es parteixin per joc i que les escriptures es retardin i s'agrupin en lloc d'escriure a cada canvi.
+
+### Què queda per fer a la consola
+
+Aquests passos **no es poden fer des de la línia d'ordres** i s'han de fer un cop a la [consola de Firebase](https://console.firebase.google.com/project/unblocked-games-by-ula):
+
+1. **Authentication → Sign-in method** → activar **Email/Password** i **Google**.
+2. **Build → Firestore Database → Create database** → mode de producció. El projecte nou surt amb l'API de Cloud Firestore desactivada, així que caldrà prémer el botó que ofereix la pròpia consola per activar-la.
+3. **Authentication → Settings → Authorized domains** → afegir `oriera26.github.io` i `127.0.0.1` (el domini de l'app d'escriptori).
+
+Fins que els proveïdors no estiguin activats, el botó d'inici de sessió es retira sol i l'aplicació continua funcionant exactament com ara.
+
+### Desplegar les regles
+
+```bash
+firebase deploy --only firestore:rules --project unblocked-games-by-ula
+```
+
+### Comprovar que tot quadra
+
+```bash
+node tools/check-firebase.mjs   # només aquesta comprovació
+node tools/check-all.mjs        # ...o amb la resta, ja hi és inclosa
+```
+
+`check-firebase.mjs` comprova que `.firebaserc`, `firebase-config.js` i `firestore.rules` parlin del **mateix projecte**, que les regles tinguin la negativa per defecte (`match /{document=**}` → `if false`) i el control del propietari, que el SDK vendoritzat no depengui de cap URL externa i que no s'hagi escapat cap credencial al repositori.
+
 ## 📁 Estructura
 
 ```
@@ -99,14 +163,19 @@ npm run dist:linux      # genera el paquet de Debian/Ubuntu (.deb)
 ├── service-worker.js     PWA: cau i funcionalitat offline
 ├── manifest.json         Manifest de la PWA
 ├── server.js             Servidor estàtic local
+├── firebase.json         Configuració de Firebase (Firestore)
+├── firestore.rules       Regles de seguretat de Firestore
+├── firestore.indexes.json Índexs de Firestore
+├── .firebaserc           Projecte per defecte de la CLI
 ├── electron/             Codi de l'app d'escriptori
 └── assets/
     ├── css/              Estils
-    ├── js/               Lògica (mòduls ES)
+    ├── js/               Lògica (mòduls ES), inclòs firebase-config.js
     ├── games/            Els jocs (fitxers HTML)
     ├── offline/          Jocs descarregables offline
     ├── images/           Portades dels jocs
     ├── lang/             100 idiomes
+    ├── vendor/           SDK de tercers (lucide, Firebase)
     └── icons/            Icones
 ```
 
