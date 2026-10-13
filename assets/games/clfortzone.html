@@ -2,9 +2,7 @@
 <html lang="en-us">
 
 <head>
-  <base href="https://rawcdn.githack.com/gn-math/assets/main/120/">
   <meta charset="utf-8">
-  <meta name="robots" content="noindex, nofollow">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Fortzone Battle Royale</title>
@@ -34,24 +32,30 @@
   </div>
 
   <script>
-    const buildUrl = "Build";
-    const loaderUrl = buildUrl + "/Frenzy_WebGL.loader.js";
+    const hideFullScreenButton = "";
+    const buildUrl = "https://s3.eponesh.com/games/files/19252";
+    const loaderUrl = buildUrl + "/813700ccfaf64a0a3c57e3aa3166490b.loader.js";
     const config = {
-      dataUrl: buildUrl + "/Frenzy_WebGL.data.unityweb",
-      frameworkUrl: buildUrl + "/Frenzy_WebGL.framework.js.unityweb",
-      codeUrl: buildUrl + "/Frenzy_WebGL.wasm.unityweb",
-      streamingAssetsUrl: "StreamingAssets",
-      companyName: "Fahrenheit Dev",
-      productName: "Fortzone Battle Royale",
-      productVersion: "0.8.5",
+        dataUrl: buildUrl + "/7625b4ca3847c4075a2ad85aaac6a376.data.unityweb",
+        frameworkUrl: buildUrl + "/9469615d6435ea1aae143a4f89202fc6.framework.js.unityweb",
+        codeUrl: buildUrl + "/759fd8d11da3cc3eb31544e697fd27a2.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Fahrenheit Dev",
+        productName: "Fortzone Battle Royale",
+        productVersion: "0.8.9",
     };
+
+    // Вставляем логику снижения devicePixelRatio
+    var ratio = window.devicePixelRatio || 1;
+    ratio *= 0.8; // уменьшаем на 20%
+    config.devicePixelRatio = ratio; 
 
     const container = document.querySelector("#unity-container");
     const canvas = document.querySelector("#unity-canvas");
     const loadingCover = document.querySelector("#loading-cover");
     const progressBarEmpty = document.querySelector("#unity-progress-bar-empty");
     const progressBarFull = document.querySelector("#unity-progress-bar-full");
-    const spinner = document.querySelector('.spinner');
+    const spinner = document.querySelector('.spinner'); 
 
     if (overlayBackgroundColor !== "-" && overlayBackgroundColor !== " " && overlayBackgroundColor !== "")
       canvas.style.background = overlayBackgroundColor;
