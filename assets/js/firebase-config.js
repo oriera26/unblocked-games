@@ -49,8 +49,12 @@ export const IS_CONFIGURED =
  *   'local'   sobreviu a tancar el navegador (el que toca per defecte:
  *             l'usuari espera trobar-se dins en tornar-hi)
  *   'session'  esborra en tancar la finestra
- *   'memory'  només en memòria: la segura, però obliga a entrar-hi a
+ *   'none'    només en memòria: la segura, però obliga a entrar-hi a
  *             cada recàrrega
+ *
+ * Qualsevol altre valor cau a 'local'. El nom ha de ser exactament
+ * aquest: auth.js els fa servir com a claus i un `'memory'` es
+ * desaria al disc sense dir-ho.
  *
  * En qualsevol dels tres la clau de recuperació no surt del dispositiu
  * del mateix usuari: només canvia quant de temps hi és.
