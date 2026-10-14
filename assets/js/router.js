@@ -1,15 +1,15 @@
 /**
  * router.js · quina vista es mostra i com s'hi arriba.
  *
- * L'aplicació té tres vistes: arcade, stats i 404. Abans el canvi es
- * feia amb una funció global i la vista es triava de dues maneres
+ * L'aplicació té quatre vistes: arcade, stats, social i 404. Abans el
+ * canvi es feia amb una funció global i la vista es triava de dues maneres
  * diferents segons qui ho demanés, de manera que l'estat es desincronitzava
  * fàcilment. Aquí hi ha un únic `go()`, i tothom hi passa per ell.
  */
 
 import { VIEW_TRANSITION_MS } from './config.js';
 
-export const VIEWS = ['arcade', 'stats'];
+export const VIEWS = ['arcade', 'stats', 'social'];
 
 /** La vista que hi ha visible ara mateix. */
 let current = 'arcade';

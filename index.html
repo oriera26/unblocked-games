@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="assets/css/layout.css">
     <link rel="stylesheet" href="assets/css/components.css">
     <link rel="stylesheet" href="assets/css/skeleton.css">
+    <link rel="stylesheet" href="assets/css/social.css">
     <!-- Darrer: responsive.css recull tots els punts de tall i ha de poder
          guanyar el que diuen els fitxers de dalt. -->
     <link rel="stylesheet" href="assets/css/responsive.css">
@@ -50,6 +51,7 @@
         <div class="nav-center">
             <span class="nav-link active" id="link-arcade" data-view="arcade" data-i18n="nav.jocs">Jocs</span>
             <span class="nav-link" id="link-stats" data-view="stats" data-i18n="nav.stats">Estadístiques</span>
+            <span class="nav-link" id="link-social" data-view="social" data-i18n="nav.social">Social</span>
         </div>
         <div class="nav-right">
             <div class="search-container" id="searchContainer">
@@ -181,6 +183,14 @@
             </div>
         </section>
 
+        <section id="view-social" class="view">
+            <div class="social-header">
+                <h2 data-i18n="nav.social">Social</h2>
+                <p data-i18n="social.subtitle">La teva colla, les lligues i el xat.</p>
+            </div>
+            <div id="socialRoot"></div>
+        </section>
+
         <section id="view-404" class="view">
             <div class="error-container">
                 <div class="error-emoji">😕</div>
@@ -307,8 +317,27 @@
             <div id="authAccount" hidden>
                 <h2 class="auth-title" data-i18n="auth.session">Sessió iniciada</h2>
                 <p class="auth-email" id="authUserEmail"></p>
+
+                <!-- L'estat de la sincronització. S'actualitza des de
+                     cloud-ui.js i no es toca des de cap altre lloc. -->
+                <p class="auth-sync" id="authSyncStatus" role="status" aria-live="polite"></p>
+
                 <button type="button" class="auth-submit auth-signout" id="authSignOut" data-i18n="auth.action.signout">Tanca la sessió</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Quan el compte i el dispositiu diuen coses diferents de la
+         mateixa cosa: no es pot endevinar què vol l'usuari, i triar-ho
+         nosaltres seria arriscar-nos a llençar progrés. -->
+    <div class="modal" id="syncModal" role="dialog" aria-modal="true" aria-labelledby="syncTitle">
+        <div class="modal-content auth-card">
+            <h2 class="auth-title" id="syncTitle" data-i18n="sync.conflict.title">Progrés en dos llocs</h2>
+            <p class="auth-sync-desc" data-i18n="sync.conflict.desc">Aquest dispositiu i el compte tenen dades diferents. Què vols conservar?</p>
+
+            <button type="button" class="auth-submit" id="syncKeepLocal" data-i18n="sync.conflict.local">Aquest dispositiu</button>
+            <button type="button" class="auth-submit" id="syncKeepRemote" data-i18n="sync.conflict.remote">El del compte</button>
+            <button type="button" class="auth-submit auth-signout" id="syncMerge" data-i18n="sync.conflict.merge">Ajuntar-ho tot</button>
         </div>
     </div>
 

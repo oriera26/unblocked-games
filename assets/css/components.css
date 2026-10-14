@@ -1101,3 +1101,39 @@ td:last-child {
     overflow-wrap: anywhere;
 }
 
+/* --- Sincronització ------------------------------------------------- */
+
+.auth-sync {
+    margin: 0 0 18px;
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+/* Un punt abans del text. Fa que es llegeixi com un estat i no com una
+   frase més, i dóna color sense dependre de cap text. */
+.auth-sync:not(:empty)::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    vertical-align: middle;
+}
+
+.auth-sync[data-state='synced'] { color: var(--accent); opacity: 1; }
+.auth-sync[data-state='error'] { color: #e5484d; opacity: 1; }
+
+.auth-sync-desc {
+    margin: 0 0 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0.8;
+}
+
+/* Cap de les tres tries és dolenta per definició, i per això cap
+   s'hi marca com a principal. */
+#syncModal .auth-submit { margin-bottom: 10px; }
+#syncModal .auth-submit:last-child { margin-bottom: 0; }
+

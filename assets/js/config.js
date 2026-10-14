@@ -38,6 +38,25 @@ export const PLAY_IDLE_MS = 60000;
  */
 export const PLAY_FLUSH_MS = 30000;
 
+/**
+ * Cada quant es compara el que hi ha al dispositiu amb el que hi ha al
+ * compte.
+ *
+ * No és temps real: una ronda cada deu segons fa que el que facis en un
+ * dispositiu arribi a l'altre en menys d'un minut, i en canvi no fa
+ * pagar lectures de Firestore cada vegada que es mou una coma.
+ */
+export const SYNC_INTERVAL_MS = 10000;
+
+/**
+ * Cada quant es torna a llegir IndexedDB sencera.
+ *
+ * Llegeix tots els desats dels jocs, així que es fa menys sovint que la
+ * ronda normal: les partides d'IndexedDB canvien molt menys que les
+ * estadístiques.
+ */
+export const SYNC_IDB_INTERVAL_MS = 40000;
+
 /* --- Categories -------------------------------------------------- */
 
 /**
@@ -93,7 +112,23 @@ export const STORAGE_KEYS = {
      * no pot importar aquest mòdul: el nom de la clau hi està escrit
      * literalment i ha de ser el mateix.
      */
-    gameVolumes: 'ulaGameVolumes'
+    gameVolumes: 'ulaGameVolumes',
+    /**
+     * Metadades de sincronització d'aquest dispositiu (sense sincronitzar).
+     *
+     * Per a cada entrada guardada al compte, què hi havia quan es va
+     * sincronitzar l'últim cop: sense això, en reobrir la pàgina no
+     * hi hauria manera de saber si el que hi ha a local ha canviat des
+     * de llavors i tot valdria com a conflicte.
+     */
+    syncMeta: 'ulaSyncMeta',
+    /**
+     * L'estat de la secció Social (amics, xat, lligues, feed…).
+     *
+     * Viu al dispositiu mentre no hi hagi un backend social connectat;
+     * `social.js` n'és l'únic amo.
+     */
+    social: 'ulaSocial'
 };
 
 /** Volum d'un joc de nou (0–1), quan l'usuari encara no n'ha tocat cap. */

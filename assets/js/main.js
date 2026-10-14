@@ -25,8 +25,11 @@ import {
 } from './ui.js';
 import { hydrateDataLucide } from './icons.js';
 import { initAuth } from './auth.js';
+import { initCloud } from './cloud.js';
+import { initCloudUi } from './cloud-ui.js';
 import { initOffline, onOfflineChange } from './offline-games.js';
 import { currentView, go, startRouter } from './router.js';
+import { initSocial } from './social.js';
 import { close, initGate, isGameOpen, launch } from './player.js';
 import { checkStreak, filters, resetProgress, toggleFavorite } from './state.js';
 import { initCacheControl, initLangSelect, initProgressReset, initSettings, registerServiceWorker } from './settings.js';
@@ -341,6 +344,23 @@ async function start() {
     // pot esperar `whenAuthReady()` sense por de perdre's res.
     initAuth();
 
+    // La sincronització va després del compte: escolta els mateixos
+    // canvis de sessió i, si algú ja hi és, no es perd el primer avís.
+    initCloud();
+    initCloudUi();
+
+    // La secció Social viu de dades locals, però el seu text sí que es
+    // tradueix: es munten les peces després de l'idioma i del compte.
+    initSocial();
+
+    // Quan el compte envia progrés (els punts, els favorits o els
+    // volums), el que es veu ha de canviar també: la graella i les
+    // estadístiques ja estan dibuixades amb els valors d'abans.
+    window.addEventListener('ula:cloud', () => {
+        if (currentView() === 'stats') renderStats();
+        else applyFilters();
+    });
+
     // El routing s'arrenca abans de la primera càrrega perquè l'enllaç
     // profund decideixi quina vista s'obre, i `onArrive` mantingui les
     // estadístiques al dia cada cop que hi arribem.
@@ -354,11 +374,13 @@ async function start() {
 
     applyFilters();
 
-    // Si l'URL demanava les estadístiques i no hi ha jocs visibles,
-    // `applyFilters` no hi arriba, així que les pintem igual.
+    // Si l'URL demanava les estadístiques o el social i no hi ha jocs
+    // visibles, `applyFilters` no hi arriba, així que hi anem igualment.
     if (initial === 'stats') {
         go('stats', { animate: false });
         renderStats();
+    } else if (initial === 'social') {
+        go('social', { animate: false });
     }
 
     // Un cop maquetat, la píldora activa té mides reals i es pot col·locar.

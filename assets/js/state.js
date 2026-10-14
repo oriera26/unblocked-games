@@ -229,3 +229,64 @@ export const filters = {
     category: 'tots',
     search: ''
 };
+
+/* --- Al que arriba del núvol -------------------------------------- */
+
+/**
+ * El valor actual de cada clau de progrés, per comparar-lo amb el que
+ * hi ha al compte.
+ *
+ * `cloud.js` l'usa per calcular el hash d'ara i saber si alguna cosa
+ * ha canviat des de l'última sincronització.
+ *
+ * @returns {Object<string, unknown>}
+ */
+export function readCloudState() {
+    return {
+        [STORAGE_KEYS.favorites]: favorites,
+        [STORAGE_KEYS.stats]: stats,
+        [STORAGE_KEYS.gameVolumes]: gameVolumes
+    };
+}
+
+/**
+ * Aplica un progrés que ve del compte.
+ *
+ * S'actualitza la còpia en memòria (no es torna a llegir el disc) perquè
+ * la resta de l'aplicació segueix mirant aquests mateixos objectes.
+ * Retorna `true` si alguna cosa ha canviat, que és el que decideix si
+ * repintem la pantalla o no.
+ *
+ * @param {string} key  clau d'estat (`STORAGE_KEYS.favorites`, …)
+ * @param {*} value
+ * @returns {boolean}
+ */
+export function applyCloudState(key, value) {
+    if (key === STORAGE_KEYS.favorites) {
+        const clean = Array.isArray(value) ? value.filter((u) => typeof u === 'string') : [];
+        if (JSON.stringify(clean) === JSON.stringify(favorites)) return false;
+        favorites.splice(0, favorites.length, ...clean);
+        writeJson(key, favorites);
+        return true;
+    }
+
+    if (key === STORAGE_KEYS.stats) {
+        const next = withDefaults(value);
+        if (JSON.stringify(next) === JSON.stringify(stats)) return false;
+        for (const name of Object.keys(stats)) delete stats[name];
+        Object.assign(stats, next);
+        writeJson(key, stats);
+        return true;
+    }
+
+    if (key === STORAGE_KEYS.gameVolumes) {
+        const clean = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+        if (JSON.stringify(clean) === JSON.stringify(gameVolumes)) return false;
+        for (const name of Object.keys(gameVolumes)) delete gameVolumes[name];
+        Object.assign(gameVolumes, clean);
+        writeJson(key, gameVolumes);
+        return true;
+    }
+
+    return false;
+}
