@@ -451,3 +451,69 @@
     .soc-chat-fab .soc-chat-fab-label { display: none; }
     .soc-chat-fab { padding: 0; width: 52px; justify-content: center; }
 }
+
+/* ============================================================
+   Porta d'accés al Social (sense sessió / error / carregant)
+   ============================================================ */
+
+.social-gate {
+    display: grid;
+    place-items: center;
+    min-height: 60vh;
+    padding: 24px;
+}
+
+.social-gate-card {
+    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 26px;
+    padding: 40px 36px;
+    text-align: center;
+    max-width: 360px;
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+}
+
+.social-gate-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 28px;
+    margin-bottom: 16px;
+}
+
+.social-gate-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 8px;
+}
+
+.social-gate-text {
+    font-size: 14px;
+    opacity: 0.7;
+    margin: 0 0 22px;
+    line-height: 1.5;
+}
+
+.social-gate-btn {
+    appearance: none;
+    border: 1px solid var(--glass-border-soft);
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 24px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.social-gate-btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+.social-gate-btn:active { transform: scale(0.97); }
