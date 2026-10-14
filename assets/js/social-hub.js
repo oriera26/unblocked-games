@@ -11,7 +11,7 @@
  */
 
 import { openProfile, openSpectator } from './social-modals.js';
-import { findPerson, myName, notify, saveState, state, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, pinFriend, challengeFriend, giftFriend } from './social-store.js';
+import { findPerson, myName, notify, saveState, state, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, pinFriend, challengeFriend, giftFriend, claimGift } from './social-store.js';
 import { activityLabel, byId, countdown, esc, get, hydrate, statusLabel, t, timeAgo } from './social-ui.js';
 
 let root = null;
@@ -351,7 +351,7 @@ export async function handleAction(button) {
             break;
         }
         case 'gift':
-            claimGift(id);
+            await claimGift(id);
             break;
         case 'gift-friend':
             await giftFriend(id);
@@ -384,20 +384,6 @@ export async function handleAction(button) {
     }
 
     return true;
-}
-
-function claimGift(id) {
-    const gift = state.gifts.find((item) => item.id === id);
-    if (!gift || gift.claimed) return;
-
-    if (gift.price) {
-        if (state.giftsBalance < gift.price) return;
-        state.giftsBalance -= gift.price;
-    } else {
-        state.giftsBalance += 10;
-    }
-
-    gift.claimed = true;
 }
 
 function reactToFeed(id, emoji) {

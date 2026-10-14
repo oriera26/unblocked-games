@@ -274,6 +274,8 @@ async function connect(user) {
     watchFriendships(user);
     watchSuggestions(user);
     watchLeague(user);
+    watchFeed(user);
+    watchGifts(user);
 }
 
 /* --- El document del propi usuari ------------------------------- */
@@ -294,6 +296,7 @@ async function ensureProfile(user) {
         streak: stats.streak ?? 0,
         status: 'online',
         game: null,
+        giftsBalance: 0,
         at: Date.now()
     };
 
@@ -340,6 +343,9 @@ function applyMe(data) {
         status: data.status || 'online',
         game: data.game ?? null
     };
+    if (typeof data.giftsBalance === 'number') {
+        state.giftsBalance = data.giftsBalance;
+    }
 }
 
 /* --- Amistats (friendships) ------------------------------------ */
@@ -564,6 +570,140 @@ function watchLeague(user) {
                 xp: e.xp ?? 0
             }))
         };
+        emit();
+    }, () => { /* sense permisos */ });
+
+    unsubs.push(off);
+}
+
+/* --- Feed ------------------------------------------------------ */
+
+/** Afegeix una entrada al feed (crida des del joc o manual). */
+export async function addFeedEntry(entry) {
+    const { api, db } = firestore() ?? {};
+    if (!api || !state.me?.uid) return;
+
+    const feedEntry = {
+        ...entry,
+        actorUid: state.me.uid,
+        actorName: state.me.name,
+        actorIcon: state.me.icon,
+        at: Date.now(),
+        reactions: {}
+    };
+
+    await api.addDoc(api.collection(db, 'feed'), feedEntry);
+}
+
+/**
+ * Escolta les darreres 20 entrades del feed global.
+ * Col·lecció `feed` amb documents: { actorUid, actorName, actorIcon, game, score, at, reactions }
+ */
+function watchFeed(user) {
+    const { api, db } = firestore() ?? {};
+    if (!api) return;
+
+    const q = api.query(
+        api.collection(db, 'feed'),
+        api.orderBy('at', 'desc'),
+        api.limit(20)
+    );
+
+    const off = api.onSnapshot(q, (snap) => {
+        const feed = [];
+        for (const doc of snap.docs) {
+            const data = doc.data() ?? {};
+            feed.push({
+                id: doc.id,
+                actor: data.actorName || 'Jugador',
+                icon: data.actorIcon || '🙂',
+                game: data.game || '',
+                score: data.score,
+                at: data.at ?? Date.now(),
+                reactions: data.reactions ?? {}
+            });
+        }
+        state.feed = feed;
+        emit();
+    }, () => { /* sense permisos */ });
+
+    unsubs.push(off);
+}
+
+/* --- Regals (gifts) -------------------------------------------- */
+
+/** Reclama un regal (gratuït o de pagament). */
+export async function claimGift(giftId) {
+    const { api, db } = firestore() ?? {};
+    if (!api || !state.me?.uid) return;
+
+    const ref = api.doc(db, 'gifts', giftId);
+    await api.runTransaction(api, async (transaction) => {
+        const snap = await transaction.get(ref);
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data.claimedBy?.includes(state.me.uid)) return;
+
+        const price = data.price ?? 0;
+        if (price > 0 && (state.giftsBalance ?? 0) < price) return;
+
+        transaction.update(ref, {
+            claimedBy: api.arrayUnion(state.me.uid),
+            claimedAt: Date.now()
+        });
+
+        if (price > 0) {
+            state.giftsBalance -= price;
+        } else {
+            state.giftsBalance = (state.giftsBalance ?? 0) + 10;
+        }
+    });
+}
+
+/** Afegeix un regal global (per admin o esdeveniments). */
+export async function addGift(gift) {
+    const { api, db } = firestore() ?? {};
+    if (!api) return;
+    await api.addDoc(api.collection(db, 'gifts'), {
+        ...gift,
+        claimedBy: [],
+        createdAt: Date.now()
+    });
+}
+
+/**
+ * Escolta els regals globals no reclamats per l'usuari.
+ * Col·lecció `gifts` amb documents: { label, icon, price, claimedBy[], createdAt }
+ */
+function watchGifts(user) {
+    const { api, db } = firestore() ?? {};
+    if (!api) return;
+
+    const q = api.query(
+        api.collection(db, 'gifts'),
+        api.orderBy('createdAt', 'desc'),
+        api.limit(20)
+    );
+
+    const off = api.onSnapshot(q, (snap) => {
+        const gifts = [];
+        let balance = 0;
+        for (const doc of snap.docs) {
+            const data = doc.data() ?? {};
+            const claimed = data.claimedBy?.includes(user.uid) ?? false;
+            if (!claimed) {
+                gifts.push({
+                    id: doc.id,
+                    label: data.label || 'Regal',
+                    icon: data.icon || '🎁',
+                    price: data.price ?? 0,
+                    claimed: false
+                });
+            }
+            // El balance es calcula a part (podria ser un camp al perfil)
+        }
+        state.gifts = gifts;
+        // El balance es carrega des del perfil
         emit();
     }, () => { /* sense permisos */ });
 
