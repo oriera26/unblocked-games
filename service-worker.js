@@ -2,7 +2,7 @@
    SERVICE WORKER · ulaGames
    ============================================================ */
 
-const CACHE_VERSION = 'ula-v1.6.1';
+const CACHE_VERSION = 'ula-v1.6.2';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const GAMES_CACHE = CACHE_VERSION + '-games';
 const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
@@ -367,7 +367,11 @@ self.addEventListener('fetch', (event) => {
                     return response;
                 })
                 .catch(() => {
-                    return caches.match(request).then((cached) => {
+                    // Fallback: busquem al cache sense query string (per SPA amb routing client)
+                    const baseUrl = new URL(request.url);
+                    baseUrl.search = '';
+                    baseUrl.hash = '';
+                    return caches.match(baseUrl.toString()).then((cached) => {
                         return cached || caches.match(rel('./offline.html'));
                     });
                 })
