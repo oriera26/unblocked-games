@@ -287,7 +287,35 @@ function replaceGameIframe() {
 
 /* --- Tancament ----------------------------------------------------- */
 
+/**
+ * Sur de la pantalla completa quan es tanca el joc.
+ *
+ * El botó de sortir-ne és dins del modal: si el modal es tanca i la
+ * finestra continua a tota pàgina, el que queda a la pantalla és un
+ * contingut amagat i no hi ha cap control per sortir-ne. Per això el
+ * tancament sempre ho deixa com estava.
+ *
+ * Només es toca el que és del modal. Un joc pot haver demanat la
+ * pantalla completa per ell mateix, i si l'element és una altra cosa
+ * (un vídeo del joc, per exemple) allò és cosa seva, no nostra.
+ */
+function exitFullscreen() {
+    const element = document.fullscreenElement;
+    if (!element) return;
+
+    // El joc demana pantalla completa a l'iframe, que és una finestra
+    // altra: `closest` hi busca des de dins, i el document del joc no
+    // pot veure el del pare.
+    if (typeof element.closest !== 'function') return;
+    if (!element.closest('#gameModal')) return;
+
+    // Sense `await` i amb `catch`: el navegador pot rebutjar la sortida
+    // i això no ha d'impedir tancar el joc.
+    document.exitFullscreen().catch(() => {});
+}
+
 export function close() {
+    exitFullscreen();
     cancelTimers();
     hideLoader();
     // Si l'usuari tanca amb l'avís a pantalla, el joc pendent es
