@@ -8,14 +8,16 @@
          que el <meta> no admet; al servidor local i a Electron, a més,
          s'hi afegeixen COOP/CORP.
 
-         Els quatre dominis de Firebase que hi surten són els mínims perquè
-         el compte funcioni: `identitytoolkit` (entrar i crear compte),
+         Els dominis de Firebase que hi surten són els mínims perquè el
+         compte funcioni: `identitytoolkit` (entrar i crear compte),
          `securetoken` (renovar el token), `firestore` (la sincronització)
          i el domini propi del projecte, que és on viu l'iframe del popup
-         de Google. Si el domini del projecte canviés, això i
-         firebase-config.js haurien de canviar alhora:
-         tools/check-firebase.mjs ho comprova. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; frame-src 'self' https://unblocked-games-by-ula.firebaseapp.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://unblocked-games-by-ula.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+         de Google. A `script-src` també hi ha `apis.google.com`: el SDK
+         en baixa el carregador de Google (`gapi`) dins de la nostra
+         pàgina abans d'obrir el popup, i sense ell el popup ni s'obre.
+         Si el domini del projecte canviés, això i firebase-config.js
+         haurien de canviar alhora: tools/check-firebase.mjs ho comprova. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; frame-src 'self' https://unblocked-games-by-ula.firebaseapp.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://unblocked-games-by-ula.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>UnblockedGames by Ula</title>
     <script src="assets/vendor/lucide.min.js"></script>
     <link rel="icon" type="image/x-icon" href="assets/icons/icon.ico">

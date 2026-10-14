@@ -104,10 +104,20 @@ const AUTH_ORIGINS = [
     AUTH_DOMAIN
 ];
 
+/**
+ * D'on baixa el SDK el carregador de Google (`gapi`).
+ *
+ * El popup de Google no és només una finestra: abans d'obrir-la, el SDK
+ * carrega `https://apis.google.com/js/api.js` DINS de la nostra pàgina i
+ * fa servir el seu `gapi.iframes` per parlar amb l'iframe del projecte.
+ * Sense aquest domini a `script-src`, el popup ni s'arriba a obrir.
+ */
+const GAPI_ORIGIN = 'https://apis.google.com';
+
 function csp(frameAncestors) {
     return [
         "default-src 'self'",
-        "script-src 'self'",
+        `script-src 'self' ${GAPI_ORIGIN}`,
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: blob:",
         "media-src 'self' blob:",

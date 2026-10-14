@@ -84,7 +84,7 @@ npm run dist:linux      # genera el paquet de Debian/Ubuntu (.deb)
 
 ## 🔒 Seguretat
 
-- **Política de contingut (CSP) estricta** en tota l'aplicació: només s'executa codi propi (`script-src 'self'`), sense `object`, sense `base` i sense enviaments de formularis. A GitHub Pages s'aplica mitjançant el `<meta http-equiv="Content-Security-Policy">` d'`index.html`; al servidor local i a Electron, a més, s'hi envien capçaleres HTTP (`server.js`). L'única escletxa són els quatre dominis de Firebase que necessita el compte (vegeu «Compte de Firebase»), tots explícits i comprovats per `tools/check-firebase.mjs`.
+- **Política de contingut (CSP) estricta** en tota l'aplicació: només s'executa codi propi (`script-src 'self'`), sense `object`, sense `base` i sense enviaments de formularis. A GitHub Pages s'aplica mitjançant el `<meta http-equiv="Content-Security-Policy">` d'`index.html`; al servidor local i a Electron, a més, s'hi envien capçaleres HTTP (`server.js`). L'única escletxa són els dominis que necessita el compte —els quatre de Firebase i `apis.google.com` per al carregador del popup— (vegeu «Compte de Firebase»), tots explícits i comprovats per `tools/check-firebase.mjs`.
 - **Capçaleres HTTP** al servidor local i a Electron: `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` i `Cross-Origin-Resource-Policy`. La COOP és **`same-origin-allow-popups`** (no `same-origin`): la finestra del popup de Google ha de poder parlar amb `window.opener`. **No** s'envia `Cross-Origin-Embedder-Policy`: un document amb COEP només pot incrustar marcs que també en portin i faria fallar l'iframe del joc.
 - **Els jocs comparteixen el mateix origen que l'aplicació** (cal perquè el pedaç de volum i l'`storage` funcionin). Per això **no hi ha un aïllament real**: l'iframe porta un `sandbox` que limita navegacions de la finestra de dalt, popups i descàrregues fora de control, però un joc pot treure-se'l amb `window.frameElement`. És una mitigació d'accidents, no una frontera de seguretat.
 - **El service worker valida** l'origen dels missatges (`ev.source === window.parent`), que les ordres vinguin de l'aplicació i que les URLs del joc siguin del propi origen.
@@ -131,11 +131,12 @@ El compte viu a **`assets/js/auth.js`** i no toca res més: la resta de mòduls 
 
 Si `firebase-config.js` digués `IS_CONFIGURED: false`, `initAuth()` esborra el botó i el modal i la pàgina funciona igual que sempre.
 
-**Tres coses de la CSP que són per al compte** (i que `check-firebase.mjs` comprova que parlin del mateix projecte que `firebase-config.js`):
+**Quatre coses de la CSP que són per al compte** (i que `check-firebase.mjs` comprova que parlin del mateix projecte que `firebase-config.js`):
 
-- `frame-src` i `connect-src` incorporen el domini del projecte (`<projectId>.firebaseapp.com`), que és on viu l'iframe que fa de pont amb el popup.
+- `script-src` deixa passar **`apis.google.com`**: abans d'obrir el popup, el SDK baixa d'aquí el carregador de Google (`gapi`) *dins de la nostra pàgina* i en fa servir el `gapi.iframes` per parlar amb l'iframe del projecte. Sense això la consola diu «violates… script-src» i el popup ni s'arriba a obrir.
+- `frame-src` i `connect-src` incorporen el domini del projecte (`<projectId>.firebaseapp.com`), que és on viu l'iframe del popup.
 - `connect-src` també deixa passar `identitytoolkit.googleapis.com` (entrar i crear compte), `securetoken.googleapis.com` (renovar el token) i `firestore.googleapis.com` (la sincronització de les fases següents).
-- `Cross-Origin-Opener-Policy` passa de `same-origin` a **`same-origin-allow-popups`**: amb `same-origin`, el popup de Google arriba sense accés a `window.opener` i la resposta no torna mai.
+- `Cross-Origin-Opener-Policy` passa de `same-origin` a **`same-origin-allow-popups`**: amb `same-origin`, el popup de Google arriba sense accés a `window.opener` i la resposta no torna mai. (Amb aquesta COOP, el navegador registra un avís «would block the `window.closed` call» mentre el popup és a Google: és del sondeig del SDK i no afecta el flux, que es tanca per `postMessage`.)
 
 A l'**app d'escriptori**, a més, `electron/main.js` té una **llista blanca** per al popup d'entrada (el domini del projecte, `accounts.google.com`, `apis.google.com` i `gstatic.com`): `signInWithPopup` obre una finestra filla de debò, i al navegador del sistema la resposta no tornaria. La resta d'enllaços segueixen obrint-se fora, com sempre.
 

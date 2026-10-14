@@ -128,6 +128,10 @@ function findUi() {
 function setMode(create) {
     if (!ui) return;
 
+    // Aquesta és l'única cosa que decideix si el formulari crea o entra:
+    // els textos de sota només són el que es veu.
+    signUp = create;
+
     ui.title.dataset.i18n = create ? 'auth.title.create' : 'auth.title';
     ui.submit.dataset.i18n = create ? 'auth.action.create' : 'auth.action.signin';
     ui.toggle.dataset.i18n = create ? 'auth.link.signin' : 'auth.link.create';
