@@ -24,6 +24,7 @@ import {
     updateOfflineCard
 } from './ui.js';
 import { hydrateDataLucide } from './icons.js';
+import { initAuth } from './auth.js';
 import { initOffline, onOfflineChange } from './offline-games.js';
 import { currentView, go, startRouter } from './router.js';
 import { close, initGate, isGameOpen, launch } from './player.js';
@@ -328,6 +329,11 @@ async function start() {
     initSettings();
     initCacheControl();
     onLangChange(onLanguageChange);
+
+    // El compte, després de l'idioma (el seu modal es tradueix com la
+    // resta) i abans d'arrencar el routing: el que pengi de la sessió
+    // pot esperar `whenAuthReady()` sense por de perdre's res.
+    initAuth();
 
     // El routing s'arrenca abans de la primera càrrega perquè l'enllaç
     // profund decideixi quina vista s'obre, i `onArrive` mantingui les

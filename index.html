@@ -6,8 +6,16 @@
     <!-- Política de seguretat per a GitHub Pages, que no permet capçaleres
          HTTP. És la mateixa que envia server.js tret de `frame-ancestors`,
          que el <meta> no admet; al servidor local i a Electron, a més,
-         s'hi afegeixen COOP/CORP. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; frame-src 'self'; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+         s'hi afegeixen COOP/CORP.
+
+         Els quatre dominis de Firebase que hi surten són els mínims perquè
+         el compte funcioni: `identitytoolkit` (entrar i crear compte),
+         `securetoken` (renovar el token), `firestore` (la sincronització)
+         i el domini propi del projecte, que és on viu l'iframe del popup
+         de Google. Si el domini del projecte canviés, això i
+         firebase-config.js haurien de canviar alhora:
+         tools/check-firebase.mjs ho comprova. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; frame-src 'self' https://unblocked-games-by-ula.firebaseapp.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://unblocked-games-by-ula.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>UnblockedGames by Ula</title>
     <script src="assets/vendor/lucide.min.js"></script>
     <link rel="icon" type="image/x-icon" href="assets/icons/icon.ico">
@@ -91,6 +99,16 @@
                     </div>
                 </div>
             </div>
+
+            <!-- El compte. Viu aquí, al costat de la configuració, perquè
+                 és una cosa de l'usuari i no del joc. `auth.js` el treu
+                 del tot si Firebase no està configurat, i quan hi ha
+                 sessió hi posa la inicial del correu en lloc de la icona.
+                 Porta la classe `settings-btn` per heretar-ne l'estil i
+                 els ajustos de mòbil i de mode rendiment. -->
+            <button class="settings-btn account-btn" id="accountBtn" type="button" aria-label="Compte" data-i18n-aria="auth.aria" aria-haspopup="dialog" aria-expanded="false">
+                <span id="accountIcon" class="ula-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            </button>
 
             <button class="theme-btn" id="themeBtn" aria-label="Canviar tema" data-i18n-aria="theme.aria">
                 <!-- Contenidor, no l'SVG mateix: el canvi de tema substitueix
@@ -218,6 +236,66 @@
                     <p class="mobile-gate-text" data-i18n="gate.text">En jugar des d'un mòbil o una tauleta hi poden haver errors i alguns jocs no responen bé al tacte.</p>
                     <button type="button" class="mobile-gate-accept" id="gateAccept" data-i18n="gate.accept">Entesos</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- El compte: entrar, crear-lo i sortir. El panell que es veu depèn
+         de si hi ha sessió, i el commuta auth.js. Si Firebase no està
+         configurat, auth.js treu el botó del nav i això no s'arriba a
+         obrir mai; no cal amagar-ho perquè `.modal` ja neix amb
+         display:none.
+
+         El botó de tancar reutilitza l'estil dels botons rodons del joc:
+         mateixa peça visual, mateix lloc. -->
+    <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <div class="modal-content auth-card">
+            <button type="button" class="close-modal" id="authClose" aria-label="Tancar" data-i18n-aria="modal.close">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+
+            <!-- Sense sessió: el formulari. -->
+            <div id="authGuest">
+                <h2 class="auth-title" id="authTitle" data-i18n="auth.title">Inicia sessió</h2>
+
+                <!-- `novalidate`: el correu el comprova el navegador amb
+                     `type="email"`, però el missatge que es veu és el
+                     nostre `#authError`, que sí que està traduït. -->
+                <form id="authForm" novalidate>
+                    <label class="auth-label" for="authEmail" data-i18n="auth.email">Correu electrònic</label>
+                    <input class="auth-input" type="email" id="authEmail" name="email" autocomplete="email" spellcheck="false" required>
+
+                    <label class="auth-label" for="authPassword" data-i18n="auth.password">Contrasenya</label>
+                    <input class="auth-input" type="password" id="authPassword" name="password" autocomplete="current-password" required>
+
+                    <!-- Els errors surten aquí, en text: un avís que
+                         només canvia de color no diu res a qui no el veu. -->
+                    <p class="auth-error" id="authError" role="alert" hidden></p>
+
+                    <button type="submit" class="auth-submit" id="authSubmit" data-i18n="auth.action.signin">Entrar</button>
+                </form>
+
+                <button type="button" class="auth-link" id="authToggle" data-i18n="auth.link.create">Crea'n un de nou</button>
+
+                <button type="button" class="auth-google" id="authGoogle">
+                    <!-- La G oficial, amb els quatre colors de marca. És
+                         l'única cosa d'aquesta pantalla que no és del
+                         tema: la guia de Google ho demana així. -->
+                    <svg class="auth-google-ico" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    <span data-i18n="auth.google">Continua amb Google</span>
+                </button>
+            </div>
+
+            <!-- Amb sessió. -->
+            <div id="authAccount" hidden>
+                <h2 class="auth-title" data-i18n="auth.session">Sessió iniciada</h2>
+                <p class="auth-email" id="authUserEmail"></p>
+                <button type="button" class="auth-submit auth-signout" id="authSignOut" data-i18n="auth.action.signout">Tanca la sessió</button>
             </div>
         </div>
     </div>

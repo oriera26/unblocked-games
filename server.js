@@ -78,7 +78,32 @@ function mimeOf(filePath) {
 
    `img-src` inclou `data:` i `blob:` per les portades incrustades i els
    SVG; `style-src` necessita `'unsafe-inline'` pels estils en línia que
-   posa l'aplicació (display del loader, delays de revelat...). */
+   posa l'aplicació (display del loader, delays de revelat...).
+
+   Els dominis de Firebase són els del compte: vegeu AUTH_ORIGINS, aquí
+   sota. Són els mateixos que porta el <meta> de index.html, perquè a
+   GitHub Pages no hi ha capçaleres; tools/check-firebase.mjs comprova
+   que tots dos parlin del projecte de firebase-config.js. */
+
+/**
+ * El domini propi del projecte: és on viu l'iframe que fa de pont amb
+ * el popup de Google.
+ */
+const AUTH_DOMAIN = 'https://unblocked-games-by-ula.firebaseapp.com';
+
+/**
+ * Els orígens del projecte de Firebase que necessita el compte.
+ *
+ * `identitytoolkit` és entrar i crear compte; `securetoken`, renovar el
+ * token; `firestore`, la sincronització.
+ */
+const AUTH_ORIGINS = [
+    'https://identitytoolkit.googleapis.com',
+    'https://securetoken.googleapis.com',
+    'https://firestore.googleapis.com',
+    AUTH_DOMAIN
+];
+
 function csp(frameAncestors) {
     return [
         "default-src 'self'",
@@ -87,8 +112,8 @@ function csp(frameAncestors) {
         "img-src 'self' data: blob:",
         "media-src 'self' blob:",
         "font-src 'self'",
-        "frame-src 'self'",
-        "connect-src 'self'",
+        `frame-src 'self' ${AUTH_DOMAIN}`,
+        `connect-src 'self' ${AUTH_ORIGINS.join(' ')}`,
         "worker-src 'self' blob:",
         "object-src 'none'",
         "base-uri 'none'",
@@ -102,7 +127,13 @@ const APP_SECURITY_HEADERS = {
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer',
     'Permissions-Policy': 'geolocation=(), camera=(), microphone=(), usb=()',
-    'Cross-Origin-Opener-Policy': 'same-origin',
+    /* `same-origin` deixaria el popup de Google sense accés a
+       `window.opener`, i sense això el pont que retorna la resposta no
+       pot parlar amb la pàgina: el popup s'obre, però en tornar no passa
+       res. `same-origin-allow-popups` és la mateixa protecció, amb
+       l'excepció que els popups oberts per la pròpia pàgina sí que hi
+       tenen accés. */
+    'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     'Cross-Origin-Resource-Policy': 'same-origin'
 };
 

@@ -84,8 +84,8 @@ npm run dist:linux      # genera el paquet de Debian/Ubuntu (.deb)
 
 ## 🔒 Seguretat
 
-- **Política de contingut (CSP) estricta** en tota l'aplicació: només s'executa codi propi (`script-src 'self'`), sense `object`, sense `base` i sense enviaments de formularis. A GitHub Pages s'aplica mitjançant el `<meta http-equiv="Content-Security-Policy">` d'`index.html`; al servidor local i a Electron, a més, s'hi envien capçaleres HTTP (`server.js`).
-- **Capçaleres HTTP** al servidor local i a Electron: `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` i `Cross-Origin-Resource-Policy`. **No** s'envia `Cross-Origin-Embedder-Policy`: un document amb COEP només pot incrustar marcs que també en portin i faria fallar l'iframe del joc.
+- **Política de contingut (CSP) estricta** en tota l'aplicació: només s'executa codi propi (`script-src 'self'`), sense `object`, sense `base` i sense enviaments de formularis. A GitHub Pages s'aplica mitjançant el `<meta http-equiv="Content-Security-Policy">` d'`index.html`; al servidor local i a Electron, a més, s'hi envien capçaleres HTTP (`server.js`). L'única escletxa són els quatre dominis de Firebase que necessita el compte (vegeu «Compte de Firebase»), tots explícits i comprovats per `tools/check-firebase.mjs`.
+- **Capçaleres HTTP** al servidor local i a Electron: `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` i `Cross-Origin-Resource-Policy`. La COOP és **`same-origin-allow-popups`** (no `same-origin`): la finestra del popup de Google ha de poder parlar amb `window.opener`. **No** s'envia `Cross-Origin-Embedder-Policy`: un document amb COEP només pot incrustar marcs que també en portin i faria fallar l'iframe del joc.
 - **Els jocs comparteixen el mateix origen que l'aplicació** (cal perquè el pedaç de volum i l'`storage` funcionin). Per això **no hi ha un aïllament real**: l'iframe porta un `sandbox` que limita navegacions de la finestra de dalt, popups i descàrregues fora de control, però un joc pot treure-se'l amb `window.frameElement`. És una mitigació d'accidents, no una frontera de seguretat.
 - **El service worker valida** l'origen dels missatges (`ev.source === window.parent`), que les ordres vinguin de l'aplicació i que les URLs del joc siguin del propi origen.
 - **`offline.html` no carrega res de cap CDN**: tot el seu CSS i JS viu al repositori, de manera que la pàgina d'error funciona sense xarxa.
@@ -117,6 +117,28 @@ L'aplicació està preparada per tenir **compte propi** (correu i Google) i per 
 >
 > El que **mai no s'ha de tocar** aquest repositori són les credencials de compte de servei (`.json` de `service account`), els secrets del client OAuth i qualsevol token d'accés. `node tools/check-firebase.mjs` ho comprova a cada passada.
 
+### Com funciona el compte
+
+El compte viu a **`assets/js/auth.js`** i no toca res més: la resta de mòduls s'hi enganxen amb `onAuthChange` i esperen `whenAuthReady()` abans de decidir què fan amb les dades del disc (fins que Firebase no diu qui hi ha, no se sap si el que hi ha a `localStorage` és d'un convidat o d'un compte).
+
+| Peça | Què fa |
+| --- | --- |
+| El botó del nav | Reutilitza l'estil del botó de configuració (`settings-btn account-btn`). Sense sessió hi surt la icona de sempre; amb sessió, s'omple amb l'accent i hi surt **la inicial del correu** (no la foto de Google: no cal afegir `googleusercontent` a la CSP per una imatge de 32 px). |
+| El modal | Un sol modal amb dos panells, `#authGuest` i `#authAccount`, que es mostren segons si hi ha sessió. El formulari commuta entre **entrar** i **crear compte** canviant la clau `data-i18n` de cada element, així que el canvi d'idioma el segueix gestionant `i18n.js` com a tota la pàgina. |
+| El SDK | **Es carrega mandrós.** Només es baixa (uns 300 kB) si hi ha el rastre d'una sessió anterior (`localStorage` → `ulaSignedIn`) o quan algú prem un botó d'entrar. Qui no té compte no el paga mai. |
+| On viu la sessió | Ho diu `SESSION_MODE` a `firebase-config.js`: `local` (per defecte: qui entra segueix dins en tornar), `session` (es tanca en tancar la pestanya) o `none` (només memòria). |
+| Errors | Es tradueixen, no s'ensenyen en cru: `auth.*` → `auth.err.*` segons el codi de Firebase. Tancar el popup de Google a mig camí no diu res, perquè no és cap error. |
+
+Si `firebase-config.js` digués `IS_CONFIGURED: false`, `initAuth()` esborra el botó i el modal i la pàgina funciona igual que sempre.
+
+**Tres coses de la CSP que són per al compte** (i que `check-firebase.mjs` comprova que parlin del mateix projecte que `firebase-config.js`):
+
+- `frame-src` i `connect-src` incorporen el domini del projecte (`<projectId>.firebaseapp.com`), que és on viu l'iframe que fa de pont amb el popup.
+- `connect-src` també deixa passar `identitytoolkit.googleapis.com` (entrar i crear compte), `securetoken.googleapis.com` (renovar el token) i `firestore.googleapis.com` (la sincronització de les fases següents).
+- `Cross-Origin-Opener-Policy` passa de `same-origin` a **`same-origin-allow-popups`**: amb `same-origin`, el popup de Google arriba sense accés a `window.opener` i la resposta no torna mai.
+
+A l'**app d'escriptori**, a més, `electron/main.js` té una **llista blanca** per al popup d'entrada (el domini del projecte, `accounts.google.com`, `apis.google.com` i `gstatic.com`): `signInWithPopup` obre una finestra filla de debò, i al navegador del sistema la resposta no tornaria. La resta d'enllaços segueixen obrint-se fora, com sempre.
+
 ### Com es guarden les dades
 
 Tot és per sota de l'usuari, i la regla és que cadascú només toca lo seu:
@@ -137,7 +159,7 @@ Aquests passos **no es poden fer des de la línia d'ordres** i s'han de fer un c
 2. **Build → Firestore Database → Create database** → mode de producció. El projecte nou surt amb l'API de Cloud Firestore desactivada, així que caldrà prémer el botó que ofereix la pròpia consola per activar-la.
 3. **Authentication → Settings → Authorized domains** → afegir `oriera26.github.io` i `127.0.0.1` (el domini de l'app d'escriptori).
 
-Fins que els proveïdors no estiguin activats, el botó d'inici de sessió es retira sol i l'aplicació continua funcionant exactament com ara.
+Fins que els proveïdors no estiguin activats, els intents d'entrar donaran error («Error de sessió») i la resta de l'aplicació continuarà funcionant exactament com ara, sense compte i sense sincronitzar res.
 
 ### Desplegar les regles
 
@@ -152,7 +174,7 @@ node tools/check-firebase.mjs   # només aquesta comprovació
 node tools/check-all.mjs        # ...o amb la resta, ja hi és inclosa
 ```
 
-`check-firebase.mjs` comprova que `.firebaserc`, `firebase-config.js` i `firestore.rules` parlin del **mateix projecte**, que les regles tinguin la negativa per defecte (`match /{document=**}` → `if false`) i el control del propietari, que el SDK vendoritzat no depengui de cap URL externa i que no s'hagi escapat cap credencial al repositori.
+`check-firebase.mjs` comprova que `.firebaserc`, `firebase-config.js` i `firestore.rules` parlin del **mateix projecte**, que les regles tinguin la negativa per defecte (`match /{document=**}` → `if false`) i el control del propietari, que el SDK vendoritzat no depengui de cap URL externa, que la CSP d'`index.html` i la de `server.js` deixin passar els dominis del projecte, i que no s'hagi escapat cap credencial al repositori.
 
 ## 📁 Estructura
 
@@ -170,7 +192,7 @@ node tools/check-all.mjs        # ...o amb la resta, ja hi és inclosa
 ├── electron/             Codi de l'app d'escriptori
 └── assets/
     ├── css/              Estils
-    ├── js/               Lògica (mòduls ES), inclòs firebase-config.js
+    ├── js/               Lògica (mòduls ES): auth.js, firebase-config.js…
     ├── games/            Els jocs (fitxers HTML)
     ├── offline/          Jocs descarregables offline
     ├── images/           Portades dels jocs

@@ -932,3 +932,172 @@ td:last-child {
 .mobile-gate-accept:hover { transform: translateY(-1px); }
 .mobile-gate-accept:active { transform: scale(0.98); }
 .mobile-gate-accept:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* --- EL COMPTE --- */
+/* El botó viu al nav, amb la classe `.settings-btn` per heretar-ne la
+   forma i els ajustos de mòbil. Aquí només hi ha el que és seu. */
+
+/* Amb la sessió oberta, el botó s'encén com el de configuració quan el
+   desplegable és obert: és l'única cosa de la pantalla que diu que hi
+   ha un compte. */
+.account-btn.is-signed-in {
+    background: var(--accent);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: white;
+    opacity: 1;
+    box-shadow: 0 4px 14px rgba(var(--glow-color-rgb), 0.30);
+}
+.account-btn.is-signed-in:hover { background: var(--accent); }
+
+/* La inicial del correu, quan hi ha sessió: substitueix la icona dins
+   del `.ula-icon`, que és una caixa d'1em feta per a un SVG i amb
+   `line-height: 0` perquè no sobri espai. Amb text, això s'ha de
+   desfer. */
+.ula-icon.ula-initial {
+    width: auto;
+    height: auto;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* La targeta del compte, a diferència de la del joc, no ha d'ocupar la
+   pantalla: és un formulari de quatre coses. El fons és el dels
+   desplegables i no el vidre translúcid, perquè aquí hi ha camps per
+   llegir i sobre una portada el text es perdria. */
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    max-height: calc(100% - 30px);
+    overflow-y: auto;
+    padding: 26px 24px;
+    background: var(--glass-menu-bg);
+}
+
+.auth-title {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin-bottom: 18px;
+    /* El botó de tancar és a dalt a la dreta, absolut: sense això un
+       títol llarg hi passaria per sota. */
+    padding-right: 40px;
+}
+
+.auth-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.55;
+    margin-bottom: 6px;
+}
+
+.auth-input {
+    display: block;
+    width: 100%;
+    background: var(--glass-bg-soft);
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 12px;
+    padding: 11px 13px;
+    margin-bottom: 14px;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 14px;
+}
+.auth-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(var(--glow-color-rgb), 0.20);
+}
+
+/* L'error és text, no un color: qui no distingeix el vermell l'ha de
+   poder llegir igualment. */
+.auth-error {
+    margin: -4px 0 12px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #ff453a;
+}
+
+.auth-submit {
+    display: block;
+    width: 100%;
+    background: var(--accent);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 14px;
+    padding: 12px 18px;
+    color: white;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.auth-submit:hover { transform: translateY(-1px); }
+.auth-submit:active { transform: scale(0.99); }
+.auth-submit:disabled { opacity: 0.55; cursor: default; transform: none; }
+
+/* Sortir no és el que ve a fer ningú: mateix botó, sense cridar. */
+.auth-signout {
+    width: 100%;
+    background: var(--glass-bg-soft);
+    border-color: var(--glass-border-soft);
+    color: var(--text-main);
+}
+.auth-signout:hover { background: var(--glass-bg); transform: none; }
+
+.auth-link {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px;
+    background: none;
+    border: none;
+    border-radius: 10px;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.auth-link:hover { text-decoration: underline; }
+.auth-link:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
+
+/* El botó de Google va blanc de fàbrica: les normes de la marca no
+   permeten canviar-li el fons ni el logo. El text sí que és el del
+   tema, perquè no forma part del logotip. */
+.auth-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 14px;
+    background: #ffffff;
+    color: #1d1d1f;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    border-radius: 14px;
+    padding: 11px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.auth-google:hover { transform: translateY(-1px); }
+.auth-google:active { transform: scale(0.99); }
+.auth-google:disabled { opacity: 0.55; cursor: default; transform: none; }
+.auth-google-ico { width: 18px; height: 18px; flex: none; }
+
+.auth-email {
+    margin: 0 0 18px;
+    font-size: 14px;
+    opacity: 0.75;
+    /* Un correu pot ser llarg: que es parteixi abans que no pas que
+       faci créixer la targeta i desbordi. */
+    overflow-wrap: anywhere;
+}
+

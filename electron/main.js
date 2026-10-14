@@ -36,6 +36,26 @@ const PREFERRED_PORT = 3131;
 const WINDOW_ICON = join(SITE, 'assets', 'icons', 'icon-512x512.png');
 const SMOKE = process.argv.includes('--smoke');
 
+/**
+ * Els llocs que el popup d'entrada necessita visitar.
+ *
+ * `signInWithPopup` obre una finestra filla: primer el domini del
+ * projecte, que fa de pont, i després el propi Google. Han de viure dins
+ * de l'app perquè la finestra ha de poder parlar amb `window.opener`; al
+ * navegador del sistema, la resposta no tornaria mai. La resta
+ * d'enllaços segueixen sortint fora, com sempre.
+ */
+const AUTH_POPUP_PREFIXES = [
+    'https://unblocked-games-by-ula.firebaseapp.com/',
+    'https://accounts.google.com/',
+    'https://apis.google.com/',
+    'https://content.googleapis.com/',
+    'https://ssl.gstatic.com/',
+    'https://www.gstatic.com/'
+];
+
+const isAuthPopup = (url) => AUTH_POPUP_PREFIXES.some((prefix) => url.startsWith(prefix));
+
 let mainWindow = null;
 let site = null;
 
@@ -82,6 +102,22 @@ function createWindow() {
     // navegador del sistema; el que sigui d'aquest servidor, dins l'app.
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
         if (url.startsWith(site.url)) return { action: 'allow' };
+
+        // El popup d'entrada és l'excepció de la regla de sobre:
+        // necessita una finestra filla de debò, amb mida de formulari,
+        // o no es podria triar cap compte.
+        if (isAuthPopup(url)) {
+            return {
+                action: 'allow',
+                overrideBrowserWindowOptions: {
+                    width: 520,
+                    height: 660,
+                    autoHideMenuBar: true,
+                    backgroundColor: '#ffffff'
+                }
+            };
+        }
+
         void shell.openExternal(url);
         return { action: 'deny' };
     });
