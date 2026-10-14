@@ -102,21 +102,21 @@
                 </div>
             </div>
 
-            <!-- El compte. Viu aquí, al costat de la configuració, perquè
-                 és una cosa de l'usuari i no del joc. `auth.js` el treu
-                 del tot si Firebase no està configurat, i quan hi ha
-                 sessió hi posa la inicial del correu en lloc de la icona.
-                 Porta la classe `settings-btn` per heretar-ne l'estil i
-                 els ajustos de mòbil i de mode rendiment. -->
-            <button class="settings-btn account-btn" id="accountBtn" type="button" aria-label="Compte" data-i18n-aria="auth.aria" aria-haspopup="dialog" aria-expanded="false">
-                <span id="accountIcon" class="ula-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-            </button>
-
             <button class="theme-btn" id="themeBtn" aria-label="Canviar tema" data-i18n-aria="theme.aria">
                 <!-- Contenidor, no l'SVG mateix: el canvi de tema substitueix
                      el contingut d'aquest element en lloc de l'element, de manera
                      que el botó no torna a perdre la referència a la icona. -->
                 <span id="themeIcon" class="ula-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
+            </button>
+
+            <!-- El compte. És l'últim botó del nav, el de més a la dreta:
+                 és una cosa de l'usuari i no del joc. `auth.js` el treu del
+                 tot si Firebase no està configurat, i quan hi ha sessió hi
+                 posa la inicial del correu en lloc de la icona. Porta la
+                 classe `settings-btn` per heretar-ne l'estil i els ajustos
+                 de mòbil i de mode rendiment. -->
+            <button class="settings-btn account-btn" id="accountBtn" type="button" aria-label="Compte" data-i18n-aria="auth.aria" aria-haspopup="dialog" aria-expanded="false">
+                <span id="accountIcon" class="ula-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
             </button>
         </div>
     </nav>
