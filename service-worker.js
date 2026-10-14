@@ -2,7 +2,7 @@
    SERVICE WORKER · ulaGames
    ============================================================ */
 
-const CACHE_VERSION = 'ula-v1.6.0';
+const CACHE_VERSION = 'ula-v1.6.1';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const GAMES_CACHE = CACHE_VERSION + '-games';
 const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
@@ -74,6 +74,7 @@ const PRECACHE_URLS = [
     './assets/css/components.css',
     './assets/css/skeleton.css',
     './assets/css/responsive.css',
+    './assets/css/social.css',
     './assets/js/gameList.js',
     './assets/js/game-volume.js',
     './assets/js/offline.js',
