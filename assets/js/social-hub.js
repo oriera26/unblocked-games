@@ -11,7 +11,7 @@
  */
 
 import { openProfile, openSpectator } from './social-modals.js';
-import { findPerson, myName, notify, saveState, state } from './social-store.js';
+import { findPerson, myName, notify, saveState, state, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, pinFriend, challengeFriend, giftFriend } from './social-store.js';
 import { activityLabel, byId, countdown, esc, get, hydrate, statusLabel, t, timeAgo } from './social-ui.js';
 
 let root = null;
@@ -317,7 +317,7 @@ function giftRow(gift) {
    Accions
    ================================================================ */
 
-export function handleAction(button) {
+export async function handleAction(button) {
     const { soc, id, emoji } = button.dataset;
 
     switch (soc) {
@@ -325,20 +325,44 @@ export function handleAction(button) {
             state.ui.showNotifs = !state.ui.showNotifs;
             if (state.ui.showNotifs) state.notifications.forEach((notification) => { notification.read = true; });
             break;
-        case 'add': addSuggestion(id); break;
-        case 'accept': acceptRequest(id); break;
-        case 'reject':
-            state.requests = state.requests.filter((request) => request.id !== id);
+        case 'add':
+            await sendFriendRequest(id);
             break;
-        case 'challenge': challenge(id); break;
+        case 'accept':
+            await acceptFriendRequest(id);
+            break;
+        case 'reject':
+            await rejectFriendRequest(id);
+            break;
+        case 'challenge':
+            await challengeFriend(id);
+            {
+                const person = findPerson(id);
+                if (person) notify(get('social.challengeSent', { name: person.name }));
+            }
+            break;
         case 'pin': {
             const friend = state.friends.find((person) => person.id === id);
-            if (friend) friend.pinned = !friend.pinned;
+            if (friend) {
+                const nextPinned = !friend.pinned;
+                friend.pinned = nextPinned;
+                pinFriend(id, nextPinned);
+            }
             break;
         }
-        case 'gift': claimGift(id); break;
-        case 'gift-friend': giftFriend(id); break;
-        case 'react': reactToFeed(id, emoji); break;
+        case 'gift':
+            claimGift(id);
+            break;
+        case 'gift-friend':
+            await giftFriend(id);
+            {
+                const person = findPerson(id);
+                if (person) notify(get('social.giftSent', { name: person.name }));
+            }
+            break;
+        case 'react':
+            reactToFeed(id, emoji);
+            break;
         case 'profile':
             openProfile(id);
             return false;
@@ -360,53 +384,6 @@ export function handleAction(button) {
     }
 
     return true;
-}
-
-function addSuggestion(id) {
-    const index = state.suggestions.findIndex((person) => person.id === id);
-    if (index === -1) return;
-
-    const [person] = state.suggestions.splice(index, 1);
-    state.friends.push(newFriend(person));
-    notify(`${person.name} · ${get('social.add')}`);
-}
-
-function acceptRequest(id) {
-    const index = state.requests.findIndex((person) => person.id === id);
-    if (index === -1) return;
-
-    const [person] = state.requests.splice(index, 1);
-    state.friends.push(newFriend(person));
-    notify(`${person.name} · ${get('social.accept')}`);
-}
-
-function newFriend(person) {
-    return {
-        id: person.id,
-        name: person.name,
-        icon: person.icon,
-        status: 'online',
-        activity: { kind: 'lobby', game: null },
-        pinned: false,
-        wins: 0,
-        losses: 0,
-        level: 1,
-        record: null
-    };
-}
-
-function challenge(id) {
-    const person = findPerson(id);
-    if (!person) return;
-    notify(get('social.challengeSent', { name: person.name }));
-}
-
-/** Envia un regal a algú; la notificació ho deixa constància. */
-function giftFriend(id) {
-    const person = findPerson(id);
-    if (!person) return;
-    if (state.giftsBalance > 0) state.giftsBalance -= 1;
-    notify(get('social.giftSent', { name: person.name }));
 }
 
 function claimGift(id) {

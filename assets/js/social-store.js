@@ -1,21 +1,21 @@
 /**
  * social-store.js · estat de la secció Social, vingut de Firebase.
  *
- * A diferència de la versió anterior (dades de demostració desades a
- * `localStorage`), aquí la font de veritat és Firestore: cada usuari té
- * un document a `profiles/{uid}` i la resta de col·leccions socials. Si
- * no hi ha cap sessió iniciada, l'estat queda a `guest` i la vista mostra
- * la porta d'accés.
+ * Font de veritat: Firestore.
+ *   - profiles/{uid}           → perfil propi (i d'altres per a suggeriments)
+ *   - friendships/{pairId}    → amistats (status: pending | accepted)
+ *   - league/{week}           → lliga setmanal (pas 3)
+ *   - feed/{docId}            → activitat (pas 4)
+ *   - gifts/{docId}           → regals (pas 4)
+ *   - chat/{channelId}/messages → xat (pas 5)
  *
- * L'API pública i la forma de `state` es mantenen igual que abans, perquè
- * `social-hub.js`, `social-chat.js` i `social-modals.js` no s'hagin de
- * reescriure: ells només llegeixen i muten `state`, i aquí s'emeten els
- * canvis amb `onSocialChange`.
+ * L'API pública i la forma de `state` es mantenen igual que abans perquè
+ * social-hub, social-chat i social-modals no s'hagin de reescriure.
  */
 
 import { onAuthChange } from './auth.js';
 import { IS_CONFIGURED } from './firebase-config.js';
-import { ensureDb, firestore } from './social-db.js';
+import { ensureDb, firestore, describeError, pairId } from './social-db.js';
 import { getLevelForPoints } from './levels.js';
 import { stats } from './state.js';
 
@@ -50,9 +50,9 @@ function blankState() {
         status: 'guest',            // guest | loading | ready | error
         error: null,                // 'config' | 'permission' | 'offline' | 'unknown'
         me: null,                   // { id:'me', uid, name, icon, points, lvl, streak, status, game }
-        friends: [],                // [{ id, name, icon, status, activity, pinned, ... }]
-        requests: [],               // [{ id, name, icon }]
-        suggestions: [],            // [{ id, name, icon }]
+        friends: [],                // [{ id, name, icon, status, activity, pinned, wins, losses, level, record, ... }]
+        requests: [],               // [{ id, name, icon, uid }]
+        suggestions: [],            // [{ id, name, icon, uid }]
         notifications: [],          // [{ id, text, at, read }]
         league: { division: '', week: '', xp: 0, xpTarget: 2000, entries: [] },
         duels: [],
@@ -144,6 +144,66 @@ export function saveState() {
 }
 
 /* ================================================================
+   Accions d'amistat (crides a Firestore)
+   ================================================================ */
+
+/** Envia una sol·licitud d'amistat. */
+export async function sendFriendRequest(targetUid) {
+    const { api, db } = firestore();
+    if (!api || !state.me?.uid) return;
+    const pid = pairId(state.me.uid, targetUid);
+    await api.setDoc(api.doc(db, 'friendships', pid), {
+        uids: [state.me.uid, targetUid].sort(),
+        status: 'pending',
+        requestedBy: state.me.uid,
+        createdAt: Date.now()
+    }, { merge: true });
+}
+
+/** Accepta una sol·licitud d'amistat entrant. */
+export async function acceptFriendRequest(requesterUid) {
+    const { api, db } = firestore();
+    if (!api || !state.me?.uid) return;
+    const pid = pairId(state.me.uid, requesterUid);
+    await api.updateDoc(api.doc(db, 'friendships', pid), {
+        status: 'accepted',
+        acceptedAt: Date.now()
+    });
+}
+
+/** Rebutja una sol·licitud d'amistat entrant. */
+export async function rejectFriendRequest(requesterUid) {
+    const { api, db } = firestore();
+    if (!api || !state.me?.uid) return;
+    const pid = pairId(state.me.uid, requesterUid);
+    await api.deleteDoc(api.doc(db, 'friendships', pid));
+}
+
+/** Elimina un amic existent. */
+export async function removeFriend(friendUid) {
+    const { api, db } = firestore();
+    if (!api || !state.me?.uid) return;
+    const pid = pairId(state.me.uid, friendUid);
+    await api.deleteDoc(api.doc(db, 'friendships', pid));
+}
+
+/** Marca/desmarca un amic com a fixat (pin). Es guarda al perfil local. */
+export function pinFriend(friendId, pinned) {
+    const friend = state.friends.find((f) => f.id === friendId);
+    if (friend) friend.pinned = pinned;
+}
+
+/** Envia una notificació de repte (només local de moment). */
+export function challengeFriend(friendId) {
+    /* la notificació la fa el hub després de l'acció */
+}
+
+/** Envia un regal a un amic (només local de moment). */
+export function giftFriend(friendId) {
+    /* la notificació la fa el hub després de l'acció */
+}
+
+/* ================================================================
    Connexió amb Firebase
    ================================================================ */
 
@@ -211,6 +271,8 @@ async function connect(user) {
     emit();
 
     watchSelf(user);
+    watchFriendships(user);
+    watchSuggestions(user);
 }
 
 /* --- El document del propi usuari ------------------------------- */
@@ -244,8 +306,7 @@ async function ensureProfile(user) {
     const me = { ...base, ...pruneProfile(data) };
     applyMe(me);
 
-    // Si el perfil ha quedat incomplet (per exemple, sense nom), el
-    // completem; si no, no toquem res.
+    // Si el perfil ha quedat incomplet, el completem.
     if (!data.name || !data.icon || data.points === undefined) {
         try { await api.setDoc(ref, base, { merge: true }); } catch { /* res */ }
     }
@@ -278,6 +339,155 @@ function applyMe(data) {
         status: data.status || 'online',
         game: data.game ?? null
     };
+}
+
+/* --- Amistats (friendships) ------------------------------------ */
+
+function watchFriendships(user) {
+    const { api, db } = firestore() ?? {};
+    if (!api) return;
+
+    // Tots els documents on l'usuari és part de la parella.
+    const q = api.query(
+        api.collection(db, 'friendships'),
+        api.where('uids', 'array-contains', user.uid)
+    );
+
+    const off = api.onSnapshot(q, (snap) => {
+        rebuildFriendsFromSnapshot(snap, user.uid);
+        emit();
+    }, () => { /* sense permisos */ });
+
+    unsubs.push(off);
+}
+
+function rebuildFriendsFromSnapshot(snap, myUid) {
+    const friends = [];
+    const requests = [];
+    const friendUids = new Set();
+
+    for (const doc of snap.docs) {
+        const data = doc.data();
+        const otherUid = data.uids.find((uid) => uid !== myUid);
+        if (!otherUid) continue;
+
+        if (data.status === 'accepted') {
+            friendUids.add(otherUid);
+            // Les dades completes (nom, icona, estat) vindran de profiles/{otherUid}
+            // Per ara posem un placeholder; watchSuggestions/Profiles l'actualitzarà.
+            friends.push({
+                id: otherUid,
+                name: 'Carregant…',
+                icon: '🙂',
+                status: 'online',
+                activity: { kind: 'lobby', game: null },
+                pinned: false,
+                wins: 0,
+                losses: 0,
+                level: 1,
+                record: null
+            });
+        } else if (data.status === 'pending' && data.requestedBy === otherUid) {
+            // Sol·licitud entrant
+            requests.push({
+                id: otherUid,
+                name: 'Carregant…',
+                icon: '🙂',
+                uid: otherUid
+            });
+        }
+        // Sol·licituds sortents (requestedBy === myUid) no es mostren al hub.
+    }
+
+    state.friends = friends;
+    state.requests = requests;
+
+    // Ara carreguem els perfils dels amics i sol·licituds per obtenir nom/icona.
+    loadProfilesFor([...friendUids, ...requests.map(r => r.uid)]);
+}
+
+/* --- Suggeriments (altres usuaris) ----------------------------- */
+
+function watchSuggestions(user) {
+    const { api, db } = firestore() ?? {};
+    if (!api) return;
+
+    // Per al MVP, prenem els primers 20 perfils que no siguin amic ni jo.
+    // En produció es faria un índex amb "últimes connexions" o similar.
+    const q = api.query(
+        api.collection(db, 'profiles'),
+        api.limit(30)
+    );
+
+    const off = api.onSnapshot(q, (snap) => {
+        rebuildSuggestionsFromSnapshot(snap, user.uid);
+        emit();
+    }, () => { /* sense permisos */ });
+
+    unsubs.push(off);
+}
+
+function rebuildSuggestionsFromSnapshot(snap, myUid) {
+    const friendUids = new Set(state.friends.map(f => f.id));
+    const requestUids = new Set(state.requests.map(r => r.uid));
+    const exclude = new Set([myUid, ...friendUids, ...requestUids]);
+
+    const suggestions = [];
+    for (const doc of snap.docs) {
+        if (suggestions.length >= 10) break;
+        const uid = doc.id;
+        if (exclude.has(uid)) continue;
+        const data = doc.data() ?? {};
+        suggestions.push({
+            id: uid,
+            name: data.name || 'Jugador',
+            icon: data.icon || '🙂',
+            uid
+        });
+    }
+    state.suggestions = suggestions;
+}
+
+/* --- Carregar perfils per omplir amics/sol·licituds ------------ */
+
+async function loadProfilesFor(uids) {
+    if (!uids.length) return;
+    const { api, db } = firestore() ?? {};
+    if (!api) return;
+
+    // Firestore 'in' query suporta fins a 30 valors.
+    const chunks = [];
+    for (let i = 0; i < uids.length; i += 30) {
+        chunks.push(uids.slice(i, i + 30));
+    }
+
+    for (const chunk of chunks) {
+        const q = api.query(
+            api.collection(db, 'profiles'),
+            api.where(api.documentId(), 'in', chunk)
+        );
+        const snap = await api.getDocs(q);
+        for (const doc of snap.docs) {
+            const data = doc.data() ?? {};
+            const uid = doc.id;
+            const profile = {
+                name: data.name || 'Jugador',
+                icon: data.icon || '🙂',
+                status: data.status || 'online',
+                game: data.game ?? null
+            };
+            // Actualitzar amic
+            const friend = state.friends.find(f => f.id === uid);
+            if (friend) {
+                Object.assign(friend, profile);
+            }
+            // Actualitzar sol·licitud
+            const request = state.requests.find(r => r.uid === uid);
+            if (request) {
+                Object.assign(request, { name: profile.name, icon: profile.icon });
+            }
+        }
+    }
 }
 
 /* --- Auxiliars ------------------------------------------------ */
