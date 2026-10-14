@@ -16,6 +16,28 @@ export const FALLBACK_DURATION = 10000;
 /** Durada de la transició entre vistes (ha de coincidir amb el CSS). */
 export const VIEW_TRANSITION_MS = 320;
 
+/**
+ * Cada quant es mira si l'usuari continua actiu mentre hi ha un joc
+ * obert. Un segon n'hi ha prou: el que es compta són segons.
+ */
+export const PLAY_TICK_MS = 1000;
+
+/**
+ * Sense cap interacció durant aquest temps, el comptador es pausa.
+ *
+ * Un joc pot estar renderitzant una cinemàtica, un vídeo o una intro
+ * sense que ningú hi toqui res: allò no és temps de joc.
+ */
+export const PLAY_IDLE_MS = 60000;
+
+/**
+ * Cada quant es desa el temps acumulat.
+ *
+ * Es desa mentre es juga i no només en tancar: si el navegador es tanca
+ * de cop, la partida no es perd del tot.
+ */
+export const PLAY_FLUSH_MS = 30000;
+
 /* --- Categories -------------------------------------------------- */
 
 /**

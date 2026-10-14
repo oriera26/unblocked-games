@@ -124,28 +124,65 @@ export function checkStreak() {
     saveStats();
 }
 
-/** Suma el que compta l'inici d'una partida. */
-export function recordPlay() {
+/**
+ * Apunta l'inici d'una partida: els punts globals i una entrada nova a
+ * l'historial del joc.
+ *
+ * El temps no s'apunta aquí: d'això se n'encarrega `recordPlaytime()`,
+ * que només suma els segons que l'usuari ha estat jugant de debò.
+ *
+ * @param {string} [name]  nom del joc, tal com apareix a gameList
+ */
+export function recordPlay(name) {
     stats.plays += 1;
     stats.points += POINTS_PER_PLAY;
+
+    if (name) {
+        const entry = stats.gameHistory[name] ?? { count: 0, timePlayed: 0, lastPlayed: '' };
+        entry.count += 1;
+        entry.lastPlayed = new Date().toISOString();
+        stats.gameHistory[name] = entry;
+    }
+
     saveStats();
 }
 
 /**
- * Tanca la sessió d'un joc i n'apunta la durada i l'historial.
+ * Suma temps de joc actiu al total i a l'historial del joc.
+ *
+ * La crida `playtime.js` a cada estona, amb els segons acumulats des de
+ * l'última vegada: no repeteix cap interval.
+ *
  * @param {string} name  nom del joc, tal com apareix a gameList
- * @param {number} seconds
+ * @param {number} seconds  segons actius acumulats
  */
-export function recordSession(name, seconds) {
+export function recordPlaytime(name, seconds) {
     const duration = Math.max(0, Math.floor(seconds));
+    if (!name || duration <= 0) return;
+
     stats.timeSeconds += duration;
 
     const entry = stats.gameHistory[name] ?? { count: 0, timePlayed: 0, lastPlayed: '' };
-    entry.count += 1;
     entry.timePlayed += duration;
     entry.lastPlayed = new Date().toISOString();
     stats.gameHistory[name] = entry;
 
+    saveStats();
+}
+
+/**
+ * Esborra el progrés: punts, nivell, minuts, ratxa i historial.
+ *
+ * Els preferits, els volums i els desats dels jocs es queden com eren:
+ * això és un restabliment del progrés, no un esborrat de tot.
+ */
+export function resetProgress() {
+    stats.plays = 0;
+    stats.points = 0;
+    stats.timeSeconds = 0;
+    stats.streak = 0;
+    stats.lastDate = null;
+    stats.gameHistory = {};
     saveStats();
 }
 

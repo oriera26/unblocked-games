@@ -203,6 +203,32 @@ export function initCacheControl(buttonId = 'clearCacheBtn', message = null) {
 }
 
 /* ================================================================
+   Progrés
+   ================================================================ */
+
+/**
+ * Enganxa el botó de restablir el progrés.
+ *
+ * Només toca les estadístiques: els preferits, els volums i els desats
+ * dels jocs es queden com eren. `onDone` és qui repinta el que calgui
+ * (per exemple, la pantalla d'estadístiques si hi som en aquell moment).
+ *
+ * @param {string} buttonId
+ * @param {() => void} onDone
+ */
+export function initProgressReset(buttonId, onDone) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+
+    button.addEventListener('click', () => {
+        // Primer es pregunta i després s'esborra: si es fes al revés,
+        // qui cancel·lés ja hauria perdut el progrés.
+        if (typeof confirm === 'function' && !confirm(t('settings.reset.confirm'))) return;
+        onDone();
+    });
+}
+
+/* ================================================================
    Service worker
    ================================================================ */
 

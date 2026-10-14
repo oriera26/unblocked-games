@@ -1,9 +1,10 @@
 /**
  * player.js · obrir i tancar un joc dins del modal.
  *
- * Aquesta peça la porta tota la lògica de temps: un spinner que no ha
- * de quedar penjat, un iframe que no ha de quedar carregant una pàgina
- * trencada, i el temps de joc que s'ha d'anar a comptar.
+ * Aquesta peça porta l'obertura i el tancament: un spinner que no ha de
+ * quedar penjat i un iframe que no ha de quedar carregant una pàgina
+ * trencada. El temps de joc el compta `playtime.js`, que només suma els
+ * segons que l'usuari hi és de debò.
  *
  * Hi ha una peça més: en un dispositiu tàctil el joc no es carrega de
  * primeres, sinó que abans surt l'avís que la web no està optimitzat
@@ -12,7 +13,8 @@
  */
 
 import { FALLBACK_DURATION, LOADER_DURATION, OFFLINE_URL } from './config.js';
-import { recordPlay, recordSession } from './state.js';
+import { recordPlay } from './state.js';
+import { bindPlaytimeFrame, startPlaytime, stopPlaytime } from './playtime.js';
 import { bindVolumeGame, clearVolumeGame, syncVolumeGame, watchVolumeGame } from './volume.js';
 import { gameSrc } from './game-path.js';
 import { downloadGame, isOfflineGame, isOfflineReady } from './offline-games.js';
@@ -218,10 +220,13 @@ function openGame(game) {
         hideLoader();
         // Assegura el pedaç de volum i li passa el valor desat.
         syncVolumeGame();
+        // El document del joc és nou: torna-hi a escoltar les interaccions.
+        bindPlaytimeFrame(iframe);
     };
     iframe.addEventListener('load', onIframeLoad);
 
-    recordPlay();
+    recordPlay(game.name);
+    startPlaytime(game.name, iframe);
 }
 
 function showOffline() {
@@ -229,6 +234,8 @@ function showOffline() {
     if (iframe) iframe.src = OFFLINE_URL;
     cancelTimers();
     hideLoader();
+    // El joc no s'ha carregat: no té sentit comptar-hi temps.
+    stopPlaytime();
 }
 
 function cancelTimers() {
@@ -289,7 +296,8 @@ export function close() {
     clearVolumeGame();
 
     if (sessionStart && currentGame) {
-        recordSession(currentGame.name, (Date.now() - sessionStart) / 1000);
+        // El comptador de temps actiu desa el que quedava i s'atura.
+        stopPlaytime();
     }
     sessionStart = null;
     currentGame = null;

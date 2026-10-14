@@ -28,8 +28,8 @@ import { initAuth } from './auth.js';
 import { initOffline, onOfflineChange } from './offline-games.js';
 import { currentView, go, startRouter } from './router.js';
 import { close, initGate, isGameOpen, launch } from './player.js';
-import { checkStreak, filters, toggleFavorite } from './state.js';
-import { initCacheControl, initLangSelect, initSettings, registerServiceWorker } from './settings.js';
+import { checkStreak, filters, resetProgress, toggleFavorite } from './state.js';
+import { initCacheControl, initLangSelect, initProgressReset, initSettings, registerServiceWorker } from './settings.js';
 import { startDetection } from './detection.js';
 import { initI18n, onLangChange, t } from './i18n.js';
 import { initVolume } from './volume.js';
@@ -328,6 +328,12 @@ async function start() {
 
     initSettings();
     initCacheControl();
+    initProgressReset('resetProgressBtn', () => {
+        resetProgress();
+        // Si les estadístiques són a la pantalla, han de reflectir-ho
+        // a l'instant: sinó semblaria que el botó no ha fet res.
+        if (currentView() === 'stats') renderStats();
+    });
     onLangChange(onLanguageChange);
 
     // El compte, després de l'idioma (el seu modal es tradueix com la
