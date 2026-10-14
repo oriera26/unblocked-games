@@ -14,6 +14,7 @@
 
 import { FALLBACK_DURATION, LOADER_DURATION, OFFLINE_URL } from './config.js';
 import { recordPlay } from './state.js';
+import { addLeagueXP } from './social-store.js';
 import { bindPlaytimeFrame, startPlaytime, stopPlaytime } from './playtime.js';
 import { bindVolumeGame, clearVolumeGame, syncVolumeGame, watchVolumeGame } from './volume.js';
 import { gameSrc } from './game-path.js';
@@ -226,6 +227,7 @@ function openGame(game) {
     iframe.addEventListener('load', onIframeLoad);
 
     recordPlay(game.name);
+    addLeagueXP(100).catch(() => { /* silenciós si no hi ha Social */ });
     startPlaytime(game.name, iframe);
 }
 

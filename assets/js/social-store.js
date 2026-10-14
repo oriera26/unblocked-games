@@ -273,6 +273,7 @@ async function connect(user) {
     watchSelf(user);
     watchFriendships(user);
     watchSuggestions(user);
+    watchLeague(user);
 }
 
 /* --- El document del propi usuari ------------------------------- */
@@ -488,6 +489,85 @@ async function loadProfilesFor(uids) {
             }
         }
     }
+}
+
+/* --- Lliga (league) -------------------------------------------- */
+
+export async function addLeagueXP(amount) {
+    const { api, db } = firestore() ?? {};
+    if (!api || !state.me?.uid) return;
+
+    const week = currentWeek();
+    const ref = api.doc(db, 'league', week);
+
+    // Incrementem l'XP setmanal de l'usuari.
+    await api.updateDoc(ref, {
+        [`entries.${state.me.uid}`]: api.increment(amount),
+        updatedAt: Date.now()
+    }).catch(async () => {
+        // Si el document no existeix, el creem amb l'entrada de l'usuari.
+        const entry = {
+            uid: state.me.uid,
+            name: state.me.name,
+            icon: state.me.icon,
+            xp: amount
+        };
+        await api.setDoc(ref, {
+            week,
+            division: 'Bronze',
+            xpTarget: 2000,
+            entries: { [state.me.uid]: entry },
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+        }, { merge: true });
+    });
+}
+
+/**
+ * Escolta el document de la lliga de la setmana actual.
+ * El document `league/{week}` té:
+ *   - week: string
+ *   - division: string
+ *   - xpTarget: number
+ *   - entries: object { [uid]: { uid, name, icon, xp } }
+ */
+function watchLeague(user) {
+    const { api, db } = firestore() ?? {};
+    if (!api) return;
+
+    const week = currentWeek();
+    const off = api.onSnapshot(api.doc(db, 'league', week), (snap) => {
+        if (!snap.exists()) {
+            // Encara no hi ha lliga aquesta setmana: deixem l'estat buit.
+            state.league = { division: '', week, xp: 0, xpTarget: 2000, entries: [] };
+            emit();
+            return;
+        }
+
+        const data = snap.data() ?? {};
+        const entriesObj = data.entries ?? {};
+        const entries = Object.values(entriesObj).sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0));
+
+        // El nostre XP és l'entrada amb el nostre uid.
+        const myEntry = entries.find(e => e.uid === user.uid);
+        const myXp = myEntry?.xp ?? 0;
+
+        state.league = {
+            division: data.division || 'Bronze',
+            week: data.week || week,
+            xp: myXp,
+            xpTarget: data.xpTarget ?? 2000,
+            entries: entries.map(e => ({
+                id: e.uid === user.uid ? 'me' : e.uid,
+                name: e.name || 'Jugador',
+                icon: e.icon || '🙂',
+                xp: e.xp ?? 0
+            }))
+        };
+        emit();
+    }, () => { /* sense permisos */ });
+
+    unsubs.push(off);
 }
 
 /* --- Auxiliars ------------------------------------------------ */
