@@ -9,14 +9,12 @@
  * per això no passa per `t()`: la línia és `${nom} ···`.
  */
 
-import { REPLY_TEXT, iconOfName, makeMessage, myName, saveState, state } from './social-store.js';
+import { iconOfName, makeMessage, myName, saveState, state, sendChatMessage, reactToChatMessage } from './social-store.js';
 import { byId, esc, get, hydrate, t, timeAgo } from './social-ui.js';
 
 const MAX_MESSAGES = 60;
 
 let drawer = null;
-let typingName = null;
-let replyTimer = 0;
 
 /* ================================================================
    Consultes
@@ -125,7 +123,6 @@ export function renderChat() {
                 </button>`).join('')}
         </div>
         <div class="soc-chat-log" data-soc-chat-log>${channelMessages(channel).map(messageRow).join('')}</div>
-        <div class="soc-typing">${typingName ? `${esc(typingName)} ···` : ''}</div>
         <div class="soc-chat-tools">
             <button class="soc-btn ghost" type="button" data-soc-chat="minigame">🎲 ${t('social.minigames')}</button>
             <button class="soc-btn ghost" type="button" data-soc-chat="record">🏆 ${t('social.challenge')}</button>
@@ -183,11 +180,6 @@ function scrollLog() {
     if (log) log.scrollTop = log.scrollHeight;
 }
 
-function updateTyping() {
-    const line = drawer?.querySelector('.soc-typing');
-    if (line) line.textContent = typingName ? `${typingName} ···` : '';
-}
-
 /* ================================================================
    Accions
    ================================================================ */
@@ -198,36 +190,9 @@ function sendMessage() {
     if (!input || !text) return;
 
     const channel = activeChannel();
-    pushMessage(channel.id, makeMessage(myName(), state.me.icon, text, Date.now()));
+    sendChatMessage(channel.id, text).catch(() => { /* silenciós */ });
     input.value = '';
-    renderMessages();
-    scheduleReply(channel);
-}
-
-/** Fingeix que algú respon, amb el «···» d'escrivint entremig. */
-function scheduleReply(channel) {
-    const repliers = channel.kind === 'dm'
-        ? [channel.name]
-        : state.friends.filter((friend) => friend.status !== 'offline').map((friend) => friend.name);
-    if (!repliers.length) return;
-
-    const who = repliers[Math.floor(Math.random() * repliers.length)];
-    typingName = who;
-    updateTyping();
-
-    clearTimeout(replyTimer);
-    replyTimer = window.setTimeout(() => {
-        typingName = null;
-        updateTyping();
-
-        const text = REPLY_TEXT[Math.floor(Math.random() * REPLY_TEXT.length)];
-        pushMessage(channel.id, makeMessage(who, iconOfName(who), text, Date.now()));
-        if (channel.id !== state.chat.active) {
-            state.chat.unread[channel.id] = (state.chat.unread[channel.id] ?? 0) + 1;
-        }
-        if (channel.id === state.chat.active) renderMessages();
-        updateBadge();
-    }, 900 + Math.random() * 1400);
+    // Els missatges arriben via onSnapshot, no cal renderMessages() aquí.
 }
 
 function shareTool(kind) {
@@ -236,20 +201,14 @@ function shareTool(kind) {
         ? `🎲 2048 · ${get('social.minigames')}`
         : `🏆 ${state.me.points} · 🔥 ${state.me.streak}`;
 
-    pushMessage(channel.id, makeMessage(myName(), state.me.icon, text, Date.now()));
-    renderMessages();
-    scheduleReply(channel);
+    sendChatMessage(channel.id, text).catch(() => { /* silenciós */ });
 }
 
 function reactToMessage(button) {
-    const message = findMessage(button.dataset.mid);
-    if (!message) return;
-
-    message.reactions ??= {};
+    const channel = activeChannel();
+    const messageId = button.dataset.mid;
     const emoji = button.dataset.emoji;
-    message.reactions[emoji] = (message.reactions[emoji] ?? 0) + 1;
-    saveState();
-    renderMessages();
+    reactToChatMessage(channel.id, messageId, emoji).catch(() => { /* silenciós */ });
 }
 
 function onChatClick(event) {

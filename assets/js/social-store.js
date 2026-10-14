@@ -276,6 +276,7 @@ async function connect(user) {
     watchLeague(user);
     watchFeed(user);
     watchGifts(user);
+    watchChat(user);
 }
 
 /* --- El document del propi usuari ------------------------------- */
@@ -704,6 +705,82 @@ function watchGifts(user) {
         }
         state.gifts = gifts;
         // El balance es carrega des del perfil
+        emit();
+    }, () => { /* sense permisos */ });
+
+    unsubs.push(off);
+}
+
+/* --- Xat (chat) ----------------------------------------------- */
+
+/** Envia un missatge a un canal. */
+export async function sendChatMessage(channelId, text) {
+    const { api, db } = firestore() ?? {};
+    if (!api || !state.me?.uid || !text.trim()) return;
+
+    const ref = api.collection(db, 'chat', channelId, 'messages');
+    await api.addDoc(ref, {
+        fromUid: state.me.uid,
+        fromName: state.me.name,
+        fromIcon: state.me.icon,
+        text: text.trim(),
+        at: Date.now(),
+        reactions: {}
+    });
+}
+
+/** Afegeix una reacció a un missatge de xat. */
+export async function reactToChatMessage(channelId, messageId, emoji) {
+    const { api, db } = firestore() ?? {};
+    if (!api || !state.me?.uid) return;
+
+    const ref = api.doc(db, 'chat', channelId, 'messages', messageId);
+    await api.updateDoc(ref, {
+        [`reactions.${emoji}`]: api.increment(1)
+    });
+}
+
+/**
+ * Escolta els canals i missatges del xat.
+ * Estructura:
+ *   chat/{channelId}/messages/{messageId}
+ *   Canal global: 'global'
+ *   Canal grup: 'group-{id}'
+ *   Canal DM: 'dm-{pairId}'
+ */
+function watchChat(user) {
+    const { api, db } = firestore() ?? {};
+    if (!api) return;
+
+    // Primer carreguem els canals (per ara hardcoded: global)
+    // En el futur es podrien afegir canals dinàmics.
+    const defaultChannels = [
+        { id: 'global', name: 'Global', kind: 'global' }
+    ];
+    state.chat.channels = defaultChannels;
+
+    // Escoltem els missatges del canal global
+    const channelId = 'global';
+    const q = api.query(
+        api.collection(db, 'chat', channelId, 'messages'),
+        api.orderBy('at', 'asc'),
+        api.limit(50)
+    );
+
+    const off = api.onSnapshot(q, (snap) => {
+        const messages = [];
+        for (const doc of snap.docs) {
+            const data = doc.data() ?? {};
+            messages.push({
+                id: doc.id,
+                from: data.fromName || 'Jugador',
+                icon: data.fromIcon || '🙂',
+                text: data.text || '',
+                at: data.at ?? Date.now(),
+                reactions: data.reactions ?? {}
+            });
+        }
+        state.chat.messages[channelId] = messages;
         emit();
     }, () => { /* sense permisos */ });
 
