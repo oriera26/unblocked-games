@@ -115,27 +115,42 @@ function refreshMessages() {
         return;
     }
 
-    log.innerHTML = messages.map((message) => messageRow(message)).join('');
+    // El nom dels altres només surt al primer missatge d'una tongada de
+    // la mateixa persona; del meu compte no en surt mai res.
+    let previousAuthor = null;
+    log.innerHTML = messages.map((message) => {
+        const mine = Boolean(message.fromUid) && message.fromUid === myUid();
+        const author = message.fromUid ?? message.fromName ?? '';
+        const withName = !mine && author !== previousAuthor;
+        previousAuthor = author;
+        return messageRow(message, { mine, withName });
+    }).join('');
     log.dataset.ready = '1';
 
     if (nearBottom || firstRender) log.scrollTop = log.scrollHeight;
 }
 
-function messageRow(message) {
-    const mine = Boolean(message.fromUid) && message.fromUid === myUid();
+/** Una fila del registre. El nom dels altres va a sobre de la bombolla
+    (mai a dins), i només quan «withName» ho demana; la meva fila no
+    porta capçalera. */
+function messageRow(message, { mine, withName }) {
     const name = message.fromName ?? 'Jugador';
+
+    const head = mine ? '' : `
+                <div class="soc-msg-head">
+                    ${withName ? `<span class="soc-msg-name">${esc(name)}</span>` : ''}
+                    <span class="soc-msg-time">${timeAgo(message.at)}</span>
+                </div>`;
 
     return `
         <div class="soc-msg ${mine ? 'is-me' : ''}">
             <span class="soc-avatar soc-avatar-mini ${mine ? 'soc-avatar-online' : 'soc-avatar-offline'}">
                 ${avatarMarkup({ name, icon: message.fromIcon, photo: '' })}
             </span>
-            <div class="soc-msg-bubble">
-                <div class="soc-msg-head">
-                    <span class="soc-msg-name">${esc(mine ? t('ui.my_account') : name)}</span>
-                    <span class="soc-msg-time">${timeAgo(message.at)}</span>
+            <div class="soc-msg-body">${head}
+                <div class="soc-msg-bubble">
+                    <p class="soc-msg-text">${esc(message.text ?? '')}</p>
                 </div>
-                <p class="soc-msg-text">${esc(message.text ?? '')}</p>
             </div>
         </div>
     `;

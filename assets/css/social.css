@@ -784,9 +784,16 @@
     flex-direction: row-reverse;
 }
 
-.soc-msg-bubble {
+.soc-msg-body {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
     max-width: 84%;
+}
+
+.soc-msg-bubble {
+    min-width: 0;
+    max-width: 100%;
     padding: 7px 10px;
     border-radius: 14px;
     background: var(--pill-bg);
@@ -797,11 +804,14 @@
     color: #fff;
 }
 
+/* El nom dels altres va a sobre de la bombolla, mai a dins: la
+   capçalera viu fora del `.soc-msg-bubble`. El meu missatge no en té. */
 .soc-msg-head {
     display: flex;
     align-items: baseline;
     gap: 8px;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
+    padding-left: 2px;
 }
 
 .soc-msg-name {
@@ -818,12 +828,6 @@
     font-size: 10.5px;
     opacity: 0.6;
     font-variant-numeric: tabular-nums;
-}
-
-.soc-msg.is-me .soc-msg-name,
-.soc-msg.is-me .soc-msg-time {
-    color: rgba(255, 255, 255, 0.85);
-    opacity: 1;
 }
 
 .soc-msg-text {
