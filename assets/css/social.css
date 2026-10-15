@@ -570,6 +570,166 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* Cada lliga de la llista, amb la seva capçalera. */
+.soc-league + .soc-league {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--table-hover);
+}
+
+.soc-league-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+    padding: 2px 2px 8px;
+}
+
+.soc-league-name {
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.soc-league-days {
+    flex: 0 0 auto;
+    font-size: 11.5px;
+    opacity: 0.65;
+}
+
+/* El rètol del guanyador de la temporada passada. */
+.soc-league-winner {
+    margin: 0 2px 8px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    background: var(--glass-bg-strong);
+    box-shadow: inset 0 0 0 1px var(--table-hover);
+}
+
+/* El desplegable de cada targeta de membre. */
+.soc-league-item {
+    border-radius: 12px;
+}
+
+.soc-league-item.is-open {
+    background: var(--glass-bg);
+}
+
+.soc-league-toggle {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.55;
+}
+
+.soc-league-toggle:hover {
+    background: var(--table-hover);
+    opacity: 1;
+}
+
+.soc-chevron {
+    display: inline-flex;
+    transition: transform 0.2s ease;
+}
+
+.soc-league-item.is-open .soc-chevron {
+    transform: rotate(180deg);
+}
+
+.soc-league-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 2px 8px 10px 51px;
+}
+
+/* L'atribut `hidden` ha de poder amagar-la tot i el `display: flex`. */
+.soc-league-detail[hidden] {
+    display: none;
+}
+
+.soc-break-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+    min-width: 0;
+}
+
+.soc-break-label {
+    flex: 0 0 auto;
+    min-width: 82px;
+}
+
+.soc-break-detail {
+    flex: 1;
+    min-width: 0;
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+}
+
+.soc-break-xp {
+    flex: 0 0 auto;
+    font-weight: 700;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.soc-break-line.is-total {
+    margin-top: 2px;
+    padding-top: 6px;
+    border-top: 1px solid var(--table-hover);
+    font-weight: 700;
+}
+
+/* Els botons de la lliga (convidar, marxar) i el formulari de crear-ne. */
+.soc-league-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 2px 2px;
+}
+
+.soc-league-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 190px;
+    overflow-y: auto;
+}
+
+.soc-league-pick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 6px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.soc-league-pick:hover {
+    background: var(--table-hover);
+}
+
+.soc-league-pick .soc-person-name {
+    flex: 1;
+    min-width: 0;
+}
+
 /* ============================================================
    Avisos
    ============================================================ */

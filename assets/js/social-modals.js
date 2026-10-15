@@ -1,6 +1,7 @@
 /**
  * social-modals.js · les fitxes que s'obren a sobre de la pàgina:
- * el perfil d'algú, l'edició del perfil propi i les confirmacions.
+ * el perfil d'algú, l'edició del perfil propi, les confirmacions i les
+ * de la lliga (crear-la i convidar-hi gent).
  *
  * Reutilitza la capa `.modal` / `.modal-content` de l'aplicació (la
  * mateixa del diàleg del compte), així que el look & feel i el
@@ -17,11 +18,14 @@ import {
     rejectFriendRequest,
     removeFriend,
     updateProfile,
+    createLeague,
+    addLeagueMembers,
     notify
 } from './social-store.js';
 import { esc, get, t, activityLabel, avatarMarkup, hydrate } from './social-ui.js';
 import { getLevelForPoints } from './levels.js';
 import { uploadToImgbb } from './social-imgbb.js';
+import { GOAL_STEPS, GOAL_MIN } from './league-score.js';
 
 /* ================================================================
    Base dels modals
@@ -95,7 +99,7 @@ function bindKeys() {
 }
 
 /** Una confirmació de sí/no. Retorna cert si s'ha confirmat. */
-function openConfirm(message, confirmLabel) {
+export function openConfirm(message, confirmLabel) {
     return new Promise((resolve) => {
         const modal = createModal(`
             <p class="soc-confirm-text">${message}</p>
@@ -369,4 +373,117 @@ function showMessage(el, text) {
     el.textContent = text;
     el.hidden = !text;
     el.classList.toggle('is-ok', false);
+}
+
+/* ================================================================
+   Lliga: crear-la i convidar-hi amics
+   ================================================================ */
+
+/** El formulari de crear una lliga: nom, objectiu i amb qui comença. */
+export function openLeagueCreate() {
+    const friends = state.friends ?? [];
+
+    const picker = friends.length
+        ? friends.map((friend) => `
+            <label class="soc-league-pick">
+                <input type="checkbox" value="${esc(friend.uid)}">
+                <span class="soc-avatar soc-avatar-${esc(friend.status ?? 'offline')}">${avatarMarkup(friend)}</span>
+                <span class="soc-person-name">${esc(friend.name ?? 'Jugador')}</span>
+            </label>
+        `).join('')
+        : `<p class="soc-hint">${t('league.noFriends')}</p>`;
+
+    const modal = createModal(`
+        <h3 class="soc-modal-title">${t('league.create')}</h3>
+        <div class="soc-edit">
+            <label class="soc-label" for="leagueName">${t('league.name')}</label>
+            <input id="leagueName" class="auth-input" type="text" maxlength="40"
+                   autocomplete="off" data-autofocus>
+
+            <label class="soc-label" for="leagueGoal">${t('league.goal')}</label>
+            <select id="leagueGoal" class="auth-input">
+                ${GOAL_STEPS.map((goal) => `
+                    <option value="${goal}" ${goal === GOAL_MIN ? 'selected' : ''}>${goal.toLocaleString()} ${t('ui.xp')}</option>
+                `).join('')}
+            </select>
+
+            <p class="soc-label">${t('league.friends')}</p>
+            <div class="soc-league-picker">${picker}</div>
+
+            <p class="soc-form-msg" id="leagueMsg" hidden></p>
+            <div class="soc-modal-actions">
+                <button type="button" class="soc-btn" data-close>${t('ui.cancel')}</button>
+                <button type="button" class="soc-btn soc-btn-primary" id="leagueCreateBtn">${t('league.create')}</button>
+            </div>
+        </div>
+    `, { label: t('league.create'), className: 'soc-modal-edit' });
+
+    const message = modal.el.querySelector('#leagueMsg');
+    const button = modal.el.querySelector('#leagueCreateBtn');
+
+    button.addEventListener('click', async () => {
+        const name = modal.el.querySelector('#leagueName').value.trim();
+        if (!name) {
+            showMessage(message, t('league.name'));
+            return;
+        }
+
+        const goal = Number(modal.el.querySelector('#leagueGoal').value) || GOAL_MIN;
+        const friendUids = [...modal.el.querySelectorAll('.soc-league-picker input:checked')]
+            .map((input) => input.value);
+
+        button.disabled = true;
+        const result = await createLeague({ name, goal, friendUids });
+
+        if (result.ok) {
+            modal.close();
+            notify(get('league.created'));
+            return;
+        }
+
+        button.disabled = false;
+        showMessage(message, t('social.error_action'));
+    });
+}
+
+/** La llista d'amics que encara no són a la lliga, per anar-hi sumant. */
+export function openLeagueInvite(leagueId) {
+    const league = state.leagues.find((item) => item.id === leagueId);
+    if (!league) return;
+
+    const candidates = (state.friends ?? []).filter((friend) => !league.memberUids.includes(friend.uid));
+
+    const modal = createModal(`
+        <h3 class="soc-modal-title">${t('league.invite')}</h3>
+        <div class="soc-list">
+            ${candidates.length ? candidates.map((friend) => `
+                <div class="soc-person soc-league-invite-row">
+                    <span class="soc-avatar soc-avatar-${esc(friend.status ?? 'offline')}">${avatarMarkup(friend)}</span>
+                    <span class="soc-person-main">
+                        <span class="soc-person-name">${esc(friend.name ?? 'Jugador')}</span>
+                    </span>
+                    <span class="soc-person-side">
+                        <button type="button" class="soc-btn soc-btn-primary" data-invite="${esc(friend.uid)}">${t('league.invite')}</button>
+                    </span>
+                </div>
+            `).join('') : `<p class="soc-hint">${t('league.noFriends')}</p>`}
+        </div>
+    `, { label: t('league.invite'), className: 'soc-modal-edit' });
+
+    modal.el.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-invite]');
+        if (!button || button.disabled) return;
+
+        button.disabled = true;
+        const result = await addLeagueMembers(leagueId, [button.dataset.invite]);
+
+        if (result.ok) {
+            button.closest('.soc-league-invite-row')?.remove();
+            notify(get('league.added'));
+            return;
+        }
+
+        button.disabled = false;
+        notify(get('social.error_action'));
+    });
 }

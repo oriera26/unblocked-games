@@ -48,6 +48,33 @@ let name = null;
 /** Segons actius que encara no s'han desat (amb decimals). */
 let pending = 0;
 
+/** Segons comptats sencers d'aquesta sessió (des que s'ha obert el joc). */
+let session = 0;
+
+/**
+ * Els escoltadors del flush.
+ *
+ * Cada cop que el comptador desa un tros de temps de joc, avisa els qui
+ * s'hi hagin subscrit. Ho fa servir el Social per sumar els minuts a les
+ * lligues, però aquí no es coneix ningú: només s'avisa.
+ */
+const listeners = new Set();
+
+/**
+ * Subscriu-se als trossos de temps que es van desant.
+ *
+ * El listener rep `{ game, seconds, sessionSeconds }`: el nom del joc,
+ * els segons d'aquest tros i els de la sessió sencera. Retorna la funció
+ * per deixar d'escoltar.
+ *
+ * @param {(play: { game: string, seconds: number, sessionSeconds: number }) => void} listener
+ * @returns {() => void}
+ */
+export function onPlaytimeFlush(listener) {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+}
+
 /** Últim moment en què es va mirar el rellotge, per no comptar salts. */
 let lastTick = 0;
 
@@ -86,7 +113,16 @@ function flush() {
     if (whole <= 0 || !name) return;
 
     pending -= whole;
+    session += whole;
     recordPlaytime(name, whole);
+
+    for (const listener of [...listeners]) {
+        try {
+            listener({ game: name, seconds: whole, sessionSeconds: session });
+        } catch {
+            // Un escoltador trencat no ha d'aturar el comptador.
+        }
+    }
 }
 
 /** Enganxa els escoltadors d'activitat a una finestra o document. */
@@ -138,6 +174,7 @@ export function startPlaytime(gameName, iframe) {
 
     name = gameName;
     pending = 0;
+    session = 0;
     lastTick = Date.now();
     lastActivity = Date.now();
 
@@ -181,6 +218,7 @@ export function stopPlaytime() {
 
     name = null;
     pending = 0;
+    session = 0;
 }
 
 function onVisibility() {

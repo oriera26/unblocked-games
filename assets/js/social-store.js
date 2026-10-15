@@ -12,7 +12,13 @@
  *                       points, lvl, streak, status, game, giftsBalance, at
  *   friendships/{pass}  uids: [a, b], status, requestedBy, at,
  *                       acceptedAt?, pinned?
- *   league/{setmana}    week, xpTarget, entries: { uid: { uid, name, icon, xp } }
+ *   leagues/{id}        name, icon, ownerUid, goal, createdAt, memberUids,
+ *                       members: { uid: { name, photo, icon } }, at
+ *   leagues/{id}/seasons/{n}
+ *                       scores: { uid: { xp, seconds, newCount, blockCount,
+ *                       boost, games, days } }  (vegeu league-score.js)
+ *   leagueWinners/{id}_{n}
+ *                       leagueId, season, winnerUids, winners, at
  *   feed/{id}           actorUid, actorName, actorIcon, game, score, at, reactions
  *   gifts/{id}          label, icon, price, createdAt, claimedBy: []
  *   chat/{canal}/messages/{id}
@@ -24,6 +30,10 @@ import { IS_CONFIGURED } from './firebase-config.js';
 import { ensureDb, firestore, describeError, pairId } from './social-db.js';
 import { getLevelForPoints } from './levels.js';
 import { stats } from './state.js';
+import {
+    seasonWindow, dayKey, applyPlay, normalize, GOAL_MIN
+} from './league-score.js';
+import { onPlaytimeFlush } from './playtime.js';
 
 /* ================================================================
    Subscripcions d'estat
@@ -69,7 +79,8 @@ function blankState() {
         suggestions: [],        // gent que potser coneixes
         notifications: [],      // avisos locals de les meves accions
 
-        league: { week: '', xp: 0, xpTarget: 2000, entries: [] },
+        leagues: [],            // les meves lligues, amb la temporada en curs
+        leagueError: null,      // si les lligues no s'han pogut escoltar
         feed: [],
         gifts: [],
         giftBalance: 0,
@@ -108,6 +119,12 @@ export function startSocialStore() {
     }
 
     onAuthChange(handleUser);
+
+    // Els minuts jugats de debò alimenten les lligues (si n'hi ha). El
+    // flush de playtime és el pols natural: cada trenta segons de joc.
+    onPlaytimeFlush((play) => {
+        recordLeaguePlay(play).catch(() => { /* el temps del joc va a part */ });
+    });
 }
 
 /** Torna-ho a provar després d'un error: refà la connexió amb la sessió actual. */
@@ -153,8 +170,7 @@ async function connect(user) {
     watchSelf(user);
     watchFriendships(user);
     watchSuggestions(user);
-    watchLeague(user);
-    watchFeed(user);
+    watchLeagues(user);    watchFeed(user);
     watchGifts(user);
     watchChat(user);
     startPresence(user);
@@ -662,101 +678,413 @@ function watchSuggestions(user) {
 }
 
 /* ================================================================
-   Lliga setmanal
-   ================================================================ */
+   Lligues · temporada de 21 dies
+   ================================================================
 
-/** La setmana ISO d'una data, amb el format 2026-W29. */
-export function currentWeek(date = new Date()) {
-    const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const day = target.getUTCDay() || 7;
-    target.setUTCDate(target.getUTCDate() + 4 - day);
+   Una lliga és un grup tancat: qui la crea hi convida amics i tots
+   competeixen per l'objectiu d'XP de la temporada (21 dies). La
+   puntuació la porta `league-score.js`; aquí només hi ha les lectures
+   i les escriptures.
 
-    const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
-    const week = Math.ceil(((target - yearStart) / 86400000 + 1) / 7);
-    return `${target.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+   Als documents, la temporada es guarda com `seasons/{n}` i el resultat
+   final com `leagueWinners/{id}_{n}`. La temporada `n` es calcula des de
+   `createdAt` (tantes finestres de 21 dies): així no cal cap escriptura
+   per fer-les avançar. */
+
+/** Les puntuacions llegides, per clau `id:n` (fora de `state` perquè
+    els listeners les van refrescant). */
+let leagueScores = {};
+/** Els listeners de temporada, per clau `id:n`. */
+let leagueSeasonSubs = {};
+/** Els guanyadors ja demanats, per clau `id:n`. */
+let leagueWinnersAsked = {};
+/** Els rètols dels guanyadors, per id de lliga (sobreviuen als refrescos). */
+let leagueBanners = {};
+
+function leagueKey(id, n) {
+    return `${id}:${n}`;
 }
 
-function watchLeague(user) {
+function watchLeagues(user) {
     const connection = fs();
     if (!connection) return;
     const { api, db } = connection;
 
-    const week = currentWeek();
-    state.league = { week, xp: 0, xpTarget: 2000, entries: [] };
+    // Les regles només deixen veure les lligues on consto com a membre.
+    const q = api.query(
+        api.collection(db, 'leagues'),
+        api.where('memberUids', 'array-contains', user.uid)
+    );
 
-    unsubs.push(api.onSnapshot(api.doc(db, 'league', week), (snap) => {
-        if (!snap.exists()) {
-            state.league = { week, xp: 0, xpTarget: 2000, entries: [] };
-            emit();
-            return;
-        }
+    unsubs.push(api.onSnapshot(q, (snap) => {
+        const list = snap.docs.map((doc) => {
+            const league = { id: doc.id, ...doc.data() };
+            league.memberUids = Array.isArray(league.memberUids) ? league.memberUids : [];
+            league.members = league.members ?? {};
+            league.goal = Math.max(GOAL_MIN, Math.round(Number(league.goal) || GOAL_MIN));
+            league.season = seasonWindow(league.createdAt);
+            league.scores = leagueScores[leagueKey(league.id, league.season.n)] ?? {};
+            league.winner = leagueBanners[league.id] ?? null;
+            return league;
+        });
 
-        const data = snap.data();
-        const entries = Object.values(data.entries ?? {})
-            .map((entry) => ({
-                uid: entry.uid,
-                name: entry.name ?? 'Jugador',
-                icon: entry.icon ?? '',
-                photo: entry.photo ?? '',
-                xp: entry.xp ?? 0
-            }))
-            .sort((a, b) => b.xp - a.xp);
+        // La més nova, primer.
+        list.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 
-        const mine = entries.find((entry) => entry.uid === user.uid);
-        state.league = {
-            week,
-            xp: mine?.xp ?? 0,
-            xpTarget: data.xpTarget ?? 2000,
-            entries
-        };
+        state.leagues = list;
+        watchLeagueSeasons(list);
+        emit();
+    }, (error) => {
+        state.leagueError = describeError(error);
         emit();
     }));
 }
 
+/** Escolta la temporada en curs de cada lliga (i el rètol de l'anterior). */
+function watchLeagueSeasons(list) {
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
+
+    const alive = new Set(list.map((league) => leagueKey(league.id, league.season.n)));
+
+    for (const key of Object.keys(leagueSeasonSubs)) {
+        if (alive.has(key)) continue;
+        try { leagueSeasonSubs[key](); } catch { /* ja no hi era */ }
+        delete leagueSeasonSubs[key];
+        delete leagueScores[key];
+    }
+
+    for (const league of list) {
+        const n = league.season.n;
+        const key = leagueKey(league.id, n);
+        if (leagueSeasonSubs[key]) continue;
+
+        leagueSeasonSubs[key] = api.onSnapshot(
+            api.doc(db, 'leagues', league.id, 'seasons', String(n)),
+            (snap) => {
+                leagueScores[key] = snap.exists() ? (snap.data().scores ?? {}) : {};
+                const target = state.leagues.find((item) => item.id === league.id && item.season?.n === n);
+                if (target) {
+                    target.scores = leagueScores[key];
+                    emit();
+                }
+            }
+        );
+
+        // El rètol del guanyador de la temporada passada (una sola vegada).
+        if (n > 1 && !leagueWinnersAsked[key]) {
+            leagueWinnersAsked[key] = true;
+            askWinner(league.id, n - 1);
+        }
+    }
+}
+
 /**
- * Suma XP a la meva entrada de la lliga d'aquesta setmana.
+ * Demana (o tanca) el resultat d'una temporada acabada.
  *
- * La lliga s'escriu amb `runTransaction` i només es toca la meva entrada:
- * les regles ho comproven i no deixarien passar res més.
+ * Si el document del guanyador no existeix, el primer membre que passa
+ * per aquí el calcula de les puntuacions i el desa; així el rètol queda
+ * per a tothom sense necessitat de cap servidor.
  */
-export async function addLeagueXP(amount) {
+async function askWinner(leagueId, season) {
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
+
+    try {
+        const ref = api.doc(db, 'leagueWinners', `${leagueId}_${season}`);
+        let snap = await api.getDoc(ref);
+
+        if (!snap.exists()) {
+            const seasonSnap = await api.getDoc(api.doc(db, 'leagues', leagueId, 'seasons', String(season)));
+            if (!seasonSnap.exists()) return;
+
+            const league = state.leagues.find((item) => item.id === leagueId);
+            const winners = topThree(seasonSnap.data().scores ?? {}, league?.members ?? {});
+            if (!winners.length) return;
+
+            const banner = {
+                leagueId,
+                season,
+                winnerUids: winners.map((row) => row.uid),
+                winners,
+                at: Date.now()
+            };
+            await api.setDoc(ref, banner);
+            snap = { data: () => banner };
+        }
+
+        const data = snap.data() ?? {};
+        leagueBanners[leagueId] = {
+            season: data.season ?? season,
+            winners: data.winners ?? []
+        };
+        for (const league of state.leagues) {
+            if (league.id === leagueId) league.winner = leagueBanners[leagueId];
+        }
+        emit();
+    } catch {
+        // El rètol és informatiu: si no es pot llegir ni escriure, no passa res.
+    }
+}
+
+/** Els tres primers d'un mapa de puntuacions, amb el nom de la lliga. */
+function topThree(scores, members) {
+    return Object.entries(scores)
+        .map(([uid, score]) => ({
+            uid,
+            name: members[uid]?.name ?? 'Jugador',
+            photo: members[uid]?.photo ?? '',
+            icon: members[uid]?.icon ?? '',
+            xp: Math.round(Number(score?.xp) || 0)
+        }))
+        .filter((row) => row.xp > 0)
+        .sort((a, b) => b.xp - a.xp)
+        .slice(0, 3);
+}
+
+/** L'entrada d'algú al mapa de membres d'una lliga. */
+function memberEntry(person) {
+    return {
+        name: String(person?.name ?? 'Jugador').slice(0, 40),
+        photo: String(person?.photo ?? ''),
+        icon: String(person?.icon ?? '')
+    };
+}
+
+function myMemberEntry() {
+    return memberEntry(state.me ?? {});
+}
+
+/**
+ * Les files de la lliga tal com les dibuixa el hub: cada membre amb la
+ * seva puntuació de la temporada, de més XP a menys.
+ */
+export function leagueRows(league) {
+    return league.memberUids
+        .map((uid) => {
+            const member = league.members[uid] ?? {};
+            const score = normalize(league.scores?.[uid] ?? null);
+            return {
+                uid,
+                name: member.name ?? 'Jugador',
+                photo: member.photo ?? '',
+                icon: member.icon ?? '',
+                score,
+                xp: score.xp,
+                me: uid === state.me?.uid
+            };
+        })
+        .sort((a, b) => b.xp - a.xp);
+}
+
+/**
+ * Crea una lliga amb un objectiu i, si vols, amb amics a dins.
+ *
+ * @param {{ name: string, icon?: string, goal?: number, friendUids?: string[] }} options
+ */
+export async function createLeague({ name, icon = '', goal = GOAL_MIN, friendUids = [] }) {
     const user = currentUser();
-    const points = Number(amount);
-    if (!user || !Number.isFinite(points) || points === 0) return { ok: false };
+    if (!user) return { ok: false, reason: 'offline' };
 
     const connection = fs();
     if (!connection) return { ok: false, reason: 'offline' };
     const { api, db } = connection;
 
-    const week = currentWeek();
-    const ref = api.doc(db, 'league', week);
+    const cleanName = String(name ?? '').trim().slice(0, 40);
+    if (!cleanName) return { ok: false, reason: 'name' };
+
+    const memberUids = [user.uid];
+    const members = { [user.uid]: myMemberEntry() };
+
+    for (const friend of state.friends) {
+        if (!friendUids.includes(friend.uid)) continue;
+        memberUids.push(friend.uid);
+        members[friend.uid] = memberEntry(friend);
+    }
 
     try {
-        await api.runTransaction(db, async (transaction) => {
-            const snap = await transaction.get(ref);
-            const data = snap.exists() ? snap.data() : {};
-            const entries = { ...(data.entries ?? {}) };
-            const mine = entries[user.uid] ?? {};
-
-            entries[user.uid] = {
-                uid: user.uid,
-                name: state.me?.name ?? 'Jugador',
-                icon: state.me?.icon ?? '',
-                photo: state.me?.photo ?? '',
-                xp: (mine.xp ?? 0) + points
-            };
-
-            transaction.set(ref, {
-                week,
-                xpTarget: data.xpTarget ?? 2000,
-                entries,
-                updatedAt: Date.now()
-            }, { merge: true });
+        await api.addDoc(api.collection(db, 'leagues'), {
+            name: cleanName,
+            icon: String(icon ?? '').slice(0, 8),
+            ownerUid: user.uid,
+            goal: Math.max(GOAL_MIN, Math.round(Number(goal) || GOAL_MIN)),
+            createdAt: Date.now(),
+            memberUids,
+            members,
+            at: Date.now()
         });
         return { ok: true };
     } catch (error) {
         return { ok: false, reason: describeError(error) };
     }
+}
+
+/** Convida amics a una lliga de la qual ets l'amo. */
+export async function addLeagueMembers(leagueId, friendUids = []) {
+    const user = currentUser();
+    const league = state.leagues.find((item) => item.id === leagueId);
+    if (!user || !league) return { ok: false, reason: 'offline' };
+    if (league.ownerUid !== user.uid) return { ok: false, reason: 'owner' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    const uids = [];
+    const patch = {};
+    for (const friend of state.friends) {
+        if (!friendUids.includes(friend.uid)) continue;
+        if (league.memberUids.includes(friend.uid)) continue;
+        uids.push(friend.uid);
+        patch[`members.${friend.uid}`] = memberEntry(friend);
+    }
+    if (!uids.length) return { ok: false, reason: 'empty' };
+
+    try {
+        patch.memberUids = api.arrayUnion(...uids);
+        patch.at = Date.now();
+        await api.updateDoc(api.doc(db, 'leagues', leagueId), patch);
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/** Toca fora un membre (només l'amo). */
+export async function removeLeagueMember(leagueId, uid) {
+    const user = currentUser();
+    const league = state.leagues.find((item) => item.id === leagueId);
+    if (!user || !league) return { ok: false, reason: 'offline' };
+    if (league.ownerUid !== user.uid || uid === user.uid) return { ok: false, reason: 'owner' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    try {
+        await api.updateDoc(api.doc(db, 'leagues', leagueId), {
+            memberUids: api.arrayRemove(uid),
+            [`members.${uid}`]: api.deleteField(),
+            at: Date.now()
+        });
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/**
+ * Marxa de la lliga. Si l'amo se'n va, el relleu passa al primer membre
+ * que hi quedi; si no hi queda ningú, la lliga s'elimina.
+ */
+export async function leaveLeague(leagueId) {
+    const user = currentUser();
+    const league = state.leagues.find((item) => item.id === leagueId);
+    if (!user || !league) return { ok: false, reason: 'offline' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    const rest = league.memberUids.filter((uid) => uid !== user.uid);
+
+    try {
+        const ref = api.doc(db, 'leagues', leagueId);
+        if (!rest.length) {
+            await api.deleteDoc(ref);
+            return { ok: true, closed: true };
+        }
+
+        const patch = {
+            memberUids: api.arrayRemove(user.uid),
+            [`members.${user.uid}`]: api.deleteField(),
+            at: Date.now()
+        };
+        if (league.ownerUid === user.uid) patch.ownerUid = rest[0];
+
+        await api.updateDoc(ref, patch);
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/** Puja (o baixa, mai per sota del terra) l'objectiu de la temporada. */
+export async function setLeagueGoal(leagueId, goal) {
+    const user = currentUser();
+    const league = state.leagues.find((item) => item.id === leagueId);
+    if (!user || !league) return { ok: false, reason: 'offline' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    try {
+        await api.updateDoc(api.doc(db, 'leagues', leagueId), {
+            goal: Math.max(GOAL_MIN, Math.round(Number(goal) || GOAL_MIN)),
+            at: Date.now()
+        });
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/**
+ * Passa els segons que acaben de comptar `playtime` pel motor de
+ * puntuació, a cada lliga meva.
+ *
+ * @param {{ game: string, seconds: number, sessionSeconds: number }} play
+ */
+export async function recordLeaguePlay({ game, seconds, sessionSeconds }) {
+    const user = currentUser();
+    const whole = Math.floor(Number(seconds) || 0);
+    if (!user || whole <= 0 || !state.leagues.length) return;
+
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
+
+    const day = dayKey();
+    const streak = Math.max(0, Number(stats.streak) || 0);
+
+    let changed = false;
+
+    for (const league of state.leagues) {
+        const n = league.season?.n;
+        if (!n) continue;
+
+        const key = leagueKey(league.id, n);
+        const before = leagueScores[key]?.[user.uid] ?? null;
+        const { state: next } = applyPlay(before, {
+            game,
+            seconds: whole,
+            sessionSeconds,
+            day,
+            streak
+        });
+
+        // Actualització optimista: l'estat és acumulatiu i es desa sencer,
+        // així que si una escriptura falla (sense xarxa), la del proper
+        // flush ja hi porta tot el que faltava.
+        leagueScores[key] = { ...(leagueScores[key] ?? {}), [user.uid]: next };
+        league.scores = leagueScores[key];
+        changed = true;
+
+        try {
+            await api.setDoc(
+                api.doc(db, 'leagues', league.id, 'seasons', String(n)),
+                { scores: { [user.uid]: next }, at: Date.now() },
+                { merge: true }
+            );
+        } catch {
+            // Sense xarxa o sense permís: es tornarà a provar al proper flush.
+        }
+    }
+
+    if (changed) emit();
 }
 
 /* ================================================================

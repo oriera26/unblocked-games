@@ -18,10 +18,13 @@ import {
     searchProfiles,
     notify,
     markNotificationsRead,
-    isFriend
+    isFriend,
+    leagueRows,
+    leaveLeague
 } from './social-store.js';
+import { breakdown } from './league-score.js';
 import { esc, get, t, timeAgo, statusLabel, avatarMarkup, hydrate } from './social-ui.js';
-import { openProfile } from './social-modals.js';
+import { openProfile, openLeagueCreate, openLeagueInvite, openConfirm } from './social-modals.js';
 
 let root = null;
 let unsubscribeStore = null;
@@ -32,6 +35,9 @@ let searchResults = [];        // resultats remots de l'última cerca
 let searchLoading = false;
 let searchToken = 0;           // per descartar respostes velles
 let searchTimer = null;
+
+/** La targeta de membre desplegada ('id:uid'), o null. Només una a la vegada. */
+let openLeagueMember = null;
 
 /* ================================================================
    Muntatge (una sola vegada)
@@ -65,7 +71,7 @@ export function mountHub(container) {
             <section class="social-card">
                 <div class="social-card-title">
                     <span class="soc-ico" data-lucide="trophy" data-size="18"></span>
-                    <span>${t('social.league')}</span>
+                    <span>${t('ui.league')}</span>
                     <span class="social-card-count" id="hubLeagueWeek"></span>
                 </div>
                 <div id="hubLeagueBody"></div>
@@ -176,8 +182,14 @@ function refreshHeader() {
     search.placeholder = t('social.searchPlayers');
     search.setAttribute('aria-label', t('social.searchPlayers'));
 
-    const week = root.querySelector('#hubLeagueWeek');
-    week.textContent = state.league.week ?? '';
+    const leagueLabel = root.querySelector('#hubLeagueWeek');
+    const league = state.leagues?.[0];
+    if (league) {
+        const days = Math.max(1, Math.ceil((league.season.end - Date.now()) / 86400000));
+        leagueLabel.textContent = `${t('league.seasonShort', { n: league.season.n })} · ${t('league.daysShort', { n: days })}`;
+    } else {
+        leagueLabel.textContent = '';
+    }
 }
 
 function refreshSubtabs() {
@@ -376,37 +388,117 @@ function refreshSuggestions() {
 
 function refreshLeague() {
     const body = root.querySelector('#hubLeagueBody');
-    const { entries, xp, xpTarget } = state.league;
+    const leagues = state.leagues ?? [];
 
-    if (!entries.length) {
-        body.innerHTML = emptyState(t('ui.empty_league'), t('ui.no_league_yet'));
+    if (!leagues.length) {
+        body.innerHTML = `
+            ${emptyState(t('ui.empty_league'), t('ui.no_league_yet'))}
+            <div class="soc-league-actions">
+                <button type="button" class="soc-btn soc-btn-primary" data-act="league-create">${t('league.create')}</button>
+            </div>
+        `;
         return;
     }
 
-    const goal = Math.max(1, xpTarget || 2000);
-    const percent = Math.min(100, Math.round((xp / goal) * 100));
-    const myRank = entries.findIndex((entry) => entry.uid === state.me?.uid) + 1;
+    body.innerHTML = leagues.map((league) => renderLeague(league)).join('');
+}
 
-    body.innerHTML = `
-        <div class="soc-league-me">
-            <span class="soc-league-rank">${myRank > 0 ? `#${myRank}` : '—'}</span>
-            <div class="soc-league-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${xp}">
-                <div class="soc-league-bar"><span style="width:${percent}%"></span></div>
-                <span class="soc-league-goal">${xp} / ${goal} ${t('ui.xp')}</span>
+function renderLeague(league) {
+    const members = leagueRows(league);
+    const mine = members.find((member) => member.me);
+    const goal = Math.max(1, league.goal);
+    const xp = mine?.xp ?? 0;
+    const percent = Math.min(100, Math.round((xp / goal) * 100));
+    const rank = mine ? members.findIndex((member) => member.me) + 1 : 0;
+    const days = Math.max(1, Math.ceil((league.season.end - Date.now()) / 86400000));
+    const daysLabel = days === 1 ? t('league.dayLeft') : t('league.daysLeft', { n: days });
+    const isOwner = league.ownerUid === state.me?.uid;
+    const winner = league.winner?.winners?.[0];
+
+    return `
+        <div class="soc-league" data-league="${esc(league.id)}">
+            <div class="soc-league-head">
+                <span class="soc-league-name">${esc(`${league.icon ? `${league.icon} ` : ''}${league.name}`)}</span>
+                <span class="soc-league-days">${daysLabel}</span>
+            </div>
+
+            <div class="soc-league-me">
+                <span class="soc-league-rank">${rank > 0 ? `#${rank}` : '—'}</span>
+                <div class="soc-league-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${xp}">
+                    <div class="soc-league-bar"><span style="width:${percent}%"></span></div>
+                    <span class="soc-league-goal">${xp} / ${goal} ${t('ui.xp')}</span>
+                </div>
+            </div>
+
+            ${winner ? `<div class="soc-league-winner">🏆 ${t('league.winner', { name: winner.name })}</div>` : ''}
+
+            <div class="soc-list soc-league-list">
+                ${members.map((member, index) => renderLeagueMember(league, member, index)).join('')}
+            </div>
+
+            <div class="soc-league-actions">
+                ${isOwner ? `<button type="button" class="soc-btn" data-act="league-invite" data-league="${esc(league.id)}">${t('league.invite')}</button>` : ''}
+                <button type="button" class="soc-btn soc-btn-danger-outline" data-act="league-leave" data-league="${esc(league.id)}">${t('league.leave')}</button>
             </div>
         </div>
-        <div class="soc-list soc-league-list">
-            ${entries.slice(0, 10).map((entry, index) => `
-                <div class="soc-league-row ${entry.uid === state.me?.uid ? 'is-me' : ''} ${index < 3 ? 'is-top' : ''}"
-                     data-act="profile" data-uid="${esc(entry.uid)}" role="button" tabindex="0">
-                    <span class="soc-league-pos">${index + 1}</span>
-                    <span class="soc-avatar soc-avatar-${entry.uid === state.me?.uid ? 'online' : 'offline'}">${avatarMarkup(entry)}</span>
-                    <span class="soc-person-name">${esc(entry.name ?? 'Jugador')}</span>
-                    <span class="soc-league-xp">${entry.xp} ${t('ui.xp')}</span>
-                </div>
-            `).join('')}
+    `;
+}
+
+/** El xevró del desplegable, en línia: no depèn de `hydrate`. */
+const CHEVRON = `<svg class="soc-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+    aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>`;
+
+function renderLeagueMember(league, member, index) {
+    const key = `${league.id}:${member.uid}`;
+    const open = openLeagueMember === key;
+    const medal = ['🥇', '🥈', '🥉'][index] ?? String(index + 1);
+
+    return `
+        <div class="soc-league-item ${open ? 'is-open' : ''}">
+            <div class="soc-league-row ${member.me ? 'is-me' : ''} ${index < 3 ? 'is-top' : ''}"
+                 data-act="profile" data-uid="${esc(member.uid)}" role="button" tabindex="0">
+                <span class="soc-league-pos">${medal}</span>
+                <span class="soc-avatar soc-avatar-${member.me ? 'online' : 'offline'}">${avatarMarkup(member)}</span>
+                <span class="soc-person-name">${esc(member.name)}</span>
+                <span class="soc-league-xp">${member.xp} ${t('ui.xp')}</span>
+                <button type="button" class="soc-league-toggle" data-act="league-toggle"
+                        data-league="${esc(league.id)}" data-uid="${esc(member.uid)}"
+                        aria-expanded="${open}" aria-label="${t('league.help')}">
+                    ${CHEVRON}
+                </button>
+            </div>
+            <div class="soc-league-detail" ${open ? '' : 'hidden'}>
+                ${renderBreakdown(member)}
+            </div>
         </div>
     `;
+}
+
+/** El desplegable d'una targeta: d'on surt cada punt del membre. */
+function renderBreakdown(member) {
+    const lines = breakdown(member.score);
+    const hours = Math.floor(lines.minutes / 60);
+    const minutes = lines.minutes % 60;
+    const played = hours === 0 ? `${minutes} min`
+        : minutes === 0 ? `${hours} h`
+        : `${hours} h ${minutes} min`;
+
+    const rows = [
+        [`⏱️ ${t('league.breakTime')}`, played, lines.timeXp],
+        [`🆕 ${t('league.breakGames')}`, String(lines.newCount), lines.newXp],
+        [`🔥 ${t('league.breakStreaks')}`, String(lines.blockCount), lines.blockXp],
+        [`⚡ ${t('league.breakBoost')}`, '', lines.boost],
+        [`${t('league.total')}`, '', lines.xp]
+    ];
+
+    return rows.map(([label, detail, xp], index) => `
+        <div class="soc-break-line ${index === rows.length - 1 ? 'is-total' : ''}">
+            <span class="soc-break-label">${label}</span>
+            <span class="soc-break-detail">${detail}</span>
+            <span class="soc-break-xp">${xp} ${t('ui.xp')}</span>
+        </div>
+    `).join('');
 }
 
 /* ================================================================
@@ -501,5 +593,36 @@ async function onClick(event) {
 
     if (act === 'read-notifs') {
         markNotificationsRead();
+        return;
+    }
+
+    if (act === 'league-toggle') {
+        event.stopPropagation();
+        const key = `${target.dataset.league}:${uid}`;
+        openLeagueMember = openLeagueMember === key ? null : key;
+        refreshLeague();
+        return;
+    }
+
+    if (act === 'league-create') {
+        openLeagueCreate();
+        return;
+    }
+
+    if (act === 'league-invite') {
+        openLeagueInvite(target.dataset.league);
+        return;
+    }
+
+    if (act === 'league-leave') {
+        const league = state.leagues.find((item) => item.id === target.dataset.league);
+        if (!league) return;
+
+        const confirmed = await openConfirm(t('league.leaveAsk', { name: league.name }), t('league.leave'));
+        if (!confirmed) return;
+
+        const result = await leaveLeague(league.id);
+        notify(result.ok ? get('league.left') : get('social.error_action'));
+        return;
     }
 }
