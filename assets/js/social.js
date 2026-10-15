@@ -58,10 +58,8 @@ function render() {
     `;
 
     root.innerHTML = /*html*/ `
-        <div id="view-social">
-            ${header}
-            ${socialLayout}
-        </div>
+        ${header}
+        ${socialLayout}
     `;
 
     initChatPanel(root);
