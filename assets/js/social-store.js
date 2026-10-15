@@ -1,222 +1,101 @@
 /**
- * social-store.js · estat de la secció Social, vingut de Firebase.
+ * social-store.js · l'estat de la secció Social i tot el que parla amb
+ * Firestore (amics, lliga, activitat, regals i xat).
  *
- * Font de veritat: Firestore.
- *   - profiles/{uid}           → perfil propi (i d'altres per a suggeriments)
- *   - friendships/{pairId}    → amistats (status: pending | accepted)
- *   - league/{week}           → lliga setmanal (pas 3)
- *   - feed/{docId}            → activitat (pas 4)
- *   - gifts/{docId}           → regals (pas 4)
- *   - chat/{channelId}/messages → xat (pas 5)
+ * Els altres mòduls del Social (hub, xat, modals, orquestrador) no toquen
+ * Firestore mai: llegeixen `state` i criden les accions d'aquí. Així hi ha
+ * un sol lloc on viuen les regles de dades i els noms dels camps.
  *
- * L'API pública i la forma de `state` es mantenen igual que abans perquè
- * social-hub, social-chat i social-modals no s'hagin de reescriure.
+ * Forma dels documents (ha de quadrar amb firestore.rules):
+ *
+ *   profiles/{uid}      name, nameLower, username, bio, photo, icon,
+ *                       points, lvl, streak, status, game, giftsBalance, at
+ *   friendships/{pass}  uids: [a, b], status, requestedBy, at,
+ *                       acceptedAt?, pinned?
+ *   league/{setmana}    week, xpTarget, entries: { uid: { uid, name, icon, xp } }
+ *   feed/{id}           actorUid, actorName, actorIcon, game, score, at, reactions
+ *   gifts/{id}          label, icon, price, createdAt, claimedBy: []
+ *   chat/{canal}/messages/{id}
+ *                       fromUid, fromName, fromIcon, text, at, reactions
  */
 
-import { onAuthChange } from './auth.js';
+import { onAuthChange, currentUser } from './auth.js';
 import { IS_CONFIGURED } from './firebase-config.js';
 import { ensureDb, firestore, describeError, pairId } from './social-db.js';
 import { getLevelForPoints } from './levels.js';
 import { stats } from './state.js';
 
 /* ================================================================
-   Avisos de canvi
+   Subscripcions d'estat
    ================================================================ */
 
 const listeners = new Set();
 
-/** Es crida sempre que `state` canvia (idioma a part). */
+/**
+ * Subscriu qui vulgui saber quan canvia l'estat Social.
+ *
+ * El subscriber rep l'estat d'entrada (guest, loading, ready o error) i
+ * després cada vegada que alguna cosa canvia. Retorna la funció per
+ * deixar d'escoltar.
+ *
+ * @param {(status: string) => void} listener
+ * @returns {() => void}
+ */
 export function onSocialChange(listener) {
     listeners.add(listener);
-    // Notify immediately with current status
-    try {
-        listener(state.status);
-    } catch {
-        /* un escoltador trencat no ha de tombar la resta */
-    }
+    try { listener(state.status); } catch { /* un subscriber trencat no atura la resta */ }
     return () => listeners.delete(listener);
 }
 
 function emit() {
-    for (const listener of listeners) {
-        try {
-            listener(state.status);
-        } catch {
-            /* un escoltador trencat no ha de tombar la resta */
-        }
+    for (const listener of [...listeners]) {
+        try { listener(state.status); } catch { /* idem */ }
     }
 }
 
 /* ================================================================
-   L'estat (mateixa forma que la versió de demostració)
+   Estat
    ================================================================ */
 
 function blankState() {
     return {
-        status: 'guest',            // guest | loading | ready | error
-        error: null,                // 'config' | 'permission' | 'offline' | 'unknown'
-        me: null,                   // { id:'me', uid, name, icon, points, lvl, streak, status, game }
-        friends: [],                // [{ id, name, icon, status, activity, pinned, wins, losses, level, record, ... }]
-        requests: [],               // [{ id, name, icon, uid }]
-        suggestions: [],            // [{ id, name, icon, uid }]
-        notifications: [],          // [{ id, text, at, read }]
-        league: { division: '', week: '', xp: 0, xpTarget: 2000, entries: [] },
-        duels: [],
-        tournaments: [],
-        community: { goal: 0, done: 0 },
-        titles: [],
+        status: 'guest',        // guest | loading | ready | error
+        error: null,            // config | permission | auth | offline | unknown
+
+        me: null,               // el meu perfil (profiles/{uid})
+        friends: [],            // amistats acceptades
+        requests: [],           // sol·licituds rebudes (pendents)
+        sentRequests: [],       // sol·licituds enviades (pendents)
+        suggestions: [],        // gent que potser coneixes
+        notifications: [],      // avisos locals de les meves accions
+
+        league: { week: '', xp: 0, xpTarget: 2000, entries: [] },
         feed: [],
         gifts: [],
-        giftsBalance: 0,
+        giftBalance: 0,
+
         chat: {
             active: 'global',
-            channels: [{ id: 'global', name: 'Global', kind: 'global' }],
-            messages: { global: [] },
-            unread: {}
-        },
-        ui: { showNotifs: false, search: '' }
+            channels: [{ id: 'global' }],
+            messages: { global: [] }
+        }
     };
 }
 
 export const state = blankState();
 
-/** Reinicia l'estat sense canviar la identitat de l'objecte. */
-function reset(next = {}) {
-    Object.assign(state, blankState(), next);
+function reset() {
+    Object.assign(state, blankState());
 }
 
 /* ================================================================
-   Utilitats que fan servir els altres mòduls del Social
-   ================================================================ */
-
-/** Les respostes del xat de demostració (encara en ús al xat). */
-export const REPLY_TEXT = [
-    'GG! 🔥',
-    'Qui s\'apunta a una altra? 😎',
-    'Bona partida!',
-    'Aquesta la guanyo jo 🙌',
-    'Espera\'t que m\'entreno...',
-    '3048 punts, supera-ho 😏'
-];
-
-/** La setmana ISO, per saber quan toca reiniciar la lliga. */
-export function currentWeek() {
-    const date = new Date();
-    const start = new Date(date.getFullYear(), 0, 1);
-    const days = Math.floor((date - start) / 86400000);
-    const week = Math.ceil((days + start.getDay() + 1) / 7);
-    return `${date.getFullYear()}-W${String(week).padStart(2, '0')}`;
-}
-
-let messageSeq = 0;
-
-/** Crea un missatge de xat amb un identificador únic i estable. */
-export function makeMessage(from, icon, text, at, reactions = {}) {
-    messageSeq += 1;
-    return { id: `m${at.toString(36)}-${messageSeq}`, from, icon, text, at, reactions };
-}
-
-/** El nom amb què el xat i la lliga anomenen el jugador de casa. */
-export function myName() {
-    return state.me?.name ?? '';
-}
-
-/** Troba una persona entre amics, sol·licituds i suggeriments. */
-export function findPerson(id) {
-    return (
-        state.friends.find((person) => person.id === id)
-        ?? state.requests.find((person) => person.id === id)
-        ?? state.suggestions.find((person) => person.id === id)
-    );
-}
-
-/** La cara d'algú pel seu nom; feia servei per als missatges del xat. */
-export function iconOfName(name) {
-    return state.friends.find((person) => person.name === name)?.icon ?? '🙂';
-}
-
-/** Afegeix una notificació al capdamunt de la campana. */
-export function notify(text) {
-    state.notifications.unshift({ id: `n${Date.now()}`, text, at: Date.now(), read: false });
-    emit();
-}
-
-/**
- * Abans desava a `localStorage`. Ara la font de veritat és Firestore i
- * les escriptures les fan les accions, així que no hi ha res a fer aquí.
- */
-export function saveState() {
-    /* la persistència viu a Firestore */
-}
-
-/* ================================================================
-   Accions d'amistat (crides a Firestore)
-   ================================================================ */
-
-/** Envia una sol·licitud d'amistat. */
-export async function sendFriendRequest(targetUid) {
-    const { api, db } = firestore();
-    if (!api || !state.me?.uid) return;
-    const pid = pairId(state.me.uid, targetUid);
-    await api.setDoc(api.doc(db, 'friendships', pid), {
-        uids: [state.me.uid, targetUid].sort(),
-        status: 'pending',
-        requestedBy: state.me.uid,
-        createdAt: Date.now()
-    }, { merge: true });
-}
-
-/** Accepta una sol·licitud d'amistat entrant. */
-export async function acceptFriendRequest(requesterUid) {
-    const { api, db } = firestore();
-    if (!api || !state.me?.uid) return;
-    const pid = pairId(state.me.uid, requesterUid);
-    await api.updateDoc(api.doc(db, 'friendships', pid), {
-        status: 'accepted',
-        acceptedAt: Date.now()
-    });
-}
-
-/** Rebutja una sol·licitud d'amistat entrant. */
-export async function rejectFriendRequest(requesterUid) {
-    const { api, db } = firestore();
-    if (!api || !state.me?.uid) return;
-    const pid = pairId(state.me.uid, requesterUid);
-    await api.deleteDoc(api.doc(db, 'friendships', pid));
-}
-
-/** Elimina un amic existent. */
-export async function removeFriend(friendUid) {
-    const { api, db } = firestore();
-    if (!api || !state.me?.uid) return;
-    const pid = pairId(state.me.uid, friendUid);
-    await api.deleteDoc(api.doc(db, 'friendships', pid));
-}
-
-/** Marca/desmarca un amic com a fixat (pin). Es guarda al perfil local. */
-export function pinFriend(friendId, pinned) {
-    const friend = state.friends.find((f) => f.id === friendId);
-    if (friend) friend.pinned = pinned;
-}
-
-/** Envia una notificació de repte (només local de moment). */
-export function challengeFriend(friendId) {
-    /* la notificació la fa el hub després de l'acció */
-}
-
-/** Envia un regal a un amic (només local de moment). */
-export function giftFriend(friendId) {
-    /* la notificació la fa el hub després de l'acció */
-}
-
-/* ================================================================
-   Connexió amb Firebase
+   Enganxar-se a l'autenticació
    ================================================================ */
 
 let started = false;
 let unsubs = [];
 
-/** Engega l'escolta de la sessió. Es crida des de `social.js`. */
+/** Engega l'escolta de la sessió. Es pot cridar tantes vegades com calgui. */
 export function startSocialStore() {
     if (started) return;
     started = true;
@@ -231,50 +110,45 @@ export function startSocialStore() {
     onAuthChange(handleUser);
 }
 
-function handleUser(user) {
-    teardown();
+/** Torna-ho a provar després d'un error: refà la connexió amb la sessió actual. */
+export function retrySocialStore() {
+    handleUser(currentUser());
+}
+
+async function handleUser(user) {
+    stopWatching();
+
     if (!user) {
         reset();
         emit();
         return;
     }
-    connect(user).catch(() => {
-        state.status = 'error';
-        state.error = 'unknown';
+
+    try {
+        state.status = 'loading';
         emit();
-    });
+        await connect(user);
+        state.status = 'ready';
+        emit();
+    } catch (error) {
+        state.status = 'error';
+        state.error = describeError(error);
+        emit();
+    }
 }
 
-function teardown() {
+function stopWatching() {
     for (const off of unsubs) {
-        try { off(); } catch { /* res a fer */ }
+        try { off(); } catch { /* ja no hi era */ }
     }
     unsubs = [];
 }
 
 async function connect(user) {
-    state.status = 'loading';
-    state.error = null;
-    emit();
-
-    let conn = null;
-    try {
-        conn = await ensureDb();
-    } catch {
-        conn = null;
-    }
-
-    if (!conn) {
-        state.status = 'error';
-        state.error = 'offline';
-        emit();
-        return;
-    }
+    const connection = await ensureDb();
+    if (!connection) throw new Error('Firestore no disponible');
 
     await ensureProfile(user);
-
-    state.status = 'ready';
-    emit();
 
     watchSelf(user);
     watchFriendships(user);
@@ -283,540 +157,823 @@ async function connect(user) {
     watchFeed(user);
     watchGifts(user);
     watchChat(user);
+    startPresence(user);
 }
 
-/* --- El document del propi usuari ------------------------------- */
+/* ================================================================
+   Una mica de mà als accessos a Firestore
+   ================================================================ */
+
+/** La connexió, o null si encara no està engegada. */
+function fs() {
+    return firestore();
+}
+
+/** El meu uid, si hi ha sessió. */
+export function myUid() {
+    return state.me?.uid ?? currentUser()?.uid ?? null;
+}
+
+/** Cert si `uid` és el meu. */
+export function isMe(uid) {
+    return Boolean(uid) && uid === myUid();
+}
+
+/** Cert si `uid` és a la llista d'amics. */
+export function isFriend(uid) {
+    return state.friends.some((friend) => friend.uid === uid);
+}
+
+/* ================================================================
+   El meu perfil
+   ================================================================ */
+
+function slugify(text) {
+    return String(text ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9_-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 14);
+}
+
+function suggestedName(user) {
+    const raw = user.displayName ?? user.email?.split('@')[0] ?? 'Jugador';
+    const clean = String(raw).trim().slice(0, 30);
+    return clean || 'Jugador';
+}
+
+function suggestedUsername(user) {
+    const base = slugify(user.displayName ?? user.email?.split('@')[0] ?? 'jugador') || 'jugador';
+    return `${base}-${String(user.uid).slice(0, 4)}`.slice(0, 20);
+}
 
 async function ensureProfile(user) {
-    const { api, db } = firestore() ?? {};
-    if (!api) throw new Error('sense Firestore');
+    const connection = fs();
+    if (!connection) throw new Error('Firestore no disponible');
+    const { api, db } = connection;
 
     const ref = api.doc(db, 'profiles', user.uid);
     const snap = await api.getDoc(ref);
 
-    const base = {
-        uid: user.uid,
-        name: suggestedName(user),
-        icon: iconFor(user.uid),
-        points: stats.points ?? 0,
-        lvl: getLevelForPoints(stats.points ?? 0).lvl,
-        streak: stats.streak ?? 0,
-        status: 'online',
-        game: null,
-        giftsBalance: 0,
-        at: Date.now()
-    };
-
     if (!snap.exists()) {
-        await api.setDoc(ref, base, { merge: true });
-        applyMe(base);
+        const points = stats.points ?? 0;
+        const base = {
+            name: suggestedName(user),
+            nameLower: suggestedName(user).toLowerCase(),
+            username: suggestedUsername(user),
+            bio: '',
+            photo: '',
+            icon: '',
+            points,
+            lvl: getLevelForPoints(points).lvl,
+            streak: stats.streak ?? 0,
+            status: 'online',
+            game: null,
+            giftsBalance: 0,
+            at: Date.now()
+        };
+        await api.setDoc(ref, base);
+        applyMe(user.uid, base);
         return;
     }
 
-    const data = snap.data() ?? {};
-    const me = { ...base, ...pruneProfile(data) };
-    applyMe(me);
+    const data = snap.data();
+    applyMe(user.uid, data);
 
-    // Si el perfil ha quedat incomplet, el completem.
-    if (!data.name || !data.icon || data.points === undefined) {
-        try { await api.setDoc(ref, base, { merge: true }); } catch { /* res */ }
+    // Si el progrés local va per davant del que hi ha al perfil, es posa
+    // al dia: els punts i el nivell surten d'aquí i ningú més no els
+    // actualitza. Si va per darrere, mana el perfil (un altre dispositiu).
+    const localPoints = stats.points ?? 0;
+    if (localPoints > (data.points ?? 0)) {
+        try {
+            await api.setDoc(ref, {
+                points: localPoints,
+                lvl: getLevelForPoints(localPoints).lvl,
+                streak: stats.streak ?? 0,
+                at: Date.now()
+            }, { merge: true });
+        } catch { /* si falla, es queda el que ja hi havia */ }
     }
+}
+
+function applyMe(uid, doc) {
+    state.me = {
+        uid,
+        name: doc.name ?? 'Jugador',
+        nameLower: doc.nameLower ?? String(doc.name ?? '').toLowerCase(),
+        username: doc.username ?? '',
+        bio: doc.bio ?? '',
+        photo: doc.photo ?? '',
+        icon: doc.icon ?? '',
+        points: doc.points ?? 0,
+        lvl: doc.lvl ?? 1,
+        streak: doc.streak ?? 0,
+        status: doc.status ?? 'online',
+        game: doc.game ?? null
+    };
+    state.giftBalance = doc.giftsBalance ?? 0;
+    emit();
 }
 
 function watchSelf(user) {
-    const { api, db } = firestore() ?? {};
-    if (!api) return;
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
 
-    const off = api.onSnapshot(api.doc(db, 'profiles', user.uid), (snap) => {
-        const data = snap.data();
-        if (!data) return;
-        applyMe(data);
-        emit();
-    }, () => { /* sense permisos: deixam el que ja teníem */ });
-
-    unsubs.push(off);
+    unsubs.push(api.onSnapshot(api.doc(db, 'profiles', user.uid), (snap) => {
+        if (snap.exists()) applyMe(user.uid, snap.data());
+    }));
 }
 
-function applyMe(data) {
-    if (!data) return;
-    state.me = {
-        id: 'me',
-        uid: data.uid,
-        name: data.name || 'Jugador',
-        icon: data.icon || '🙂',
-        points: data.points ?? 0,
-        lvl: data.lvl ?? 1,
-        streak: data.streak ?? 0,
-        status: data.status || 'online',
-        game: data.game ?? null
+/**
+ * Presència senzilla: amb la pestanya visible estic «en línia»; amb la
+ * pestanya amagada, «inactiu». No hi ha servidor de presència a Spark,
+ * així que aquest és el senyal que hi ha; val més dir la veritat que
+ * inventar-se un «en línia» permanent.
+ */
+function startPresence(user) {
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
+    const ref = api.doc(db, 'profiles', user.uid);
+
+    let last = null;
+    const sync = () => {
+        const status = document.visibilityState === 'visible' ? 'online' : 'idle';
+        if (status === last) return;
+        last = status;
+        api.setDoc(ref, { status, at: Date.now() }, { merge: true }).catch(() => {});
     };
-    if (typeof data.giftsBalance === 'number') {
-        state.giftsBalance = data.giftsBalance;
+
+    document.addEventListener('visibilitychange', sync);
+    unsubs.push(() => document.removeEventListener('visibilitychange', sync));
+    sync();
+}
+
+/**
+ * Actualitza el perfil propi (nom, nom d'usuari, bio i foto).
+ *
+ * El nom d'usuari ha de ser únic: es consulta `profiles` per la versió en
+ * minúscules i, si el té algú altre, no es desa res.
+ *
+ * @returns {Promise<{ok: boolean, reason?: string}>}
+ */
+export async function updateProfile(patch) {
+    const user = currentUser();
+    if (!user) return { ok: false, reason: 'offline' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    const name = String(patch.name ?? '').trim().slice(0, 30);
+    const username = String(patch.username ?? '').trim().toLowerCase();
+    const bio = String(patch.bio ?? '').trim().slice(0, 200);
+    const photo = String(patch.photo ?? '').trim();
+
+    if (!name) return { ok: false, reason: 'name' };
+    if (!/^[a-z0-9_-]{3,20}$/.test(username)) return { ok: false, reason: 'username' };
+    if (photo && !/^https:\/\//.test(photo) && !/^data:image\//.test(photo)) {
+        return { ok: false, reason: 'photo' };
+    }
+
+    try {
+        const taken = await isUsernameTaken(api, db, username, user.uid);
+        if (taken) return { ok: false, reason: 'taken' };
+
+        await api.setDoc(api.doc(db, 'profiles', user.uid), {
+            name,
+            nameLower: name.toLowerCase(),
+            username,
+            bio,
+            photo,
+            at: Date.now()
+        }, { merge: true });
+
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
     }
 }
 
-/* --- Amistats (friendships) ------------------------------------ */
+async function isUsernameTaken(api, db, username, ownUid) {
+    const q = api.query(
+        api.collection(db, 'profiles'),
+        api.where('username', '==', username),
+        api.limit(5)
+    );
+    const snap = await api.getDocs(q);
+    return snap.docs.some((doc) => doc.id !== ownUid);
+}
+
+/**
+ * El perfil complet d'un uid per obrir-ne la fitxa (encara que no sigui
+ * amic meu, per exemple si surt a la lliga).
+ */
+export async function fetchProfile(uid) {
+    const known = findPerson(uid);
+    if (known && known.uid !== myUid()) return known;
+
+    const connection = fs();
+    if (!connection) return known;
+    const { api, db } = connection;
+
+    try {
+        const snap = await api.getDoc(api.doc(db, 'profiles', uid));
+        if (!snap.exists()) return known;
+        return { uid, id: uid, ...snap.data() };
+    } catch {
+        return known;
+    }
+}
+
+/* ================================================================
+   Amics i sol·licituds
+   ================================================================ */
 
 function watchFriendships(user) {
-    const { api, db } = firestore() ?? {};
-    if (!api) return;
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
 
-    // Tots els documents on l'usuari és part de la parella.
     const q = api.query(
         api.collection(db, 'friendships'),
         api.where('uids', 'array-contains', user.uid)
     );
 
-    const off = api.onSnapshot(q, (snap) => {
-        rebuildFriendsFromSnapshot(snap, user.uid);
-        emit();
-    }, () => { /* sense permisos */ });
+    unsubs.push(api.onSnapshot(q, (snap) => {
+        const friends = [];
+        const requests = [];
+        const sentRequests = [];
+        const uids = new Set();
 
-    unsubs.push(off);
-}
+        snap.forEach((doc) => {
+            const data = doc.data();
+            const otherUid = (data.uids ?? []).find((uid) => uid !== user.uid);
+            if (!otherUid) return;
+            uids.add(otherUid);
 
-function rebuildFriendsFromSnapshot(snap, myUid) {
-    const friends = [];
-    const requests = [];
-    const friendUids = new Set();
+            const base = { uid: otherUid, id: otherUid };
 
-    for (const doc of snap.docs) {
-        const data = doc.data();
-        const otherUid = data.uids.find((uid) => uid !== myUid);
-        if (!otherUid) continue;
-
-        if (data.status === 'accepted') {
-            friendUids.add(otherUid);
-            // Les dades completes (nom, icona, estat) vindran de profiles/{otherUid}
-            // Per ara posem un placeholder; watchSuggestions/Profiles l'actualitzarà.
-            friends.push({
-                id: otherUid,
-                name: 'Carregant…',
-                icon: '🙂',
-                status: 'online',
-                activity: { kind: 'lobby', game: null },
-                pinned: false,
-                wins: 0,
-                losses: 0,
-                level: 1,
-                record: null
-            });
-        } else if (data.status === 'pending' && data.requestedBy === otherUid) {
-            // Sol·licitud entrant
-            requests.push({
-                id: otherUid,
-                name: 'Carregant…',
-                icon: '🙂',
-                uid: otherUid
-            });
-        }
-        // Sol·licituds sortents (requestedBy === myUid) no es mostren al hub.
-    }
-
-    state.friends = friends;
-    state.requests = requests;
-
-    // Ara carreguem els perfils dels amics i sol·licituds per obtenir nom/icona.
-    loadProfilesFor([...friendUids, ...requests.map(r => r.uid)]);
-}
-
-/* --- Suggeriments (altres usuaris) ----------------------------- */
-
-function watchSuggestions(user) {
-    const { api, db } = firestore() ?? {};
-    if (!api) return;
-
-    // Per al MVP, prenem els primers 20 perfils que no siguin amic ni jo.
-    // En produció es faria un índex amb "últimes connexions" o similar.
-    const q = api.query(
-        api.collection(db, 'profiles'),
-        api.limit(30)
-    );
-
-    const off = api.onSnapshot(q, (snap) => {
-        rebuildSuggestionsFromSnapshot(snap, user.uid);
-        emit();
-    }, () => { /* sense permisos */ });
-
-    unsubs.push(off);
-}
-
-function rebuildSuggestionsFromSnapshot(snap, myUid) {
-    const friendUids = new Set(state.friends.map(f => f.id));
-    const requestUids = new Set(state.requests.map(r => r.uid));
-    const exclude = new Set([myUid, ...friendUids, ...requestUids]);
-
-    const suggestions = [];
-    for (const doc of snap.docs) {
-        if (suggestions.length >= 10) break;
-        const uid = doc.id;
-        if (exclude.has(uid)) continue;
-        const data = doc.data() ?? {};
-        suggestions.push({
-            id: uid,
-            name: data.name || 'Jugador',
-            icon: data.icon || '🙂',
-            uid
+            if (data.status === 'pending') {
+                if (data.requestedBy === user.uid) sentRequests.push({ ...base, at: data.at ?? 0 });
+                else requests.push({ ...base, at: data.at ?? 0 });
+            } else if (data.status === 'accepted') {
+                friends.push({ ...base, pinned: data.pinned === true, at: data.acceptedAt ?? data.at ?? 0 });
+            }
         });
-    }
-    state.suggestions = suggestions;
+
+        state.friends = friends;
+        state.requests = requests;
+        state.sentRequests = sentRequests;
+        refreshPeopleProfiles([...uids]);
+        emit();
+    }));
 }
 
-/* --- Carregar perfils per omplir amics/sol·licituds ------------ */
+/** Omple nom, foto i estat dels perfils que encara són buits. */
+async function refreshPeopleProfiles(uids) {
+    const connection = fs();
+    if (!connection || !uids.length) return;
+    const { api, db } = connection;
 
-async function loadProfilesFor(uids) {
-    if (!uids.length) return;
-    const { api, db } = firestore() ?? {};
-    if (!api) return;
-
-    // Firestore 'in' query suporta fins a 30 valors.
-    const chunks = [];
-    for (let i = 0; i < uids.length; i += 30) {
-        chunks.push(uids.slice(i, i + 30));
-    }
-
-    for (const chunk of chunks) {
-        const q = api.query(
-            api.collection(db, 'profiles'),
-            api.where(api.documentId(), 'in', chunk)
-        );
-        const snap = await api.getDocs(q);
-        for (const doc of snap.docs) {
-            const data = doc.data() ?? {};
-            const uid = doc.id;
-            const profile = {
-                name: data.name || 'Jugador',
-                icon: data.icon || '🙂',
-                status: data.status || 'online',
-                game: data.game ?? null
-            };
-            // Actualitzar amic
-            const friend = state.friends.find(f => f.id === uid);
-            if (friend) {
-                Object.assign(friend, profile);
-            }
-            // Actualitzar sol·licitud
-            const request = state.requests.find(r => r.uid === uid);
-            if (request) {
-                Object.assign(request, { name: profile.name, icon: profile.icon });
-            }
-        }
-    }
-}
-
-/* --- Lliga (league) -------------------------------------------- */
-
-export async function addLeagueXP(amount) {
-    const { api, db } = firestore() ?? {};
-    if (!api || !state.me?.uid) return;
-
-    const week = currentWeek();
-    const ref = api.doc(db, 'league', week);
-
-    // Incrementem l'XP setmanal de l'usuari.
-    await api.updateDoc(ref, {
-        [`entries.${state.me.uid}`]: api.increment(amount),
-        updatedAt: Date.now()
-    }).catch(async () => {
-        // Si el document no existeix, el creem amb l'entrada de l'usuari.
-        const entry = {
-            uid: state.me.uid,
-            name: state.me.name,
-            icon: state.me.icon,
-            xp: amount
-        };
-        await api.setDoc(ref, {
-            week,
-            division: 'Bronze',
-            xpTarget: 2000,
-            entries: { [state.me.uid]: entry },
-            createdAt: Date.now(),
-            updatedAt: Date.now()
-        }, { merge: true });
+    const missing = uids.filter((uid) => {
+        const person = [...state.friends, ...state.requests, ...state.sentRequests].find((p) => p.uid === uid);
+        return person && !person.name;
     });
+    if (!missing.length) return;
+
+    const loaded = await Promise.all(missing.map(async (uid) => {
+        try {
+            const snap = await api.getDoc(api.doc(db, 'profiles', uid));
+            return snap.exists() ? { uid, ...snap.data() } : null;
+        } catch {
+            return null;
+        }
+    }));
+
+    for (const profile of loaded) {
+        if (profile) mergePersonProfile(profile);
+    }
+    emit();
+}
+
+function mergePersonProfile(profile) {
+    const merge = (list) => {
+        const person = list.find((p) => p.uid === profile.uid);
+        if (!person) return;
+        person.name = profile.name ?? person.name;
+        person.nameLower = profile.nameLower ?? (profile.name ?? '').toLowerCase();
+        person.username = profile.username ?? '';
+        person.bio = profile.bio ?? '';
+        person.photo = profile.photo ?? '';
+        person.icon = profile.icon ?? '';
+        person.status = profile.status ?? 'offline';
+        person.game = profile.game ?? null;
+        person.xp = profile.points ?? 0;
+        person.lvl = profile.lvl ?? 1;
+        person.streak = profile.streak ?? 0;
+    };
+    merge(state.friends);
+    merge(state.requests);
+    merge(state.sentRequests);
+    merge(state.suggestions);
 }
 
 /**
- * Escolta el document de la lliga de la setmana actual.
- * El document `league/{week}` té:
- *   - week: string
- *   - division: string
- *   - xpTarget: number
- *   - entries: object { [uid]: { uid, name, icon, xp } }
+ * Envia una sol·licitud d'amistat.
+ * @returns {Promise<{ok: boolean, reason?: string}>}
  */
+export async function sendFriendRequest(targetUid) {
+    const user = currentUser();
+    if (!user || !targetUid || targetUid === user.uid) return { ok: false, reason: 'self' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    const id = pairId(user.uid, targetUid);
+    const ref = api.doc(db, 'friendships', id);
+
+    try {
+        // Es mira si la sol·licitud ja hi és. Si aquesta lectura fallés
+        // per unes regles velles —el `get` d'un document que encara no
+        // existeix pot quedar denegat, perquè `resource` hi és nul—, es
+        // tracta com si no hi fos: la regla de creació tornarà a decidir
+        // quan s'escrigui.
+        let existing = null;
+        try {
+            existing = await api.getDoc(ref);
+        } catch (error) {
+            if (describeError(error) !== 'permission') throw error;
+        }
+        if (existing?.exists()) return { ok: false, reason: 'exists' };
+
+        await api.setDoc(ref, {
+            uids: [user.uid, targetUid],
+            status: 'pending',
+            requestedBy: user.uid,
+            at: Date.now(),
+            pinned: false
+        });
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/** Accepta una sol·licitud rebuda. */
+export async function acceptFriendRequest(requesterUid) {
+    const user = currentUser();
+    if (!user) return { ok: false, reason: 'offline' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    try {
+        await api.updateDoc(api.doc(db, 'friendships', pairId(user.uid, requesterUid)), {
+            status: 'accepted',
+            acceptedAt: Date.now()
+        });
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/** Rebutja una sol·licitud rebuda, o cancel·la una d'enviada: és el mateix document. */
+export async function rejectFriendRequest(otherUid) {
+    const user = currentUser();
+    if (!user) return { ok: false, reason: 'offline' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    try {
+        await api.deleteDoc(api.doc(db, 'friendships', pairId(user.uid, otherUid)));
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/** Treu un amic de la llista. */
+export async function removeFriend(friendUid) {
+    return rejectFriendRequest(friendUid);
+}
+
+/** Fixa o deixa de fixar un amic a dalt de la llista. */
+export async function setFriendPin(friendUid, pinned) {
+    const user = currentUser();
+    if (!user) return { ok: false, reason: 'offline' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    try {
+        await api.updateDoc(api.doc(db, 'friendships', pairId(user.uid, friendUid)), {
+            pinned: Boolean(pinned)
+        });
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/* ================================================================
+   Cerca i suggeriments
+   ================================================================ */
+
+/**
+ * Cerca perfils pel nom (mínim 2 caràcters). Fa servir `nameLower`, així
+ * que «ula» troba «Ula» i «ULA».
+ *
+ * @returns {Promise<Array<object>>}
+ */
+export async function searchProfiles(term) {
+    const query = String(term ?? '').trim().toLowerCase();
+    if (query.length < 2) return [];
+
+    const connection = fs();
+    if (!connection) return [];
+    const { api, db } = connection;
+
+    try {
+        const q = api.query(
+            api.collection(db, 'profiles'),
+            api.orderBy('nameLower'),
+            api.startAt(query),
+            api.endAt(`${query}\uf8ff`),
+            api.limit(10)
+        );
+        const snap = await api.getDocs(q);
+        return snap.docs
+            .map((doc) => ({ uid: doc.id, id: doc.id, ...doc.data() }))
+            .filter((person) => person.uid !== myUid());
+    } catch {
+        return [];
+    }
+}
+
+function watchSuggestions(user) {
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
+
+    const q = api.query(
+        api.collection(db, 'profiles'),
+        api.orderBy('at', 'desc'),
+        api.limit(24)
+    );
+
+    unsubs.push(api.onSnapshot(q, (snap) => {
+        const known = new Set([
+            user.uid,
+            ...state.friends.map((p) => p.uid),
+            ...state.requests.map((p) => p.uid),
+            ...state.sentRequests.map((p) => p.uid)
+        ]);
+
+        const suggestions = [];
+        snap.forEach((doc) => {
+            if (known.has(doc.id)) return;
+            const data = doc.data();
+            suggestions.push({
+                uid: doc.id,
+                id: doc.id,
+                name: data.name ?? 'Jugador',
+                nameLower: data.nameLower ?? '',
+                username: data.username ?? '',
+                photo: data.photo ?? '',
+                icon: data.icon ?? '',
+                status: data.status ?? 'offline',
+                xp: data.points ?? 0
+            });
+        });
+
+        state.suggestions = suggestions;
+        emit();
+    }));
+}
+
+/* ================================================================
+   Lliga setmanal
+   ================================================================ */
+
+/** La setmana ISO d'una data, amb el format 2026-W29. */
+export function currentWeek(date = new Date()) {
+    const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const day = target.getUTCDay() || 7;
+    target.setUTCDate(target.getUTCDate() + 4 - day);
+
+    const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+    const week = Math.ceil(((target - yearStart) / 86400000 + 1) / 7);
+    return `${target.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
 function watchLeague(user) {
-    const { api, db } = firestore() ?? {};
-    if (!api) return;
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
 
     const week = currentWeek();
-    const off = api.onSnapshot(api.doc(db, 'league', week), (snap) => {
+    state.league = { week, xp: 0, xpTarget: 2000, entries: [] };
+
+    unsubs.push(api.onSnapshot(api.doc(db, 'league', week), (snap) => {
         if (!snap.exists()) {
-            // Encara no hi ha lliga aquesta setmana: deixem l'estat buit.
-            state.league = { division: '', week, xp: 0, xpTarget: 2000, entries: [] };
+            state.league = { week, xp: 0, xpTarget: 2000, entries: [] };
             emit();
             return;
         }
 
-        const data = snap.data() ?? {};
-        const entriesObj = data.entries ?? {};
-        const entries = Object.values(entriesObj).sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0));
-
-        // El nostre XP és l'entrada amb el nostre uid.
-        const myEntry = entries.find(e => e.uid === user.uid);
-        const myXp = myEntry?.xp ?? 0;
-
-        state.league = {
-            division: data.division || 'Bronze',
-            week: data.week || week,
-            xp: myXp,
-            xpTarget: data.xpTarget ?? 2000,
-            entries: entries.map(e => ({
-                id: e.uid === user.uid ? 'me' : e.uid,
-                name: e.name || 'Jugador',
-                icon: e.icon || '🙂',
-                xp: e.xp ?? 0
+        const data = snap.data();
+        const entries = Object.values(data.entries ?? {})
+            .map((entry) => ({
+                uid: entry.uid,
+                name: entry.name ?? 'Jugador',
+                icon: entry.icon ?? '',
+                photo: entry.photo ?? '',
+                xp: entry.xp ?? 0
             }))
+            .sort((a, b) => b.xp - a.xp);
+
+        const mine = entries.find((entry) => entry.uid === user.uid);
+        state.league = {
+            week,
+            xp: mine?.xp ?? 0,
+            xpTarget: data.xpTarget ?? 2000,
+            entries
         };
         emit();
-    }, () => { /* sense permisos */ });
-
-    unsubs.push(off);
-}
-
-/* --- Feed ------------------------------------------------------ */
-
-/** Afegeix una entrada al feed (crida des del joc o manual). */
-export async function addFeedEntry(entry) {
-    const { api, db } = firestore() ?? {};
-    if (!api || !state.me?.uid) return;
-
-    const feedEntry = {
-        ...entry,
-        actorUid: state.me.uid,
-        actorName: state.me.name,
-        actorIcon: state.me.icon,
-        at: Date.now(),
-        reactions: {}
-    };
-
-    await api.addDoc(api.collection(db, 'feed'), feedEntry);
+    }));
 }
 
 /**
- * Escolta les darreres 20 entrades del feed global.
- * Col·lecció `feed` amb documents: { actorUid, actorName, actorIcon, game, score, at, reactions }
+ * Suma XP a la meva entrada de la lliga d'aquesta setmana.
+ *
+ * La lliga s'escriu amb `runTransaction` i només es toca la meva entrada:
+ * les regles ho comproven i no deixarien passar res més.
  */
-function watchFeed(user) {
-    const { api, db } = firestore() ?? {};
-    if (!api) return;
+export async function addLeagueXP(amount) {
+    const user = currentUser();
+    const points = Number(amount);
+    if (!user || !Number.isFinite(points) || points === 0) return { ok: false };
 
-    const q = api.query(
-        api.collection(db, 'feed'),
-        api.orderBy('at', 'desc'),
-        api.limit(20)
-    );
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
 
-    const off = api.onSnapshot(q, (snap) => {
-        const feed = [];
-        for (const doc of snap.docs) {
-            const data = doc.data() ?? {};
-            feed.push({
-                id: doc.id,
-                actor: data.actorName || 'Jugador',
-                icon: data.actorIcon || '🙂',
-                game: data.game || '',
-                score: data.score,
-                at: data.at ?? Date.now(),
-                reactions: data.reactions ?? {}
-            });
-        }
-        state.feed = feed;
-        emit();
-    }, () => { /* sense permisos */ });
+    const week = currentWeek();
+    const ref = api.doc(db, 'league', week);
 
-    unsubs.push(off);
+    try {
+        await api.runTransaction(db, async (transaction) => {
+            const snap = await transaction.get(ref);
+            const data = snap.exists() ? snap.data() : {};
+            const entries = { ...(data.entries ?? {}) };
+            const mine = entries[user.uid] ?? {};
+
+            entries[user.uid] = {
+                uid: user.uid,
+                name: state.me?.name ?? 'Jugador',
+                icon: state.me?.icon ?? '',
+                photo: state.me?.photo ?? '',
+                xp: (mine.xp ?? 0) + points
+            };
+
+            transaction.set(ref, {
+                week,
+                xpTarget: data.xpTarget ?? 2000,
+                entries,
+                updatedAt: Date.now()
+            }, { merge: true });
+        });
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
 }
 
-/* --- Regals (gifts) -------------------------------------------- */
+/* ================================================================
+   Activitat (feed)
+   ================================================================ */
 
-/** Reclama un regal (gratuït o de pagament). */
+function watchFeed() {
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
+
+    const q = api.query(api.collection(db, 'feed'), api.orderBy('at', 'desc'), api.limit(20));
+
+    unsubs.push(api.onSnapshot(q, (snap) => {
+        state.feed = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        emit();
+    }));
+}
+
+/**
+ * Publica una fita al feed. Els camps són els que deixen passar les
+ * regles: actorUid, actorName, actorIcon, game, score, at i reactions.
+ */
+export async function addFeedEntry({ game, score }) {
+    const user = currentUser();
+    if (!user) return { ok: false, reason: 'offline' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    try {
+        await api.addDoc(api.collection(db, 'feed'), {
+            actorUid: user.uid,
+            actorName: state.me?.name ?? 'Jugador',
+            actorIcon: state.me?.icon ?? '',
+            game: String(game ?? '').slice(0, 60),
+            score: Number(score) || 0,
+            at: Date.now(),
+            reactions: {}
+        });
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/* ================================================================
+   Regals
+   ================================================================ */
+
+function watchGifts() {
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
+
+    const q = api.query(api.collection(db, 'gifts'), api.orderBy('createdAt', 'desc'), api.limit(20));
+
+    unsubs.push(api.onSnapshot(q, (snap) => {
+        state.gifts = snap.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .filter((gift) => (gift.claimedBy ?? []).length === 0);
+        emit();
+    }));
+}
+
+/**
+ * Reclama un regal. Un regal només es pot reclamar una vegada: qui hi
+ * arriba primer se'l queda, i desapareix de la resta de llistes.
+ *
+ * Els gratuïts donen crèdits i els de pagament en costen; el saldo viu a
+ * `profiles/{uid}.giftsBalance`.
+ *
+ * @returns {Promise<{ok: boolean, reason?: string, reward?: number}>}
+ */
 export async function claimGift(giftId) {
-    const { api, db } = firestore() ?? {};
-    if (!api || !state.me?.uid) return;
+    const user = currentUser();
+    if (!user) return { ok: false, reason: 'offline' };
 
-    const ref = api.doc(db, 'gifts', giftId);
-    await api.runTransaction(api, async (transaction) => {
-        const snap = await transaction.get(ref);
-        if (!snap.exists()) return;
-        const data = snap.data();
-        if (data.claimedBy?.includes(state.me.uid)) return;
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
 
-        const price = data.price ?? 0;
-        if (price > 0 && (state.giftsBalance ?? 0) < price) return;
+    const giftRef = api.doc(db, 'gifts', giftId);
+    const profileRef = api.doc(db, 'profiles', user.uid);
+    let reward = 0;
 
-        transaction.update(ref, {
-            claimedBy: api.arrayUnion(state.me.uid),
-            claimedAt: Date.now()
+    try {
+        await api.runTransaction(db, async (transaction) => {
+            const giftSnap = await transaction.get(giftRef);
+            if (!giftSnap.exists()) {
+                const error = new Error('gift-missing');
+                error.reason = 'claimed';
+                throw error;
+            }
+
+            const gift = giftSnap.data();
+            if ((gift.claimedBy ?? []).length > 0) {
+                const error = new Error('gift-claimed');
+                error.reason = 'claimed';
+                throw error;
+            }
+
+            const profileSnap = await transaction.get(profileRef);
+            const balance = profileSnap.exists() ? (profileSnap.data().giftsBalance ?? 0) : 0;
+            const price = Math.max(0, Number(gift.price) || 0);
+
+            if (price > 0 && balance < price) {
+                const error = new Error('gift-funds');
+                error.reason = 'funds';
+                throw error;
+            }
+
+            reward = price > 0 ? -price : 10;
+
+            transaction.update(giftRef, { claimedBy: [user.uid] });
+            transaction.update(profileRef, { giftsBalance: balance + reward });
         });
 
-        if (price > 0) {
-            state.giftsBalance -= price;
-        } else {
-            state.giftsBalance = (state.giftsBalance ?? 0) + 10;
-        }
-    });
+        return { ok: true, reward };
+    } catch (error) {
+        return { ok: false, reason: error.reason ?? describeError(error) };
+    }
 }
 
-/** Afegeix un regal global (per admin o esdeveniments). */
-export async function addGift(gift) {
-    const { api, db } = firestore() ?? {};
-    if (!api) return;
-    await api.addDoc(api.collection(db, 'gifts'), {
-        ...gift,
-        claimedBy: [],
-        createdAt: Date.now()
-    });
+/* ================================================================
+   Xat
+   ================================================================ */
+
+function watchChat() {
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
+
+    for (const channel of state.chat.channels) {
+        state.chat.messages[channel.id] = [];
+
+        const q = api.query(
+            api.collection(db, 'chat', channel.id, 'messages'),
+            api.orderBy('at', 'desc'),
+            api.limit(50)
+        );
+
+        unsubs.push(api.onSnapshot(q, (snap) => {
+            state.chat.messages[channel.id] = snap.docs
+                .map((doc) => ({ id: doc.id, ...doc.data() }))
+                .reverse();
+            emit();
+        }));
+    }
 }
 
-/**
- * Escolta els regals globals no reclamats per l'usuari.
- * Col·lecció `gifts` amb documents: { label, icon, price, claimedBy[], createdAt }
- */
-function watchGifts(user) {
-    const { api, db } = firestore() ?? {};
-    if (!api) return;
-
-    const q = api.query(
-        api.collection(db, 'gifts'),
-        api.orderBy('createdAt', 'desc'),
-        api.limit(20)
-    );
-
-    const off = api.onSnapshot(q, (snap) => {
-        const gifts = [];
-        let balance = 0;
-        for (const doc of snap.docs) {
-            const data = doc.data() ?? {};
-            const claimed = data.claimedBy?.includes(user.uid) ?? false;
-            if (!claimed) {
-                gifts.push({
-                    id: doc.id,
-                    label: data.label || 'Regal',
-                    icon: data.icon || '🎁',
-                    price: data.price ?? 0,
-                    claimed: false
-                });
-            }
-            // El balance es calcula a part (podria ser un camp al perfil)
-        }
-        state.gifts = gifts;
-        // El balance es carrega des del perfil
-        emit();
-    }, () => { /* sense permisos */ });
-
-    unsubs.push(off);
-}
-
-/* --- Xat (chat) ----------------------------------------------- */
-
-/** Envia un missatge a un canal. */
+/** Envia un missatge al canal. Els camps són els que deixen passar les regles. */
 export async function sendChatMessage(channelId, text) {
-    const { api, db } = firestore() ?? {};
-    if (!api || !state.me?.uid || !text.trim()) return;
+    const user = currentUser();
+    const message = String(text ?? '').trim().slice(0, 500);
+    if (!user || !message) return { ok: false };
 
-    const ref = api.collection(db, 'chat', channelId, 'messages');
-    await api.addDoc(ref, {
-        fromUid: state.me.uid,
-        fromName: state.me.name,
-        fromIcon: state.me.icon,
-        text: text.trim(),
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    try {
+        await api.addDoc(api.collection(db, 'chat', channelId || 'global', 'messages'), {
+            fromUid: user.uid,
+            fromName: state.me?.name ?? 'Jugador',
+            fromIcon: state.me?.icon ?? '',
+            text: message,
+            at: Date.now(),
+            reactions: {}
+        });
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: describeError(error) };
+    }
+}
+
+/* ================================================================
+   Avisos locals (la campana)
+   ================================================================ */
+
+/** Afegeix un avís local. El text el construeix qui crida, ja traduït. */
+export function notify(text) {
+    if (!text) return;
+    state.notifications.unshift({
+        id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        text: String(text).slice(0, 140),
         at: Date.now(),
-        reactions: {}
+        read: false
     });
+    state.notifications = state.notifications.slice(0, 20);
+    emit();
 }
 
-/** Afegeix una reacció a un missatge de xat. */
-export async function reactToChatMessage(channelId, messageId, emoji) {
-    const { api, db } = firestore() ?? {};
-    if (!api || !state.me?.uid) return;
-
-    const ref = api.doc(db, 'chat', channelId, 'messages', messageId);
-    await api.updateDoc(ref, {
-        [`reactions.${emoji}`]: api.increment(1)
-    });
+/** Marca tots els avisos com a llegits. */
+export function markNotificationsRead() {
+    for (const notification of state.notifications) notification.read = true;
+    emit();
 }
 
-/**
- * Escolta els canals i missatges del xat.
- * Estructura:
- *   chat/{channelId}/messages/{messageId}
- *   Canal global: 'global'
- *   Canal grup: 'group-{id}'
- *   Canal DM: 'dm-{pairId}'
- */
-function watchChat(user) {
-    const { api, db } = firestore() ?? {};
-    if (!api) return;
-
-    // Primer carreguem els canals (per ara hardcoded: global)
-    // En el futur es podrien afegir canals dinàmics.
-    const defaultChannels = [
-        { id: 'global', name: 'Global', kind: 'global' }
-    ];
-    state.chat.channels = defaultChannels;
-
-    // Escoltem els missatges del canal global
-    const channelId = 'global';
-    const q = api.query(
-        api.collection(db, 'chat', channelId, 'messages'),
-        api.orderBy('at', 'asc'),
-        api.limit(50)
-    );
-
-    const off = api.onSnapshot(q, (snap) => {
-        const messages = [];
-        for (const doc of snap.docs) {
-            const data = doc.data() ?? {};
-            messages.push({
-                id: doc.id,
-                from: data.fromName || 'Jugador',
-                icon: data.fromIcon || '🙂',
-                text: data.text || '',
-                at: data.at ?? Date.now(),
-                reactions: data.reactions ?? {}
-            });
-        }
-        state.chat.messages[channelId] = messages;
-        emit();
-    }, () => { /* sense permisos */ });
-
-    unsubs.push(off);
+/** Buida la campana. */
+export function clearNotifications() {
+    state.notifications = [];
+    emit();
 }
 
-/* --- Auxiliars ------------------------------------------------ */
+/* ================================================================
+   Consultes de conveniència
+   ================================================================ */
 
-/** Es queda només amb els camps de perfil coneguts i ben tipats. */
-function pruneProfile(data) {
-    const out = {};
-    if (typeof data.name === 'string') out.name = data.name.slice(0, 40);
-    if (typeof data.icon === 'string') out.icon = data.icon.slice(0, 8);
-    if (typeof data.points === 'number') out.points = data.points;
-    if (typeof data.lvl === 'number') out.lvl = data.lvl;
-    if (typeof data.streak === 'number') out.streak = data.streak;
-    if (typeof data.status === 'string') out.status = data.status;
-    if (typeof data.game === 'string' || data.game === null) out.game = data.game;
-    return out;
-}
-
-function suggestedName(user) {
-    return user.displayName?.trim() || user.email?.split('@')[0] || 'Jugador';
-}
-
-const ICONS = ['🦊', '🦄', '🐺', '🐯', '🐧', '🐙', '🦅', '🐉', '🐨', '🐸', '🦉', '🐱'];
-
-/** Una cara estable a partir de l'uid (la mateixa sempre). */
-function iconFor(uid) {
-    let hash = 0;
-    for (const char of String(uid)) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-    return ICONS[hash % ICONS.length];
+/** Una persona de l'estat, sigui amic, sol·licitud, suggeriment o jo. */
+export function findPerson(uid) {
+    if (!uid) return state.me;
+    if (isMe(uid)) return state.me;
+    return state.friends.find((p) => p.uid === uid)
+        ?? state.requests.find((p) => p.uid === uid)
+        ?? state.sentRequests.find((p) => p.uid === uid)
+        ?? state.suggestions.find((p) => p.uid === uid)
+        ?? null;
 }

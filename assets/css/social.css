@@ -1,738 +1,1260 @@
 /* ============================================================
-   social.css · tota la secció Social: amics, lliga, feed, xat i sidebar
-   Carregat des d'index.html després de components.css i abans
-   de responsive.css (que ha de poder guanyar-lo als punts de tall).
-   Les classes `soc-*` les genera assets/js/social-*.js.
+   social.css · tota la secció Social: hub (amics, lliga, avisos),
+   barra lateral (perfil, xat, activitat, regals), modals i estats.
+
+   Regles d'aquest fitxer:
+
+   - NO es redefineixen variables globals (`:root`): els colors surten
+     dels tokens del tema (main.css), així el clar i el fosc funcionen.
+   - Les classes `soc-*` les genera assets/js/social-*.js. Només es fan
+     servir aquí.
+   - Res pot desbordar: els fills de grid/flex porten `min-width: 0`, i
+     els textos llargs es trenquen o s'escapcen amb punts suspensius.
    ============================================================ */
 
 /* ============================================================
-   Variables globals i raons
+   Estructura
    ============================================================ */
-:root {
-    --glass-bg: #1a1a2e;
-    --glass-bg-strong: #161628;
-    --glass-border-soft: #3a3a5e;
-    --text-main: #e8e8f0;
-    --accent: #bb86fc;
-    --accent-hover: #a855f7;
-    --pill-bg: #2d2d4a;
-    --table-hover: #25253b;
+
+.social-page {
+    padding-bottom: 32px;
 }
 
-/* ============================================================
-   Estructura principal del layout
-   ============================================================ */
+.social-header {
+    margin: 2px 0 18px;
+}
 
-#view-social {
-    padding-bottom: 96px;
-    position: relative;
+.social-header h2 {
+    margin: 0 0 4px;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+}
+
+.social-header p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.6;
 }
 
 .social-layout {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 24px;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 18px;
     align-items: start;
 }
 
-@media (min-width: 1301px) {
-    .social-layout {
-        grid-template-columns: 1fr 280px;
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
+.social-main {
+    min-width: 0;
 }
 
-.social-col {
+.social-sidebar {
+    position: sticky;
+    top: 88px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 14px;
+    min-width: 0;
 }
 
-.main-area {
-    flex: 1;
-}
-
-.sidebar {
-    position: sticky;
-    top: 20px;
-    height: fit-content;
-    background: var(--glass-bg-strong);
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 26px;
-    padding: 20px 16px;
-    backdrop-filter: var(--glass-filter);
-    -webkit-backdrop-filter: var(--glass-filter);
-    z-index: 100;
-}
-
-.sidebar-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 20px;
-    padding: 20px;
-    backdrop-filter: var(--glass-filter);
-    -webkit-backdrop-filter: var(--glass-filter);
-    margin-bottom: 20px;
-}
-
-.sidebar-header {
+.soc-col {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--glass-border-soft);
-}
-
-.sidebar-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: linear-gradient(140deg, var(--accent), #7b5cff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 800;
-    color: #fff;
-}
-
-.sidebar-info {
-    flex: 1;
-}
-
-.sidebar-name {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-main);
-}
-
-.sidebar-desc {
-    font-size: 11px;
-    opacity: 0.6;
-}
-
-.sidebar-tabs {
-    display: flex;
-    gap: 4px;
-    background: var(--glass-bg);
-    border-radius: 16px;
-    padding: 4px;
-}
-
-.sidebar-tab {
-    flex: 1;
-    padding: 8px 0;
-    border-radius: 12px;
-    color: var(--text-main);
-    opacity: 0.6;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.sidebar-tab.active {
-    background: var(--accent);
-    color: #fff;
-    opacity: 1;
-}
-
-.sidebar-tab:hover:not(.active) {
-    background: rgba(187, 134, 252, 0.2);
-    opacity: 0.8;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
 }
 
 /* ============================================================
-   Contingut de les tabs
-   ============================================================ */
-
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* Tab: Activitat */
-.activity-section {
-    flex: 1;
-}
-
-.activity-empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-main);
-    opacity: 0.5;
-}
-
-.activity-empty-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 12px;
-    background: var(--glass-bg);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-}
-
-.activity-empty h3 {
-    font-size: 14px;
-    margin-bottom: 4px;
-}
-
-.activity-empty p {
-    font-size: 12px;
-    opacity: 0.4;
-}
-
-/* Tab: Regals */
-.gifts-section {
-    flex: 1;
-}
-
-.gifts-empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-main);
-    opacity: 0.5;
-}
-
-.gifts-empty-icon {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 12px;
-    background: var(--glass-bg);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-}
-
-.gifts-empty h3 {
-    font-size: 14px;
-    margin-bottom: 4px;
-}
-
-.gifts-empty p {
-    font-size: 12px;
-    opacity: 0.4;
-}
-
-/* Estructura de la targeta del xat (sidebar) */
-.chat-sidebar {
-    flex: 1;
-}
-
-.chat-sidebar .soc-chat-fab {
-    position: static;
-    margin: 20px auto 0;
-    display: block;
-}
-
-.chat-sidebar .soc-chat-fab-label {
-    display: block;
-}
-
-/* ============================================================
-   Targetes principals
+   Targetes
    ============================================================ */
 
 .social-card {
-    background: var(--glass-bg);
+    min-width: 0;
+    padding: 16px;
     border: 1px solid var(--glass-border-soft);
-    border-radius: 20px;
-    padding: 20px;
+    border-radius: 18px;
+    background: var(--glass-bg);
+    box-shadow: var(--glass-shadow);
     backdrop-filter: var(--glass-filter);
     -webkit-backdrop-filter: var(--glass-filter);
-    box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
-    transition: box-shadow 0.2s ease;
-}
-
-.social-card:hover {
-    box-shadow: var(--glass-shadow), inset 0 2px 0 var(--accent), inset 0 1px 0 var(--glass-highlight);
 }
 
 .social-card-title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 16px;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: -0.3px;
-    margin-bottom: 12px;
-    color: var(--text-main);
 }
 
 .social-card-title .soc-ico {
-    color: var(--accent);
-    width: 20px;
-    height: 20px;
+    display: inline-flex;
+    opacity: 0.75;
 }
 
-/* Count a la targeta */
 .social-card-count {
-    margin-left: auto;
-    font-size: 10px;
+    margin-inline-start: auto;
+    font-size: 11.5px;
     font-weight: 700;
-    background: var(--pill-bg);
-    padding: 2px 8px;
-    border-radius: 999px;
-    opacity: 0.7;
-}
-
-/* ============================================================
-   Cercador amb skeleton loader
-   ============================================================ */
-
-.soc-search-wrapper {
-    position: relative;
-}
-
-.soc-search {
-    width: 100%;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border-soft);
-    color: var(--text-main);
-    border-radius: 14px;
-    padding: 10px 14px;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.soc-search:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.15);
-}
-
-.soc-search::placeholder {
-    color: var(--text-main);
-    opacity: 0.45;
-}
-
-/* Skeleton loader per al buscador */
-.soc-search.skeleton {
-    background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-bg-strong) 50%, var(--glass-bg) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite ease-in-out;
-}
-
-@keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-/* Resultats de la cerca */
-.soc-results {
-    margin-top: 12px;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.soc-result-item {
-    padding: 8px 0;
-    border-bottom: 1px solid var(--glass-border-soft);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--text-main);
-    opacity: 0.8;
-    transition: opacity 0.2s;
-}
-
-.soc-result-item:last-child {
-    border-bottom: none;
-}
-
-.soc-result-item:hover {
-    opacity: 1;
-}
-
-.soc-result-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: linear-gradient(140deg, var(--accent), #7b5cff);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.soc-result-info {
-    flex: 1;
-}
-
-.soc-result-name {
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 150px;
-}
-
-.soc-result-desc {
-    font-size: 10px;
     opacity: 0.5;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px;
+    font-variant-numeric: tabular-nums;
 }
-
-/* Estat "no resultats" */
-.soc-no-results {
-    padding: 12px;
-    text-align: center;
-    color: var(--text-main);
-    opacity: 0.5;
-    font-size: 12px;
-}
-
-/* ============================================================
-   Estat buits i targetes informatives
-   ============================================================ */
-
-.soc-empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-main);
-    opacity: 0.5;
-}
-
-.soc-empty-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 16px;
-    background: var(--glass-bg);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-}
-
-.soc-empty-state h3 {
-    font-size: 14px;
-    margin-bottom: 4px;
-}
-
-.soc-empty-state p {
-    font-size: 12px;
-}
-
-/* Estil per targetes buides (friends, league entries, etc.) */
-.soc-empty-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 16px;
-    padding: 24px;
-    text-align: center;
-}
-
-.soc-empty-icon-large {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 12px;
-    background: var(--glass-bg);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    color: var(--accent);
-}
-
-.soc-empty-card h3 {
-    font-size: 13px;
-    margin-bottom: 4px;
-    color: var(--text-main);
-}
-
-.soc-empty-card p {
-    font-size: 11px;
-    opacity: 0.5;
-}
-
-/* ============================================================
-   Sidebar: Estat buits i placeholders
-   ============================================================ */
-
-.sidebar .soc-empty-state {
-    padding: 32px 16px;
-}
-
-.sidebar .soc-empty-icon {
-    width: 40px;
-    height: 40px;
-    margin: 0 auto 8px;
-}
-
-.sidebar .soc-empty-state h3 {
-    font-size: 12px;
-    margin-bottom: 2px;
-}
-
-.sidebar .soc-empty-state p {
-    font-size: 10px;
-    opacity: 0.4;
-}
-
-/* Skeleton loader per amics */
-.skeleton-friend {
-    height: 56px;
-    background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-bg-strong) 50%, var(--glass-bg) 75%);
-    border-radius: 12px;
-    animation: shimmer 1.5s infinite ease-in-out;
-    border-radius: 8px 8px 0 0;
-}
-
-.skeleton-friend .soc-avatar {
-    height: 36px;
-    width: 36px;
-}
-
-.skeleton-friend .soc-person-main {
-    height: 20px;
-}
-
-/* Estructura skeleton per a targetes */
-.skeleton-card {
-    height: 100%;
-    background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-bg-strong) 50%, var(--glass-bg) 75%);
-    border-radius: 20px;
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite ease-in-out;
-}
-
-.skeleton-row {
-    height: 32px;
-    background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-bg-strong) 50%, var(--glass-bg) 75%);
-    border-radius: 10px;
-    animation: shimmer 1.5s infinite ease-in-out;
-    margin: 8px 0;
-}
-
-.skeleton-row.short { height: 20px; width: 50%; }
-.skeleton-row.medium { height: 20px; width: 70%; }
-.skeleton-row.long { height: 20px; width: 100%; }
-
-/* ============================================================
-   Estat buits de les targetes de friends/league/feed/gifts
-   ============================================================ */
-
-.friends-empty {
-    padding: 24px;
-    text-align: center;
-}
-
-.friends-empty-icon {
-    width: 40px;
-    height: 40px;
-    margin: 0 auto 12px;
-    background: var(--glass-bg);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    color: var(--accent);
-}
-
-.friends-empty h3 {
-    font-size: 12px;
-    margin-bottom: 4px;
-    color: var(--text-main);
-}
-
-.friends-empty p {
-    font-size: 11px;
-    opacity: 0.5;
-}
-
-/* Empty state per a entries de lliga */
-.league-empty {
-    padding: 24px;
-    text-align: center;
-    color: var(--text-main);
-    opacity: 0.5;
-}
-
-.league-empty-icon {
-    width: 40px;
-    height: 40px;
-    margin: 0 auto 12px;
-    background: var(--glass-bg);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-}
-
-.league-empty h3 {
-    font-size: 12px;
-    margin-bottom: 4px;
-}
-
-.league-empty p {
-    font-size: 11px;
-}
-
-/* Empty state per a feed */
-.feed-empty {
-    padding: 24px;
-    text-align: center;
-    color: var(--text-main);
-    opacity: 0.5;
-}
-
-.feed-empty-icon {
-    width: 40px;
-    height: 40px;
-    margin: 0 auto 12px;
-    background: var(--glass-bg);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-}
-
-.feed-empty h3 {
-    font-size: 12px;
-    margin-bottom: 4px;
-}
-
-.feed-empty p {
-    font-size: 11px;
-}
-
-/* Empty state per a regals */
-.gifts-empty-sidebar {
-    padding: 20px;
-    text-align: center;
-    color: var(--text-main);
-    opacity: 0.5;
-}
-
-.gifts-empty-icon-sidebar {
-    width: 32px;
-    height: 32px;
-    margin: 0 auto 8px;
-    background: var(--glass-bg);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-}
-
-.gifts-empty h3 {
-    font-size: 11px;
-    margin-bottom: 2px;
-}
-
-.gifts-empty p {
-    font-size: 10px;
-}
-
-/* ============================================================
-   Estat buits del xat (sidebar)
-   ============================================================ */
-
-.chat-sidebar .soc-empty-state {
-    padding: 24px 16px;
-    min-height: 120px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.chat-sidebar .soc-empty-icon {
-    width: 32px;
-    height: 32px;
-    margin: 0 auto 8px;
-}
-
-.chat-sidebar .soc-empty-state h3 {
-    font-size: 11px;
-    margin-bottom: 2px;
-}
-
-.chat-sidebar .soc-empty-state p {
-    font-size: 10px;
-}
-
-/* ============================================================
-   Modal count a la targeta de friends
-   ============================================================ */
 
 .soc-badge {
+    margin-inline-start: auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.soc-section-label {
+    margin: 14px 2px 6px;
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.5;
+}
+
+/* ============================================================
+   Botons i xips (també als modals, que viuen fora del Social)
+   ============================================================ */
+
+.soc-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 700;
+    gap: 6px;
+    padding: 7px 12px;
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 10px;
+    background: var(--pill-bg);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.soc-btn:hover {
+    filter: brightness(1.08);
+}
+
+.soc-btn:active {
+    transform: scale(0.98);
+}
+
+.soc-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+    transform: none;
+}
+
+.soc-btn-primary,
+#socialRoot .btn-primary {
+    border-color: transparent;
     background: var(--accent);
     color: #fff;
 }
 
+.soc-btn-danger {
+    border-color: transparent;
+    background: #ff453a;
+    color: #fff;
+}
+
+.soc-btn-danger-outline {
+    border-color: currentColor;
+    background: transparent;
+    color: #ff453a;
+}
+
+.soc-btn:focus-visible,
+.soc-icon-btn:focus-visible,
+.soc-person:focus-visible,
+.soc-profile-btn:focus-visible,
+.soc-league-row:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.soc-icon-btn {
+    display: inline-flex;
+    padding: 4px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.55;
+}
+
+.soc-icon-btn:hover {
+    background: var(--pill-bg);
+    opacity: 1;
+}
+
+.soc-chip {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--pill-bg);
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    opacity: 0.85;
+}
+
+.soc-chip-ok {
+    background: rgba(52, 199, 89, 0.16);
+    color: #34c759;
+    opacity: 1;
+}
+
+.soc-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.soc-when {
+    flex: 0 0 auto;
+    font-size: 11px;
+    opacity: 0.55;
+    font-variant-numeric: tabular-nums;
+}
+
+.soc-dot-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #34c759;
+}
+
 /* ============================================================
-   Responsive
+   Avatars
    ============================================================ */
 
-@media (max-width: 1300px) {
+.soc-avatar {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: var(--pill-bg);
+    font-size: 14px;
+    font-weight: 700;
+    overflow: visible;
+}
+
+.soc-avatar-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+}
+
+.soc-avatar-glyph {
+    line-height: 1;
+}
+
+.soc-avatar-mini {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+}
+
+.soc-avatar-lg {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+}
+
+.soc-avatar-xl {
+    width: 72px;
+    height: 72px;
+    font-size: 24px;
+}
+
+.soc-avatar-online::after,
+.soc-avatar-idle::after,
+.soc-avatar-offline::after {
+    content: '';
+    position: absolute;
+    inset-inline-end: -1px;
+    bottom: -1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--glass-menu-bg);
+}
+
+.soc-avatar-xl::after {
+    width: 15px;
+    height: 15px;
+}
+
+.soc-avatar-online::after {
+    background: #34c759;
+}
+
+.soc-avatar-idle::after {
+    background: #ffcc00;
+}
+
+.soc-avatar-offline::after {
+    background: #8e8e93;
+}
+
+/* ============================================================
+   Cercador d'amics
+   ============================================================ */
+
+.soc-search-wrap {
+    position: relative;
+    margin: 0 0 10px;
+}
+
+.soc-search-ico {
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 11px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    opacity: 0.45;
+}
+
+.soc-search {
+    box-sizing: border-box;
+    width: 100%;
+    padding-block: 9px;
+    padding-inline: 34px 12px;
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 12px;
+    background: var(--glass-bg-soft);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 13.5px;
+}
+
+.soc-search:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.soc-search::-webkit-search-cancel-button {
+    cursor: pointer;
+}
+
+/* ============================================================
+   Pestanyes petites (Amics / Sol·licituds / Enviades)
+   ============================================================ */
+
+.soc-subtabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.soc-subtab {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.soc-subtab:hover {
+    background: var(--pill-bg);
+    opacity: 0.9;
+}
+
+.soc-subtab.active {
+    background: var(--pill-bg);
+    opacity: 1;
+}
+
+/* ============================================================
+   Llistes i fitxes de persones
+   ============================================================ */
+
+.soc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.soc-person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 7px 6px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.soc-person:hover {
+    background: var(--table-hover);
+}
+
+.soc-person-main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.soc-person-name {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.soc-person-sub {
+    font-size: 12px;
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.soc-person-side {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.soc-person-side .soc-actions {
+    max-width: 220px;
+}
+
+.soc-pin.is-pinned {
+    color: var(--accent);
+    opacity: 1;
+}
+
+/* Esquelet de càrrega del cercador */
+
+.soc-skeleton-list {
+    pointer-events: none;
+}
+
+.soc-skeleton {
+    height: 46px;
+    border-radius: 12px;
+    background-image: linear-gradient(
+        90deg,
+        var(--glass-bg-soft) 25%,
+        var(--glass-bg-strong) 37%,
+        var(--glass-bg-soft) 63%
+    );
+    background-size: 400% 100%;
+    animation: soc-shimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes soc-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}
+
+/* ============================================================
+   Lliga
+   ============================================================ */
+
+.soc-league-me {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 2px 12px;
+    min-width: 0;
+}
+
+.soc-league-rank {
+    flex: 0 0 auto;
+    min-width: 36px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.soc-league-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.soc-league-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--pill-bg);
+    overflow: hidden;
+}
+
+.soc-league-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+    transition: width 0.4s ease;
+}
+
+.soc-league-goal {
+    font-size: 11.5px;
+    opacity: 0.65;
+    font-variant-numeric: tabular-nums;
+}
+
+.soc-league-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding: 6px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.soc-league-row:hover {
+    background: var(--table-hover);
+}
+
+.soc-league-row.is-me {
+    background: var(--glass-bg-strong);
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.soc-league-row .soc-person-name {
+    flex: 1;
+    min-width: 0;
+}
+
+.soc-league-pos {
+    flex: 0 0 auto;
+    width: 18px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.7;
+}
+
+.soc-league-row.is-top .soc-league-pos {
+    color: #f5b843;
+    opacity: 1;
+}
+
+.soc-league-xp {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.8;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Avisos
+   ============================================================ */
+
+.soc-notification {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 6px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.soc-notification:hover {
+    background: var(--table-hover);
+}
+
+.soc-notification.is-read {
+    cursor: default;
+}
+
+.soc-notification.is-read:hover {
+    background: transparent;
+}
+
+.soc-notification-dot {
+    flex: 0 0 auto;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.soc-notification.is-read .soc-notification-dot {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px currentColor;
+    opacity: 0.3;
+}
+
+.soc-notification-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   Barra lateral: targeta de perfil i pestanyes
+   ============================================================ */
+
+.soc-profile-card {
+    padding: 10px;
+}
+
+.soc-profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: 8px;
+    border: none;
+    border-radius: 14px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.soc-profile-btn:hover {
+    background: var(--table-hover);
+}
+
+.soc-profile-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.soc-profile-name {
+    font-size: 14.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.soc-profile-desc {
+    font-size: 12px;
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.soc-sidebar-card {
+    padding: 12px;
+}
+
+.soc-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    background: var(--pill-bg);
+}
+
+.soc-tab {
+    flex: 1;
+    padding: 7px 6px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    opacity: 0.65;
+    cursor: pointer;
+}
+
+.soc-tab.active {
+    background: var(--glass-bg-strong);
+    opacity: 1;
+}
+
+.soc-tabpanel {
+    min-width: 0;
+}
+
+/* ============================================================
+   Xat
+   ============================================================ */
+
+.soc-chat {
+    display: flex;
+    flex-direction: column;
+    height: min(52vh, 520px);
+    min-height: 340px;
+}
+
+.soc-chat-channels {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-bottom: 8px;
+}
+
+.soc-channel {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 999px;
+    background: var(--pill-bg);
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.65;
+    cursor: pointer;
+}
+
+.soc-channel.active {
+    background: var(--accent);
+    color: #fff;
+    opacity: 1;
+}
+
+.soc-chat-log {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+    padding: 4px 2px 10px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.soc-msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+}
+
+.soc-msg.is-me {
+    flex-direction: row-reverse;
+}
+
+.soc-msg-bubble {
+    min-width: 0;
+    max-width: 84%;
+    padding: 7px 10px;
+    border-radius: 14px;
+    background: var(--pill-bg);
+}
+
+.soc-msg.is-me .soc-msg-bubble {
+    background: var(--accent);
+    color: #fff;
+}
+
+.soc-msg-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.soc-msg-name {
+    font-size: 11.5px;
+    font-weight: 700;
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.soc-msg-time {
+    flex: 0 0 auto;
+    font-size: 10.5px;
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums;
+}
+
+.soc-msg.is-me .soc-msg-name,
+.soc-msg.is-me .soc-msg-time {
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 1;
+}
+
+.soc-msg-text {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.soc-chat-form {
+    display: flex;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--glass-border-soft);
+}
+
+.soc-chat-input {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 12px;
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 12px;
+    background: var(--glass-bg-soft);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 13.5px;
+}
+
+.soc-chat-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.soc-empty-chat {
+    padding-top: 28px;
+}
+
+/* ============================================================
+   Activitat
+   ============================================================ */
+
+.soc-activity {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding: 7px 6px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.soc-activity:hover {
+    background: var(--table-hover);
+}
+
+.soc-activity-main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.soc-activity-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.soc-activity-game {
+    font-size: 12px;
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============================================================
+   Regals
+   ============================================================ */
+
+.soc-balance {
+    padding: 2px 2px 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    opacity: 0.85;
+}
+
+.soc-gift {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding: 7px 6px;
+    border-radius: 12px;
+}
+
+.soc-gift:hover {
+    background: var(--table-hover);
+}
+
+.soc-gift-icon {
+    flex: 0 0 auto;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.soc-gift-label {
+    flex: 1;
+    min-width: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============================================================
+   Estats buits, porta d'accés, càrrega i error
+   ============================================================ */
+
+.soc-empty {
+    padding: 18px 10px;
+    text-align: center;
+    opacity: 0.75;
+}
+
+.soc-empty-icon {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 26px;
+    line-height: 1;
+    opacity: 0.9;
+}
+
+.soc-empty p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.social-page > .soc-gate {
+    max-width: 560px;
+    margin: 40px auto;
+}
+
+.soc-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.soc-gate-icon {
+    font-size: 40px;
+    line-height: 1;
+}
+
+.soc-gate h3 {
+    margin: 0;
+    font-size: 19px;
+}
+
+.soc-gate p {
+    max-width: 420px;
+    margin: 0;
+    font-size: 13.5px;
+    opacity: 0.65;
+}
+
+.soc-gate .soc-btn,
+.soc-gate .btn-primary {
+    margin-top: 6px;
+}
+
+.soc-spinner {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 3px solid var(--glass-border-soft);
+    border-top-color: var(--accent);
+    animation: soc-spin 0.8s linear infinite;
+}
+
+@keyframes soc-spin {
+    to { transform: rotate(1turn); }
+}
+
+/* ============================================================
+   Modals (perfil, edició, confirmació)
+   ============================================================ */
+
+/* Els modals del Social reaprofiten la capa `.modal` de l'aplicació, però
+   la targeta ha de ser petita (com la del compte): `height: auto`, sense
+   ocupar la pantalla, amb el seus marges i el fons dels diàlegs. */
+.soc-modal-card {
+    position: relative;
+    width: min(520px, calc(100vw - 32px));
+    height: auto;
+    max-height: calc(100% - 30px);
+    overflow-y: auto;
+    padding: 26px 24px;
+    background: var(--glass-menu-bg);
+}
+
+.soc-modal-edit .soc-modal-card {
+    width: min(440px, calc(100vw - 32px));
+}
+
+.soc-modal-title {
+    margin: 0 0 14px;
+    padding-right: 40px;
+    font-size: 18px;
+}
+
+.soc-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.soc-confirm-text {
+    margin: 4px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+/* Fitxa de perfil */
+
+.soc-profile-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    margin-bottom: 12px;
+    padding-right: 36px;
+}
+
+.soc-profile-id {
+    min-width: 0;
+}
+
+.soc-profile-id .soc-profile-name {
+    margin: 0;
+    font-size: 20px;
+    overflow-wrap: anywhere;
+}
+
+.soc-profile-handle {
+    margin: 2px 0 4px;
+    font-size: 13px;
+    opacity: 0.6;
+}
+
+.soc-profile-status {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.soc-profile-bio {
+    margin: 6px 0 4px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.soc-profile-bio.is-empty {
+    font-style: italic;
+    opacity: 0.5;
+}
+
+.soc-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 12px 0 0;
+}
+
+.soc-stat {
+    min-width: 0;
+    padding: 10px 6px;
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 14px;
+    background: var(--glass-bg-soft);
+    text-align: center;
+}
+
+.soc-stat strong {
+    display: block;
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+}
+
+.soc-stat span {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    opacity: 0.65;
+    overflow-wrap: anywhere;
+}
+
+/* Formulari d'edició */
+
+.soc-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.soc-label {
+    margin-top: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.soc-hint {
+    margin: 2px 0 0;
+    font-size: 11.5px;
+    opacity: 0.6;
+}
+
+.soc-hint.is-bad {
+    color: #ff6b6b;
+    opacity: 1;
+}
+
+.soc-textarea {
+    min-height: 64px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.soc-form-msg {
+    margin: 10px 0 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #ff6b6b;
+    overflow-wrap: anywhere;
+}
+
+.soc-edit-photo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.soc-photo-drop {
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.soc-photo-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 999px;
+    background: var(--pill-bg);
+    box-shadow: 0 0 0 2px var(--glass-border-soft);
+    font-size: 26px;
+    font-weight: 700;
+    overflow: hidden;
+}
+
+.soc-photo-preview .soc-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.soc-photo-preview.is-uploading {
+    animation: soc-pulse 1s ease-in-out infinite;
+}
+
+@keyframes soc-pulse {
+    50% { opacity: 0.35; }
+}
+
+/* ============================================================
+   Pantalles estretes
+   ============================================================ */
+
+@media (max-width: 1120px) {
     .social-layout {
-        grid-template-columns: 1fr;
-    }
-    
-    .sidebar {
-        position: relative;
-        margin-top: 20px;
+        grid-template-columns: minmax(0, 1fr) 300px;
     }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 920px) {
+    .social-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .social-sidebar {
+        position: static;
+    }
+
+    .soc-chat {
+        height: min(60vh, 480px);
+    }
+
+    .social-header h2 {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 520px) {
     .social-card {
-        padding: 16px;
-        border-radius: 22px;
+        padding: 13px;
+        border-radius: 16px;
     }
-    
-    .social-card-title {
-        font-size: 15px;
+
+    .soc-person-side .soc-actions {
+        max-width: 150px;
     }
-    
-    .social-col { gap: 12px; }
-    
-    .sidebar {
-        padding: 12px 8px;
+
+    .soc-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
     }
-    
-    .sidebar-tabs {
-        gap: 2px;
+
+    .soc-modal-card {
+        width: calc(100vw - 30px);
     }
-    
-    .sidebar-tab {
-        padding: 6px 0;
-        font-size: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .soc-skeleton {
+        animation: none;
+    }
+
+    .soc-btn:active {
+        transform: none;
+    }
+
+    .soc-league-bar span {
+        transition: none;
     }
 }

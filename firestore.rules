@@ -16,9 +16,12 @@ service cloud.firestore {
     //   users/{uid}/saves/{joc}         els saves d'un joc concret, amb el
     //                                   joc com a identificador
     //
-    //   profiles/{uid}                  perfil social (nom, icona, punts, racha)
+    //   profiles/{uid}                  perfil social (nom, nom d'usuari,
+    //                                   bio, foto, icona, punts, ratxa)
     //   friendships/{pairId}            amistats (status: pending | accepted)
-    //   league/{week}                   lliga setmanal (entrades, divisió, XP)
+    //   league/{week}                   lliga setmanal: un mapa d'entrades
+    //                                   { uid: { uid, name, icon, photo, xp } }
+    //                                   on cadascú només pot tocar la seva
     //   feed/{docId}                    activitat pública (darreres 20)
     //   gifts/{docId}                   regals globals (reclamables)
     //   chat/{channelId}/messages/{msgId} xat per canals
@@ -75,36 +78,71 @@ service cloud.firestore {
     }
 
     // --- Social: Perfil propi ---
+    // L'actualització només pot tocar aquestes claus: així ningú no es pot
+    // inventar camps ni escriure on no toca. `at` és quan s'ha tocat.
     match /profiles/{uid} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == uid;
       allow update: if request.auth != null && request.auth.uid == uid
-          && request.resource.data.keys().hasOnly(['name', 'icon', 'points', 'lvl', 'streak', 'status', 'game', 'giftsBalance', 'at']);
+          && request.resource.data.keys().hasOnly([
+            'name', 'nameLower', 'username', 'bio', 'photo', 'icon',
+            'points', 'lvl', 'streak', 'status', 'game', 'giftsBalance', 'at'
+          ]);
     }
 
     // --- Social: Amistats (pairId = uid1__uid2 ordenats) ---
     match /friendships/{pairId} {
-      allow read: if request.auth != null && request.auth.uid in resource.data.uids;
+      // La parella viu dins del propi identificador, així que la lectura
+      // d'un document concret es comprova pel camí. No es pot comprovar
+      // per `resource`: el client llegeix l'amistat ABANS d'enviar la
+      // primera sol·licitud i, quan el document encara no existeix,
+      // `resource` és nul — una regla que hi mirés els camps petaria i
+      // denegaria la lectura (justament això va fer caure «afegir amic»).
+      allow get: if request.auth != null && request.auth.uid in pairId.split('__');
+      // Les consultes (list) sí que poden mirar les dades: Firestore les
+      // lliga amb el `where('uids', 'array-contains', uid)` del client.
+      allow list: if request.auth != null && request.auth.uid in resource.data.uids;
       allow create: if request.auth != null
           && request.auth.uid in request.resource.data.uids
           && request.resource.data.uids.size() == 2
           && request.resource.data.status == 'pending'
           && request.resource.data.requestedBy == request.auth.uid;
+      // Després de crear-la només hi ha dos canvis legítims: acceptar
+      // (només qui rep la sol·licitud) i fixar (qualsevol de les dues
+      // parts). La parella `uids` no es pot reescriure mai: si no, algú
+      // podria fer-se passar per amic de qui volgués.
       allow update: if request.auth != null
           && request.auth.uid in resource.data.uids
-          && request.resource.data.status == 'accepted'
-          && request.resource.data.acceptedAt != null;
+          && request.resource.data.uids == resource.data.uids
+          && (
+            (resource.data.status == 'pending'
+              && request.resource.data.status == 'accepted'
+              && request.resource.data.acceptedAt != null
+              && request.auth.uid != resource.data.requestedBy)
+            ||
+            (resource.data.status == 'accepted'
+              && request.resource.data.status == 'accepted'
+              && request.resource.data.acceptedAt == resource.data.acceptedAt)
+          );
       allow delete: if request.auth != null
           && request.auth.uid in resource.data.uids;
     }
 
     // --- Social: Lliga setmanal ---
+    // El document és compartit: hi ha una entrada per persona. La regla
+    // d'actualització deixa tocar NOMÉS la pròpia entrada (diff sobre el
+    // mapa) i cap de les altres, i el document no pot créixer sense límit.
     match /league/{week} {
       allow read: if request.auth != null;
-      // L'XP s'actualitza via increment des del client (addLeagueXP)
+      allow create: if request.auth != null
+          && request.resource.data.keys().hasOnly(['week', 'xpTarget', 'entries', 'updatedAt'])
+          && request.resource.data.entries.keys().hasOnly([request.auth.uid])
+          && request.resource.data.entries.size() <= 50;
       allow update: if request.auth != null
-          && request.resource.data.entries.hasOnly(request.auth.uid)
-          && request.resource.data.keys().hasOnly(['entries', 'updatedAt']);
+          && request.resource.data.keys().hasOnly(['week', 'xpTarget', 'entries', 'updatedAt'])
+          && request.resource.data.entries.size() <= 50
+          && request.resource.data.entries.diff(resource.data.entries)
+                .affectedKeys().hasOnly([request.auth.uid]);
     }
 
     // --- Social: Feed (activitat pública) ---

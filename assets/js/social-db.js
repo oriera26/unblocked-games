@@ -66,6 +66,10 @@ export function firestore() {
  */
 export function describeError(error) {
     const code = error?.code ?? '';
+    // Al navegador, un error del Social només arriba fins aquí: deixar el
+    // codi a la consola estalvia endevinar per què una acció no s'ha pogut
+    // completar quan la pantalla només pot dir «no s'ha pogut completar».
+    console.warn('[ula] error del Social:', code || '(sense codi)', error?.message ?? '');
     if (code.includes('permission-denied')) return 'permission';
     if (code.includes('unauthenticated')) return 'auth';
     if (code.includes('unavailable') || code.includes('failed-precondition')) return 'offline';

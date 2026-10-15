@@ -17,7 +17,7 @@
          pàgina abans d'obrir el popup, i sense ell el popup ni s'obre.
          Si el domini del projecte canviés, això i firebase-config.js
          haurien de canviar alhora: tools/check-firebase.mjs ho comprova. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; frame-src 'self' https://unblocked-games-by-ula.firebaseapp.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://unblocked-games-by-ula.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://i.ibb.co https://*.ibb.co; media-src 'self' blob:; font-src 'self'; frame-src 'self' https://unblocked-games-by-ula.firebaseapp.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://unblocked-games-by-ula.firebaseapp.com https://api.imgbb.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>UnblockedGames by Ula</title>
     <script src="assets/vendor/lucide.min.js"></script>
     <link rel="icon" type="image/x-icon" href="assets/icons/icon.ico">
@@ -183,10 +183,6 @@
         </section>
 
         <section id="view-social" class="view">
-            <div class="social-header">
-                <h2 data-i18n="nav.social">Social</h2>
-                <p data-i18n="social.subtitle">La teva colla, les lligues i el xat.</p>
-            </div>
             <div id="socialRoot"></div>
         </section>
 

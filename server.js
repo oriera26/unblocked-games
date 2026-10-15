@@ -114,16 +114,24 @@ const AUTH_ORIGINS = [
  */
 const GAPI_ORIGIN = 'https://apis.google.com';
 
+/**
+ * imgbb: la foto de perfil del Social. Les pujades van a `api.imgbb.com`
+ * i les imatges resultants es mostren des de `i.ibb.co` (i els seus
+ * subdominis). Si mai no es fa servir la foto de perfil, es poden treure.
+ */
+const IMGBB_UPLOAD = 'https://api.imgbb.com';
+const IMGBB_IMAGES = ['https://i.ibb.co', 'https://*.ibb.co'];
+
 function csp(frameAncestors) {
     return [
         "default-src 'self'",
         `script-src 'self' ${GAPI_ORIGIN}`,
         "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data: blob:",
+        `img-src 'self' data: blob: ${IMGBB_IMAGES.join(' ')}`,
         "media-src 'self' blob:",
         "font-src 'self'",
         `frame-src 'self' ${AUTH_DOMAIN}`,
-        `connect-src 'self' ${AUTH_ORIGINS.join(' ')}`,
+        `connect-src 'self' ${AUTH_ORIGINS.join(' ')} ${IMGBB_UPLOAD}`,
         "worker-src 'self' blob:",
         "object-src 'none'",
         "base-uri 'none'",

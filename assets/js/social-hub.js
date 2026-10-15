@@ -1,160 +1,518 @@
 /**
- * social-hub.js · pintat i gestió de les columnes esquerres (Amics / Lliga)
- * i actualització de la targeta de perfil del sidebar.
+ * social-hub.js · la columna de contingut del Social: amics amb cercador,
+ * lliga setmanal i avisos.
  *
- * Aquesta versió:
- * - Column esquerra amb taules d'amics i lliga.
- * - Delegació a initHub.leftColumn i initHub.leagueSection.
- * - Subscriptors per al perfil del sidebar.
+ * El DOM es munta una sola vegada (`mount`) i després només se'n
+ * refresquen els trossos que canvien (`refresh`). Això és important perquè
+ * l'input del cercador no perdi el focus ni el text mentre s'escriu i
+ * arriben actualitzacions de Firestore al mateix temps.
  */
 
-import { findPerson, myName, notify, saveState, state, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, pinFriend, challengeFriend, giftFriend, claimGift } from './social-store.js';
-import { activityLabel, byId, countdown, esc, get, hydrate, statusLabel, t, timeAgo } from './social-ui.js';
+import {
+    state,
+    onSocialChange,
+    acceptFriendRequest,
+    rejectFriendRequest,
+    sendFriendRequest,
+    setFriendPin,
+    searchProfiles,
+    notify,
+    markNotificationsRead,
+    clearNotifications,
+    isFriend
+} from './social-store.js';
+import { esc, get, t, timeAgo, statusLabel, avatarMarkup, hydrate } from './social-ui.js';
 import { openProfile } from './social-modals.js';
 
 let root = null;
+let unsubscribeStore = null;
 
-/* ---------- Inicialització ---------- */
+let activeTab = 'friends';     // friends | requests | sent
+let searchTerm = '';           // el que hi ha escrit al cercador
+let searchResults = [];        // resultats remots de l'última cerca
+let searchLoading = false;
+let searchToken = 0;           // per descartar respostes velles
+let searchTimer = null;
 
-export function initHub(node, onSocialChange) {
-    root = node;
+/* ================================================================
+   Muntatge (una sola vegada)
+   ================================================================ */
 
-    // No subscription here - social.js handles state changes
-    // Just initial render if we're already ready
-    if (state.status === 'ready') {
-        render();
-    }
-}
+export function mountHub(container) {
+    root = container;
 
-/* ---------- Renderitzador ---------- */
+    root.innerHTML = `
+        <div class="soc-col">
+            <section class="social-card">
+                <div class="social-card-title">
+                    <span class="soc-ico" data-lucide="users" data-size="18"></span>
+                    <span>${t('social.friends')}</span>
+                    <span class="soc-badge" id="hubOnlineBadge" hidden></span>
+                </div>
 
-function render() {
-    if (!root || view !== 'ready') return;
+                <div class="soc-search-wrap">
+                    <span class="soc-search-ico" data-lucide="search" data-size="15"></span>
+                    <input id="hubSearch" class="soc-search" type="search"
+                           placeholder="${t('social.searchPlayers')}"
+                           aria-label="${t('social.searchPlayers')}"
+                           autocomplete="off" spellcheck="false">
+                </div>
 
-    // Obtenim dades de l'estat
-    const friends = state.friends || [];
-    const profile = state.profile || {};
-    const league = state.league || [];
+                <div class="soc-subtabs" id="hubSubtabs" role="tablist"></div>
+                <div class="soc-friends-body" id="hubFriendsBody"></div>
+                <div id="hubSuggestions"></div>
+            </section>
 
-    // Contadors
-    const activeFriends = (state.friends || []).filter(f => f.status !== 'offline').length;
-    const friendsCountEl = root.querySelector('#friendsCount');
-    if (friendsCountEl) friendsCountEl.textContent = `(${activeFriends})`;
+            <section class="social-card">
+                <div class="social-card-title">
+                    <span class="soc-ico" data-lucide="trophy" data-size="18"></span>
+                    <span>${t('social.league')}</span>
+                    <span class="social-card-count" id="hubLeagueWeek"></span>
+                </div>
+                <div id="hubLeagueBody"></div>
+            </section>
 
-    const leagueCountEl = root.querySelector('#leagueCount');
-    if (leagueCountEl) leagueCountEl.textContent = league.length ? `(${league.length} setmanes)` : '';
-
-    // Renderitzem columnes esquerres
-    root.innerHTML = /*html*/ `
-        <div class="social-col">
-            ${renderFriendsSection(friends)}
-            ${renderLeagueSection(league)}
+            <section class="social-card">
+                <div class="social-card-title">
+                    <span class="soc-ico" data-lucide="bell" data-size="18"></span>
+                    <span>${t('social.notifications')}</span>
+                    <button type="button" class="soc-icon-btn" data-act="clear-notifs"
+                            aria-label="${t('ui.close')}" title="${t('ui.close')}" hidden>
+                        <span data-lucide="x" data-size="14"></span>
+                    </button>
+                </div>
+                <div id="hubNotifsBody"></div>
+            </section>
         </div>
     `;
 
-    // Subscriptors després de pintar
-    addFriendClicks();
-}
-
-/* ---------- Secció d'amics ---------- */
-
-function renderFriendsSection(friends) {
-    // Si no hi ha dades encara
-    if (!friends || friends.length === 0) {
-        return `
-            <div class="friends-empty">
-                <div class="friends-empty-icon">${t('ui.empty_friends')}</div>
-                <h3>${t('ui.friends')}</h3>
-                <p>${t('ui.no_friends_yet')}</p>
-            </div>
-        `;
-    }
-
-    const rows = friends.map((person, i) => personRow(person, i)).join('');
-
-    return `
-        <div class="soc-section-label">${t('ui.friends')}</div>
-        <div class="soc-list soc-friends-list" style="max-height: 420px; overflow-y: auto;">
-            ${rows}
-        </div>
-    `;
-}
-
-/* ---------- Secció de lliga ---------- */
-
-function renderLeagueSection(league) {
-    if (!league || league.length === 0) {
-        return `
-            <div class="league-empty">
-                <div class="league-empty-icon">${t('ui.empty_league')}</div>
-                <h3>${t('ui.league')}</h3>
-                <p>${t('ui.no_league_yet')}</p>
-            </div>
-        `;
-    }
-
-    const rows = league.map((entry, i) => leagueRow(entry, i)).join('');
-
-    return `
-        <div class="soc-section-label">${t('ui.league')}</div>
-        <div class="soc-list soc-league-list">${rows}</div>
-    `;
-}
-
-/* ---------- Files d'amic ---------- */
-
-function personRow(person, index) {
-    const offline = person.status === 'offline';
-    const playing = person.activity?.kind === 'playing';
-    const gameName = person.activity?.game ?? '';
-    const xp = person.xp ?? 0;
-
-    return `
-        <div class="soc-person ${offline ? 'is-offline' : ''}" data-person-id="${esc(person.id)}" style="cursor: pointer;">
-            <div class="soc-avatar">
-                ${esc(person.icon)}
-                <span class="soc-dot ${esc(person.status)}" title="${statusLabel(person.status)}"></span>
-            </div>
-            <button class="soc-person-main soc-person-btn" type="button" data-soc="profile" data-id="${esc(person.id)}">
-                <span class="soc-person-name">${esc(person.name)}</span>
-                ${xp ? `<span class="soc-xp">${xp} XP</span>` : ''}
-            </button>
-        </div>
-    `;
-}
-
-/* ---------- Files de lliga ---------- */
-
-function leagueRow(entry, index) {
-    const week = entry.week ?? 0;
-    const rank = entry.rank ?? '—';
-    const xp = entry.xp ?? 0;
-
-    return `
-        <div class="soc-league-entry" style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--glass-border-soft);">
-            <div style="width: 32px; height: 32px; background: linear-gradient(140deg, var(--accent), #7b5cff); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px;">#${rank}</div>
-            <div style="flex: 1;">
-                <span style="font-weight: 600; font-size: 12px; color: var(--text-main);">Setmana ${week}</span>
-                <span style="font-size: 10px; color: var(--text-main); opacity: 0.5;">${t('ui.xp')} ${xp}</span>
-            </div>
-        </div>
-    `;
-}
-
-/* ---------- Delegació de clics ---------- */
-
-function addFriendClicks() {
-    // Clic en un amic → obre perfil lateral
-    document.querySelectorAll('.soc-person').forEach(btn => {
-        btn.replaceWith(btn.innerHTML); // netejem listeners antics
+    const search = root.querySelector('#hubSearch');
+    search.addEventListener('input', () => {
+        searchTerm = search.value.trim();
+        scheduleSearch();
+    });
+    search.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') event.preventDefault();
     });
 
-    document.querySelectorAll('.soc-person').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const personId = btn.dataset.personId;
-            if (personId) {
-                openProfile(root, personId);
-            }
-        });
+    root.addEventListener('click', onClick);
+
+    unsubscribeStore = onSocialChange(() => refresh());
+    refresh();
+}
+
+export function destroyHub() {
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = null;
+    if (unsubscribeStore) unsubscribeStore();
+    unsubscribeStore = null;
+    root = null;
+}
+
+/* ================================================================
+   Cerca
+   ================================================================ */
+
+function scheduleSearch() {
+    if (searchTimer) clearTimeout(searchTimer);
+
+    if (searchTerm.length < 2) {
+        searchResults = [];
+        searchLoading = false;
+        searchToken++;
+        refresh();
+        return;
+    }
+
+    searchLoading = true;
+    refresh();
+
+    searchTimer = setTimeout(async () => {
+        const token = ++searchToken;
+        const results = await searchProfiles(searchTerm);
+        if (token !== searchToken) return; // ja s'ha escrit una altra cosa
+        searchResults = results;
+        searchLoading = false;
+        refresh();
+    }, 250);
+}
+
+/** Els que ja conec (amics, sol·licituds i suggeriments) que casen amb el text. */
+function localMatches(term) {
+    const query = term.toLowerCase();
+    const seen = new Set();
+    const out = [];
+
+    for (const person of [...state.friends, ...state.requests, ...state.sentRequests, ...state.suggestions]) {
+        if (seen.has(person.uid)) continue;
+        seen.add(person.uid);
+        const haystack = `${person.name ?? ''} ${person.username ?? ''}`.toLowerCase();
+        if (haystack.includes(query)) out.push(person);
+    }
+
+    return out;
+}
+
+/* ================================================================
+   Refresc
+   ================================================================ */
+
+export function refresh() {
+    if (!root || state.status !== 'ready') return;
+
+    refreshHeader();
+    refreshSubtabs();
+    refreshFriendsBody();
+    refreshSuggestions();
+    refreshLeague();
+    refreshNotifications();
+
+    hydrate(root);
+}
+
+function refreshHeader() {
+    const online = state.friends.filter((friend) => friend.status === 'online').length;
+    const badge = root.querySelector('#hubOnlineBadge');
+    badge.textContent = String(online);
+    badge.title = t('social.statusOnline');
+    badge.hidden = online === 0;
+
+    const search = root.querySelector('#hubSearch');
+    search.placeholder = t('social.searchPlayers');
+    search.setAttribute('aria-label', t('social.searchPlayers'));
+
+    const week = root.querySelector('#hubLeagueWeek');
+    week.textContent = state.league.week ?? '';
+}
+
+function refreshSubtabs() {
+    const bar = root.querySelector('#hubSubtabs');
+
+    const tabs = [
+        { id: 'friends', label: t('social.friends'), count: state.friends.length },
+        { id: 'requests', label: t('social.requests'), count: state.requests.length },
+        { id: 'sent', label: t('social.sentRequests'), count: state.sentRequests.length }
+    ].filter((tab) => tab.id === 'friends' || tab.count > 0);
+
+    if (!tabs.some((tab) => tab.id === activeTab)) activeTab = 'friends';
+
+    bar.innerHTML = tabs.map((tab) => `
+        <button type="button" class="soc-subtab ${tab.id === activeTab ? 'active' : ''}"
+                data-act="tab" data-tab="${tab.id}" role="tab"
+                aria-selected="${tab.id === activeTab}">
+            ${tab.label}${tab.id === 'friends' ? '' : ` (${tab.count})`}
+        </button>
+    `).join('');
+}
+
+function refreshFriendsBody() {
+    const body = root.querySelector('#hubFriendsBody');
+
+    if (searchTerm.length > 0) {
+        body.innerHTML = renderSearchResults();
+        return;
+    }
+
+    if (activeTab === 'requests') {
+        body.innerHTML = renderRequests();
+        return;
+    }
+    if (activeTab === 'sent') {
+        body.innerHTML = renderSent();
+        return;
+    }
+
+    body.innerHTML = renderFriends();
+}
+
+/* ================================================================
+   Amics
+   ================================================================ */
+
+function sortFriends(list) {
+    const weight = (friend) => {
+        if (friend.pinned) return 0;
+        if (friend.status === 'online') return 1;
+        return 2;
+    };
+    return [...list].sort((a, b) => {
+        const diff = weight(a) - weight(b);
+        if (diff !== 0) return diff;
+        return String(a.name ?? '').localeCompare(String(b.name ?? ''));
     });
+}
+
+function personRow(person, extra = '') {
+    const status = person.status ?? 'offline';
+    const uid = esc(person.uid);
+
+    return `
+        <div class="soc-person" data-act="profile" data-uid="${uid}" role="button" tabindex="0">
+            <span class="soc-avatar soc-avatar-${esc(status)}">
+                ${avatarMarkup(person)}
+            </span>
+            <span class="soc-person-main">
+                <span class="soc-person-name">${esc(person.name ?? 'Jugador')}</span>
+                <span class="soc-person-sub">${esc(person.username ? `@${person.username}` : statusLabel(status))}</span>
+            </span>
+            <span class="soc-person-side">${extra}</span>
+        </div>
+    `;
+}
+
+function renderFriends() {
+    if (!state.friends.length) {
+        return emptyState(t('ui.empty_friends'), t('social.noFriends'));
+    }
+
+    return `<div class="soc-list">${sortFriends(state.friends).map((friend) => personRow(friend, `
+        <button type="button" class="soc-icon-btn soc-pin ${friend.pinned ? 'is-pinned' : ''}"
+                data-act="pin" data-uid="${esc(friend.uid)}"
+                aria-pressed="${friend.pinned === true}"
+                aria-label="${t('social.pin')}" title="${t('social.pin')}">
+            <span data-lucide="pin" data-size="14"></span>
+        </button>
+        ${friend.status === 'online' ? `<span class="soc-dot-label">${statusLabel('online')}</span>` : ''}
+    `)).join('')}</div>`;
+}
+
+function renderRequests() {
+    if (!state.requests.length) return emptyState('📨', t('social.noRequests'));
+
+    return `<div class="soc-list">${state.requests.map((person) => personRow(person, `
+        <span class="soc-actions">
+            <button type="button" class="soc-btn soc-btn-primary" data-act="accept" data-uid="${esc(person.uid)}">${t('social.accept')}</button>
+            <button type="button" class="soc-btn" data-act="reject" data-uid="${esc(person.uid)}">${t('social.reject')}</button>
+        </span>
+        <span class="soc-when">${timeAgo(person.at)}</span>
+    `)).join('')}</div>`;
+}
+
+function renderSent() {
+    if (!state.sentRequests.length) return emptyState('⏳', t('social.noSentRequests'));
+
+    return `<div class="soc-list">${state.sentRequests.map((person) => personRow(person, `
+        <span class="soc-chip">${t('social.requestPending')}</span>
+        <button type="button" class="soc-btn" data-act="cancel" data-uid="${esc(person.uid)}">${t('ui.cancel')}</button>
+    `)).join('')}</div>`;
+}
+
+/* ================================================================
+   Resultats de la cerca
+   ================================================================ */
+
+function relationOf(uid) {
+    if (isFriend(uid)) return 'friend';
+    if (state.requests.some((p) => p.uid === uid)) return 'incoming';
+    if (state.sentRequests.some((p) => p.uid === uid)) return 'sent';
+    return 'stranger';
+}
+
+function renderSearchResults() {
+    if (searchLoading && !searchResults.length) {
+        return `<div class="soc-list soc-skeleton-list" aria-busy="true">
+            ${'<div class="soc-skeleton"></div>'.repeat(3)}
+        </div>`;
+    }
+
+    const seen = new Set();
+    const rows = [];
+
+    for (const person of localMatches(searchTerm)) {
+        seen.add(person.uid);
+        rows.push(person);
+    }
+    for (const person of searchResults) {
+        if (seen.has(person.uid)) continue;
+        seen.add(person.uid);
+        rows.push(person);
+    }
+
+    if (!rows.length) {
+        return searchLoading
+            ? `<div class="soc-list soc-skeleton-list" aria-busy="true">${'<div class="soc-skeleton"></div>'.repeat(2)}</div>`
+            : emptyState('🔍', t('social.noResults'));
+    }
+
+    const html = rows.map((person) => {
+        const relation = relationOf(person.uid);
+        const action = relation === 'friend'
+            ? `<span class="soc-chip soc-chip-ok">${t('social.friends')}</span>`
+            : relation === 'sent'
+                ? `<span class="soc-chip">${t('social.requestPending')}</span>`
+                : relation === 'incoming'
+                    ? `<span class="soc-actions">
+                           <button type="button" class="soc-btn soc-btn-primary" data-act="accept" data-uid="${esc(person.uid)}">${t('social.accept')}</button>
+                           <button type="button" class="soc-btn" data-act="reject" data-uid="${esc(person.uid)}">${t('social.reject')}</button>
+                       </span>`
+                    : `<button type="button" class="soc-btn soc-btn-primary" data-act="add" data-uid="${esc(person.uid)}" data-name="${esc(person.name ?? '')}">${t('social.add')}</button>`;
+
+        return personRow(person, action);
+    }).join('');
+
+    return `<div class="soc-list">${html}</div>`;
+}
+
+/* ================================================================
+   Suggeriments
+   ================================================================ */
+
+function refreshSuggestions() {
+    const box = root.querySelector('#hubSuggestions');
+
+    if (searchTerm.length > 0 || !state.suggestions.length) {
+        box.innerHTML = '';
+        return;
+    }
+
+    const rows = state.suggestions.slice(0, 4).map((person) => personRow(person, `
+        <button type="button" class="soc-btn soc-btn-primary" data-act="add" data-uid="${esc(person.uid)}" data-name="${esc(person.name ?? '')}">${t('social.add')}</button>
+    `)).join('');
+
+    box.innerHTML = `
+        <div class="soc-section-label">${t('social.suggested')}</div>
+        <div class="soc-list">${rows}</div>
+    `;
+}
+
+/* ================================================================
+   Lliga
+   ================================================================ */
+
+function refreshLeague() {
+    const body = root.querySelector('#hubLeagueBody');
+    const { entries, xp, xpTarget } = state.league;
+
+    if (!entries.length) {
+        body.innerHTML = emptyState(t('ui.empty_league'), t('ui.no_league_yet'));
+        return;
+    }
+
+    const goal = Math.max(1, xpTarget || 2000);
+    const percent = Math.min(100, Math.round((xp / goal) * 100));
+    const myRank = entries.findIndex((entry) => entry.uid === state.me?.uid) + 1;
+
+    body.innerHTML = `
+        <div class="soc-league-me">
+            <span class="soc-league-rank">${myRank > 0 ? `#${myRank}` : '—'}</span>
+            <div class="soc-league-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${xp}">
+                <div class="soc-league-bar"><span style="width:${percent}%"></span></div>
+                <span class="soc-league-goal">${xp} / ${goal} ${t('ui.xp')}</span>
+            </div>
+        </div>
+        <div class="soc-list soc-league-list">
+            ${entries.slice(0, 10).map((entry, index) => `
+                <div class="soc-league-row ${entry.uid === state.me?.uid ? 'is-me' : ''} ${index < 3 ? 'is-top' : ''}"
+                     data-act="profile" data-uid="${esc(entry.uid)}" role="button" tabindex="0">
+                    <span class="soc-league-pos">${index + 1}</span>
+                    <span class="soc-avatar soc-avatar-${entry.uid === state.me?.uid ? 'online' : 'offline'}">${avatarMarkup(entry)}</span>
+                    <span class="soc-person-name">${esc(entry.name ?? 'Jugador')}</span>
+                    <span class="soc-league-xp">${entry.xp} ${t('ui.xp')}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+/* ================================================================
+   Avisos
+   ================================================================ */
+
+function refreshNotifications() {
+    const body = root.querySelector('#hubNotifsBody');
+    const clearButton = root.querySelector('[data-act="clear-notifs"]');
+    const list = state.notifications;
+
+    clearButton.hidden = list.length === 0;
+
+    if (!list.length) {
+        body.innerHTML = emptyState('🔔', t('social.noNotifications'));
+        return;
+    }
+
+    body.innerHTML = `<div class="soc-list">${list.map((notification) => `
+        <div class="soc-notification ${notification.read ? 'is-read' : ''}" data-act="read-notifs">
+            <span class="soc-notification-dot" aria-hidden="true"></span>
+            <span class="soc-notification-text">${esc(notification.text)}</span>
+            <span class="soc-when">${timeAgo(notification.at)}</span>
+        </div>
+    `).join('')}</div>`;
+}
+
+/* ================================================================
+   Peces compartides
+   ================================================================ */
+
+function emptyState(icon, text) {
+    return `
+        <div class="soc-empty">
+            <span class="soc-empty-icon" aria-hidden="true">${icon}</span>
+            <p>${text}</p>
+        </div>
+    `;
+}
+
+/* ================================================================
+   Accions
+   ================================================================ */
+
+async function onClick(event) {
+    const target = event.target.closest('[data-act]');
+    if (!target || !root.contains(target)) return;
+
+    const act = target.dataset.act;
+    const uid = target.dataset.uid;
+
+    if (act === 'tab') {
+        activeTab = target.dataset.tab;
+        refresh();
+        return;
+    }
+
+    if (act === 'profile') {
+        openProfile(uid);
+        return;
+    }
+
+    if (act === 'pin') {
+        event.stopPropagation();
+        const person = state.friends.find((friend) => friend.uid === uid);
+        if (!person) return;
+        const result = await setFriendPin(uid, !person.pinned);
+        if (!result.ok) notify(get('social.error_action'));
+        return;
+    }
+
+    if (act === 'accept') {
+        event.stopPropagation();
+        const result = await acceptFriendRequest(uid);
+        notify(result.ok ? get('social.friendAccepted') : get('social.error_action'));
+        return;
+    }
+
+    if (act === 'reject' || act === 'cancel') {
+        event.stopPropagation();
+        const result = await rejectFriendRequest(uid);
+        if (!result.ok) notify(get('social.error_action'));
+        return;
+    }
+
+    if (act === 'add') {
+        event.stopPropagation();
+        const name = target.dataset.name || uid;
+        const result = await sendFriendRequest(uid);
+        notify(result.ok
+            ? get('social.requestSent', { name })
+            : get('social.error_action'));
+        return;
+    }
+
+    if (act === 'read-notifs') {
+        markNotificationsRead();
+        return;
+    }
+
+    if (act === 'clear-notifs') {
+        clearNotifications();
+    }
 }
