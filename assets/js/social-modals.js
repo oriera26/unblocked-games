@@ -21,7 +21,7 @@ import {
 } from './social-store.js';
 import { esc, get, t, activityLabel, avatarMarkup, hydrate } from './social-ui.js';
 import { getLevelForPoints } from './levels.js';
-import { uploadToImgbb, imgbbConfigured } from './social-imgbb.js';
+import { uploadToImgbb } from './social-imgbb.js';
 
 /* ================================================================
    Base dels modals
@@ -303,11 +303,6 @@ export function openProfileEdit() {
     photoInput.addEventListener('change', async () => {
         const file = photoInput.files?.[0];
         if (!file) return;
-
-        if (!imgbbConfigured()) {
-            showMessage(message, t('ui.upload_failed'));
-            return;
-        }
 
         preview.classList.add('is-uploading');
         try {

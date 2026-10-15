@@ -1,23 +1,47 @@
 /**
  * social-imgbb.js · pujada d'imatges a imgbb per a la foto de perfil.
  *
- * imgbb demana una clau d'API (les gratuïtes surten a
- * https://api.imgbb.com/ i es creen en un minut). La clau viu aquí, no és
- * cap secret de seguretat —qualsevol web que pugi imatges a imgbb des del
- * navegador l'ha de tenir a mà— però SENSE CLAU la pujada no funciona i
- * el formulari ho diu.
+ * imgbb demana una clau d'API (les gratuïtes es creen en un minut a
+ * https://api.imgbb.com/). La clau no viu al repositori: aquí només hi ha
+ * la de proves en local; a producció es llegeix del document
+ * `config/imgbb` de Firestore (camp `key`), que el propietari escriu des
+ * de la consola de Firebase i que els clients no poden modificar.
+ *
+ * Val la pena ser honest: això treu la clau de GitHub —on els bots que
+ * escombrén repositoris la trobarien— però és el navegador qui l'ha de
+ * fer servir, així que qualsevol persona que inspeccioni l'aplicació la
+ * podria arribar a veure. Per ocultar-la de debò caldria un intermediari
+ * (una funció al núvol), cosa que el pla gratuït de Firebase no permet.
  *
  * Perquè això funcioni a la web cal que la CSP (index.html i server.js)
  * permeti parlar amb `api.imgbb.com` i mostrar imatges de `i.ibb.co`;
  * ja hi és.
  */
 
-/** Posa aquí la clau d'imgbb. Amb la cadena buida, la pujada es desactiva. */
+import { firestore } from './social-db.js';
+
+/** Clau de proves en local. A producció mana `config/imgbb` de Firestore. */
 export const IMGBB_API_KEY = '';
 
-/** Cert si hi ha clau configurada. */
-export function imgbbConfigured() {
-    return IMGBB_API_KEY.trim().length > 0;
+/** La clau llegida de Firestore, per no anar-hi a cada pujada. */
+let configKey = '';
+
+/** D'on surt la clau: primer la local (proves); si no, la de Firestore. */
+async function resolveKey() {
+    const local = IMGBB_API_KEY.trim();
+    if (local) return local;
+    if (configKey) return configKey;
+
+    const connection = firestore();
+    if (!connection) return '';
+    const { api, db } = connection;
+    try {
+        const snap = await api.getDoc(api.doc(db, 'config', 'imgbb'));
+        configKey = String(snap.data()?.key ?? '').trim();
+        return configKey;
+    } catch {
+        return '';   // sense regla, sense xarxa o sense document: no hi ha clau
+    }
 }
 
 const MAX_BYTES = 8 * 1024 * 1024; // imgbb no accepta més de 32 MB; amb 8 n'hi ha de sobres
@@ -30,11 +54,6 @@ const MAX_BYTES = 8 * 1024 * 1024; // imgbb no accepta més de 32 MB; amb 8 n'hi
  * @throws {Error} amb `reason`: no-key | bad-type | too-big | network | server
  */
 export async function uploadToImgbb(file) {
-    if (!imgbbConfigured()) {
-        const error = new Error('sense clau d\'imgbb');
-        error.reason = 'no-key';
-        throw error;
-    }
     if (!file || !file.type.startsWith('image/')) {
         const error = new Error('el fitxer no és una imatge');
         error.reason = 'bad-type';
@@ -46,6 +65,13 @@ export async function uploadToImgbb(file) {
         throw error;
     }
 
+    const key = await resolveKey();
+    if (!key) {
+        const error = new Error('sense clau d\'imgbb');
+        error.reason = 'no-key';
+        throw error;
+    }
+
     const base64 = await fileToBase64(file);
 
     const body = new FormData();
@@ -54,7 +80,7 @@ export async function uploadToImgbb(file) {
 
     let response;
     try {
-        response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(IMGBB_API_KEY)}`, {
+        response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(key)}`, {
             method: 'POST',
             body
         });

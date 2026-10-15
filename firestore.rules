@@ -25,6 +25,8 @@ service cloud.firestore {
     //   feed/{docId}                    activitat pública (darreres 20)
     //   gifts/{docId}                   regals globals (reclamables)
     //   chat/{channelId}/messages/{msgId} xat per canals
+    //   config/{docId}                  configuració de l'aplicació (la
+    //                                   clau d'imgbb; només es llegeix)
     //
     // Tot és per sota de users/{uid} o col·leccions globals amb regles pròpies.
     //
@@ -80,13 +82,17 @@ service cloud.firestore {
     // --- Social: Perfil propi ---
     // L'actualització només pot tocar aquestes claus: així ningú no es pot
     // inventar camps ni escriure on no toca. `at` és quan s'ha tocat.
+    // `uid` és el rastre de la primera versió del Social: hi ha perfils
+    // antics que el porten i, com que la comprovació és sobre el document
+    // sencer, sense això no es podrien editar mai.
     match /profiles/{uid} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == uid;
       allow update: if request.auth != null && request.auth.uid == uid
           && request.resource.data.keys().hasOnly([
             'name', 'nameLower', 'username', 'bio', 'photo', 'icon',
-            'points', 'lvl', 'streak', 'status', 'game', 'giftsBalance', 'at'
+            'points', 'lvl', 'streak', 'status', 'game', 'giftsBalance', 'at',
+            'uid'
           ]);
     }
 
@@ -169,6 +175,15 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly(['fromUid', 'fromName', 'fromIcon', 'text', 'at', 'reactions']);
       allow update: if request.auth != null
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']);
+    }
+
+    // --- Configuració de l'aplicació (clau d'imgbb, etc.) ---
+    // Només es llegeix; l'escriptura és cosa del propietari, des de la
+    // consola de Firebase. El contingut no és cap secret davant d'algú que
+    // faci servir l'aplicació —el navegador l'ha de poder llegir— però així
+    // queda fora del repositori i de l'abast dels bots que l'escombrén.
+    match /config/{docId} {
+      allow read: if request.auth != null;
     }
 
     // Tot lo altre: prohibit. Això ha de ser l'última línia del fitxer.
