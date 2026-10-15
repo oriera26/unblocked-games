@@ -1,519 +1,755 @@
 /* ============================================================
-   social.css · la secció Social: amics, lligues, feed i xat
+   social.css · tota la secció Social: amics, lliga, feed, xat i sidebar
    Carregat des d'index.html després de components.css i abans
    de responsive.css (que ha de poder guanyar-lo als punts de tall).
    Les classes `soc-*` les genera assets/js/social-*.js.
    ============================================================ */
 
-/* El contenidor de la vista no ha de retallar el FAB del xat, que és
-   fixed, però sí que ha de tenir un mínim d'aire a sota. */
-#view-social { padding-bottom: 96px; }
+/* ============================================================
+   Variables globals i raons
+   ============================================================ */
+:root {
+    --glass-bg: #1a1a2e;
+    --glass-bg-strong: #161628;
+    --glass-border-soft: #3a3a5e;
+    --text-main: #e8e8f0;
+    --accent: #bb86fc;
+    --accent-hover: #a855f7;
+    --pill-bg: #2d2d4a;
+    --table-hover: #25253b;
+}
 
-.social-header { margin-bottom: 22px; }
-.social-header h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
-.social-header p { font-size: 14px; opacity: 0.65; margin-top: 4px; }
+/* ============================================================
+   Estructura principal del layout
+   ============================================================ */
 
-/* --- estructura ---------------------------------------------- */
+#view-social {
+    padding-bottom: 96px;
+    position: relative;
+}
+
+.social-container {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+@media (max-width: 1300px) {
+    .social-container {
+        grid-template-columns: 1fr;
+        max-width: none;
+    }
+}
+
+.sidebar {
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    background: var(--glass-bg-strong);
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 26px;
+    padding: 20px 16px;
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    z-index: 100;
+}
+
+.sidebar-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    margin-bottom: 20px;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--glass-border-soft);
+}
+
+.sidebar-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(140deg, var(--accent), #7b5cff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.sidebar-info {
+    flex: 1;
+}
+
+.sidebar-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.sidebar-desc {
+    font-size: 11px;
+    opacity: 0.6;
+}
+
+.sidebar-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--glass-bg);
+    border-radius: 16px;
+    padding: 4px;
+}
+
+.sidebar-tab {
+    flex: 1;
+    padding: 8px 0;
+    border-radius: 12px;
+    color: var(--text-main);
+    opacity: 0.6;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-tab.active {
+    background: var(--accent);
+    color: #fff;
+    opacity: 1;
+}
+
+.sidebar-tab:hover:not(.active) {
+    background: rgba(187, 134, 252, 0.2);
+    opacity: 0.8;
+}
+
+/* ============================================================
+   Contingut de les tabs
+   ============================================================ */
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Tab: Activitat */
+.activity-section {
+    flex: 1;
+}
+
+.activity-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-main);
+    opacity: 0.5;
+}
+
+.activity-empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 12px;
+    background: var(--glass-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.activity-empty h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.activity-empty p {
+    font-size: 12px;
+    opacity: 0.4;
+}
+
+/* Tab: Regals */
+.gifts-section {
+    flex: 1;
+}
+
+.gifts-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-main);
+    opacity: 0.5;
+}
+
+.gifts-empty-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 12px;
+    background: var(--glass-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.gifts-empty h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.gifts-empty p {
+    font-size: 12px;
+    opacity: 0.4;
+}
+
+/* Estructura de la targeta del xat (sidebar) */
+.chat-sidebar {
+    flex: 1;
+}
+
+.chat-sidebar .soc-chat-fab {
+    position: static;
+    margin: 20px auto 0;
+    display: block;
+}
+
+.chat-sidebar .soc-chat-fab-label {
+    display: block;
+}
+
+/* ============================================================
+   Contingut principal (llestat a la esquerra)
+   ============================================================ */
 
 .social-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-    gap: 18px;
+    grid-template-columns: 1fr;
+    gap: 24px;
     align-items: start;
 }
 
-.social-col { display: flex; flex-direction: column; gap: 18px; }
+@media (min-width: 1301px) {
+    .social-layout {
+        grid-template-columns: 1fr 280px;
+    }
+}
+
+.social-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.main-area {
+    flex: 1;
+}
+
+/* ============================================================
+   Targetes principals
+   ============================================================ */
 
 .social-card {
-    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
+    background: var(--glass-bg);
     border: 1px solid var(--glass-border-soft);
-    border-radius: 26px;
+    border-radius: 20px;
     padding: 20px;
     backdrop-filter: var(--glass-filter);
     -webkit-backdrop-filter: var(--glass-filter);
     box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
-    position: relative;
+    transition: box-shadow 0.2s ease;
+}
+
+.social-card:hover {
+    box-shadow: var(--glass-shadow), inset 0 2px 0 var(--accent), inset 0 1px 0 var(--glass-highlight);
 }
 
 .social-card-title {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 17px; font-weight: 800; letter-spacing: -0.3px;
-    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 12px;
+    color: var(--text-main);
 }
-.social-card-title .soc-ico { color: var(--accent); }
+
+.social-card-title .soc-ico {
+    color: var(--accent);
+    width: 20px;
+    height: 20px;
+}
+
+/* Count a la targeta */
 .social-card-count {
     margin-left: auto;
-    font-size: 11px; font-weight: 700;
+    font-size: 10px;
+    font-weight: 700;
     background: var(--pill-bg);
-    padding: 3px 9px; border-radius: 999px;
-    opacity: 0.85;
+    padding: 2px 8px;
+    border-radius: 999px;
+    opacity: 0.7;
 }
 
-.soc-ico { display: inline-flex; align-items: center; justify-content: center; }
+/* ============================================================
+   Cercador amb skeleton loader
+   ============================================================ */
 
-/* --- xips i botons petits ------------------------------------ */
-
-.soc-btn {
-    appearance: none; border: 1px solid var(--glass-border-soft);
-    background: var(--glass-bg);
-    color: var(--text-main);
-    font-family: inherit;
-    font-size: 12px; font-weight: 700;
-    padding: 6px 12px; border-radius: 999px;
-    cursor: pointer; white-space: nowrap;
-    transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+.soc-search-wrapper {
+    position: relative;
 }
-.soc-btn:hover { transform: translateY(-1px); background: var(--glass-bg-strong); }
-.soc-btn:active { transform: scale(0.97); }
-.soc-btn.primary { background: var(--accent); border-color: transparent; color: #fff; }
-.soc-btn.ghost { background: transparent; }
-.soc-btn.danger { color: #ff5b5b; border-color: rgba(255, 91, 91, 0.4); }
-.soc-btn[disabled] { opacity: 0.5; cursor: default; transform: none; }
 
-.soc-btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
-
-/* --- presència i amics ---------------------------------------- */
-
-.soc-search-row { display: flex; gap: 8px; margin-bottom: 12px; }
 .soc-search {
-    flex: 1; min-width: 0;
+    width: 100%;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border-soft);
     color: var(--text-main);
     border-radius: 14px;
-    padding: 9px 13px; font-size: 13px;
+    padding: 10px 14px;
+    font-size: 13px;
     outline: none;
-}
-.soc-search::placeholder { color: var(--text-main); opacity: 0.45; }
-.soc-search:focus { border-color: var(--accent); }
-
-.soc-bell { position: relative; }
-.soc-bell-badge {
-    position: absolute; top: -5px; right: -5px;
-    min-width: 17px; height: 17px; padding: 0 4px;
-    border-radius: 999px; background: #ff3b30; color: #fff;
-    font-size: 10px; font-weight: 800;
-    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s ease;
 }
 
-.soc-list { display: flex; flex-direction: column; gap: 6px; }
-
-.soc-person {
-    display: flex; align-items: center; gap: 11px;
-    padding: 9px 10px; border-radius: 16px;
-    transition: background 0.15s ease;
-}
-.soc-person:hover { background: var(--table-hover); }
-
-.soc-avatar {
-    position: relative; flex: 0 0 auto;
-    width: 38px; height: 38px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 15px; color: #fff;
-    background: linear-gradient(140deg, var(--accent), #7b5cff);
-    user-select: none;
-}
-.soc-avatar.sm { width: 30px; height: 30px; font-size: 12px; }
-.soc-avatar .soc-dot {
-    position: absolute; right: -1px; bottom: -1px;
-    width: 11px; height: 11px; border-radius: 50%;
-    border: 2px solid var(--glass-bg-strong);
-}
-.soc-dot.online { background: #34c759; }
-.soc-dot.idle { background: #ffcc00; }
-.soc-dot.dnd { background: #ff3b30; }
-.soc-dot.offline { background: #8e8e93; }
-.soc-person.is-offline .soc-avatar { filter: grayscale(0.7); opacity: 0.75; }
-
-.soc-person-main {
-    min-width: 0; flex: 1;
-    display: flex; flex-direction: column; align-items: flex-start;
-    gap: 2px;
-}
-/* El nom i l'activitat són un botó quan obren el mini-perfil. */
-.soc-person-btn {
-    appearance: none; border: none; background: transparent;
-    color: inherit; font: inherit; text-align: left;
-    padding: 0; cursor: pointer;
-}
-.soc-person-btn:hover .soc-person-name { color: var(--accent); }
-
-.soc-person-name {
-    font-size: 13.5px; font-weight: 700;
-    display: flex; align-items: center; gap: 7px;
-}
-.soc-person-activity {
-    font-size: 11.5px; opacity: 0.6;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 100%;
-}
-.soc-wrap { white-space: normal; overflow: visible; line-height: 1.4; }
-.soc-person-actions { display: flex; gap: 6px; flex: 0 0 auto; }
-
-.soc-empty { font-size: 12.5px; opacity: 0.55; padding: 10px 4px; line-height: 1.5; }
-
-.soc-section-label {
-    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
-    font-weight: 800; opacity: 0.5;
-    margin: 16px 0 8px;
+.soc-search:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.15);
 }
 
-/* --- min perfil expandible ------------------------------------ */
-
-.soc-profile-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-.soc-profile-av {
-    width: 58px; height: 58px; border-radius: 20px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 800; color: #fff;
-    background: linear-gradient(150deg, var(--accent), #9b5cff);
-}
-.soc-profile-name { font-size: 20px; font-weight: 800; }
-.soc-profile-status { font-size: 12.5px; opacity: 0.65; margin-top: 3px; }
-.soc-profile-stats {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 10px; margin: 14px 0;
-}
-.soc-profile-stat {
-    background: var(--glass-bg-soft);
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 16px; padding: 10px; text-align: center;
-}
-.soc-profile-stat b { display: block; font-size: 19px; color: var(--accent); }
-.soc-profile-stat span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.6; }
-
-/* --- lliga setmanal ------------------------------------------- */
-
-.soc-league-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-.soc-streak { font-size: 13px; font-weight: 700; }
-.soc-league-xp { font-size: 13px; font-weight: 700; opacity: 0.7; margin-left: auto; }
-.soc-level-track {
-    height: 9px; border-radius: 999px; overflow: hidden;
-    background: var(--pill-bg); margin: 4px 0 12px;
-}
-.soc-level-fill {
-    height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #7c5cff);
-    transition: width 0.5s ease;
-}
-
-.soc-rank {
-    display: flex; align-items: center; gap: 11px;
-    padding: 8px 10px; border-radius: 14px;
-    border-left: 4px solid transparent;
-}
-.soc-rank.promotion { border-left-color: #30d158; }
-.soc-rank.relegation { border-left-color: #ff453a; }
-.soc-rank.is-me, .soc-person.is-me {
-    background: var(--glass-bg-strong);
-    box-shadow: inset 0 0 0 1px var(--accent);
-}
-.soc-rank-pos { width: 22px; text-align: center; font-weight: 800; opacity: 0.7; font-size: 13px; }
-.soc-rank-xp { margin-left: auto; font-weight: 800; font-size: 13px; color: var(--accent); }
-
-/* --- rivalitat / duels ---------------------------------------- */
-
-.soc-duel {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 12px; border-radius: 16px;
-    background: var(--glass-bg-soft);
-    border: 1px solid var(--glass-border-soft);
-}
-.soc-duel-side { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
-.soc-duel-side.right { justify-content: flex-end; text-align: right; }
-.soc-duel-name { font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.soc-duel-score { font-size: 16px; font-weight: 800; }
-.soc-duel-score.win { color: #34c759; }
-.soc-duel-score.lose { color: #ff6b6b; }
-.soc-vs { font-size: 11px; font-weight: 800; opacity: 0.5; letter-spacing: 0.5px; }
-
-.soc-streak .flame { filter: saturate(1.2); }
-
-/* --- torneigs i repte comunitari ------------------------------ */
-
-.soc-tour {
-    background: var(--glass-bg-soft);
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 18px; padding: 14px;
-    display: flex; flex-direction: column; gap: 10px;
-}
-.soc-tour-top { display: flex; align-items: baseline; gap: 10px; }
-.soc-tour-name { font-size: 13.5px; font-weight: 800; }
-.soc-tour-timer {
-    margin-left: auto; font-variant-numeric: tabular-nums;
-    font-size: 12px; font-weight: 800; color: var(--accent);
-}
-.soc-bracket { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
-.soc-bracket-col { display: flex; flex-direction: column; gap: 8px; min-width: 128px; }
-.soc-bracket-match {
-    font-size: 11px; font-weight: 600;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 12px; padding: 7px 10px; white-space: nowrap;
-}
-
-.soc-progress {
-    height: 9px; border-radius: 999px; overflow: hidden;
-    background: var(--pill-bg); margin: 6px 0;
-}
-.soc-progress-fill {
-    height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, #30d158, var(--accent));
-    transition: width 0.5s ease;
-}
-.soc-progress-meta { display: flex; justify-content: space-between; font-size: 11.5px; opacity: 0.7; }
-
-/* --- títols --------------------------------------------------- */
-
-.soc-titles { display: flex; flex-wrap: wrap; gap: 8px; }
-.soc-title-pill {
-    font-size: 11.5px; font-weight: 700;
-    padding: 6px 12px; border-radius: 999px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border-soft);
-    display: inline-flex; align-items: center; gap: 6px;
-}
-.soc-title-pill.rare {
-    background: linear-gradient(120deg, rgba(155, 92, 255, 0.35), rgba(10, 132, 255, 0.25));
-    border-color: rgba(155, 92, 255, 0.5);
-}
-
-/* --- feed d'activitat ----------------------------------------- */
-
-.soc-feed-item { align-items: flex-start; padding: 10px; }
-.soc-reactions-row { display: flex; gap: 4px; margin-top: 2px; flex-wrap: wrap; }
-.soc-reaction-chip {
-    appearance: none; color: var(--text-main);
-    font-family: inherit; font-size: 10.5px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 999px; padding: 2px 8px;
-    cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease;
-}
-.soc-reaction-chip:hover { transform: translateY(-1px); border-color: var(--accent); }
-
-/* --- xat ------------------------------------------------------ */
-
-.soc-chat-fab {
-    position: fixed; right: 22px; bottom: 22px; z-index: 900;
-    display: inline-flex; align-items: center; gap: 9px;
-    height: 52px; padding: 0 18px 0 16px;
-    border: none; border-radius: 999px; cursor: pointer;
-    background: var(--accent); color: #fff;
-    font-family: inherit; font-size: 14px; font-weight: 800;
-    box-shadow: 0 12px 30px rgba(10, 132, 255, 0.45);
-    transition: transform 0.18s ease;
-}
-.soc-chat-fab:hover { transform: translateY(-2px); }
-.soc-chat-fab svg { width: 20px; height: 20px; }
-.soc-chat-fab .soc-bell-badge { top: -4px; right: -4px; }
-
-.soc-chat-drawer {
-    position: fixed; top: 0; right: 0; bottom: 0; z-index: 950;
-    width: min(400px, 100vw);
-    display: flex; flex-direction: column;
-    background: var(--glass-menu-bg);
-    backdrop-filter: var(--glass-filter);
-    -webkit-backdrop-filter: var(--glass-filter);
-    border-left: 1px solid var(--glass-border-soft);
-    box-shadow: -20px 0 60px rgba(0, 0, 0, 0.35);
-    transform: translateX(105%);
-    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-    padding-bottom: env(safe-area-inset-bottom, 0);
-}
-.soc-chat-drawer.open { transform: translateX(0); }
-
-.soc-chat-head {
-    display: flex; align-items: center; gap: 10px;
-    padding: 16px 16px 12px;
-    border-bottom: 1px solid var(--glass-border-soft);
-}
-.soc-chat-title { font-size: 16px; font-weight: 800; }
-.soc-chat-close {
-    margin-left: auto; appearance: none; border: none; background: transparent;
-    color: var(--text-main); cursor: pointer; font-size: 20px; line-height: 1;
-    width: 32px; height: 32px; border-radius: 50%;
-}
-.soc-chat-close:hover { background: var(--table-hover); }
-
-.soc-channels {
-    display: flex; gap: 6px; overflow-x: auto;
-    padding: 12px 14px 6px;
-}
-.soc-channel {
-    appearance: none; color: var(--text-main); font-family: inherit;
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 999px; padding: 5px 11px;
-    font-size: 12px; font-weight: 700;
-    cursor: pointer; white-space: nowrap;
-}
-.soc-channel.active { background: var(--accent); border-color: transparent; color: #fff; }
-.soc-channel .dot { width: 7px; height: 7px; border-radius: 50%; background: #34c759; }
-
-.soc-chat-log {
-    flex: 1; overflow-y: auto;
-    display: flex; flex-direction: column; gap: 10px;
-    padding: 14px;
-}
-.soc-chat-msg {
-    display: flex; flex-direction: column; align-items: flex-start;
-    max-width: 84%;
-}
-.soc-chat-msg.is-me { align-self: flex-end; align-items: flex-end; }
-.soc-chat-msg-header { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
-.soc-chat-msg-name { font-size: 11.5px; font-weight: 800; }
-.soc-chat-msg-time { font-size: 10px; opacity: 0.5; }
-.soc-msg-avatar { width: 26px; height: 26px; font-size: 12px; }
-.soc-chat-bubble {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 16px; padding: 8px 12px;
-    font-size: 13px; line-height: 1.4;
-    word-break: break-word;
-}
-.soc-chat-msg.is-me .soc-chat-bubble { background: var(--accent); color: #fff; border-color: transparent; }
-
-.soc-typing {
-    min-height: 16px; padding: 0 14px 4px;
-    font-size: 11.5px; font-style: italic; opacity: 0.6;
-}
-
-.soc-chat-tools {
-    display: flex; gap: 8px; flex-wrap: wrap;
-    padding: 0 14px 10px;
-}
-
-.soc-chat-input-row {
-    display: flex; gap: 8px;
-    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0));
-    border-top: 1px solid var(--glass-border-soft);
-}
-.soc-chat-input {
-    flex: 1; min-width: 0;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border-soft);
+.soc-search::placeholder {
     color: var(--text-main);
-    border-radius: 14px; padding: 10px 13px; font-size: 13px;
-    outline: none;
-}
-.soc-chat-input:focus { border-color: var(--accent); }
-.soc-send {
-    flex: 0 0 auto; width: 46px;
-    border: none; border-radius: 14px; cursor: pointer;
-    background: var(--accent); color: #fff;
-    font-size: 16px; font-weight: 800;
-}
-.soc-send:hover { transform: translateY(-1px); }
-
-/* --- mode espectador ------------------------------------------ */
-
-.soc-spectate {
-    position: relative; overflow: hidden;
-    aspect-ratio: 16 / 9;
-    display: flex; align-items: center; justify-content: center;
-    background: #05070d;
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 18px;
-}
-.soc-spectate-feed {
-    position: absolute; inset: 0;
-    background:
-        radial-gradient(circle at 30% 40%, rgba(10, 132, 255, 0.35), transparent 55%),
-        radial-gradient(circle at 70% 65%, rgba(155, 92, 255, 0.3), transparent 55%),
-        repeating-linear-gradient(135deg, #0b1220 0 14px, #0a0f1a 14px 28px);
-}
-.soc-spectate-badge {
-    position: absolute; top: 10px; left: 10px; z-index: 2;
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #ff3b30; color: #fff;
-    font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 4px 10px; border-radius: 999px;
-}
-.soc-spectate-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #fff; }
-.soc-spectate-overlay { position: relative; z-index: 2; text-align: center; padding: 18px; color: #fff; }
-.soc-spectate-title { font-size: 20px; font-weight: 800; }
-.soc-spectate-sub { font-size: 12.5px; opacity: 0.75; margin-top: 4px; }
-
-/* --- punts de tall -------------------------------------------- */
-
-@media (max-width: 1000px) {
-    .social-layout { grid-template-columns: 1fr; }
+    opacity: 0.45;
 }
 
-@media (max-width: 560px) {
-    .social-card { padding: 16px; border-radius: 22px; }
-    .soc-person { flex-wrap: wrap; }
-    .soc-person-actions { width: 100%; }
-    .soc-profile-stats { grid-template-columns: repeat(3, 1fr); }
-    .soc-chat-fab { right: 14px; bottom: 14px; }
-    .soc-chat-fab .soc-chat-fab-label { display: none; }
-    .soc-chat-fab { padding: 0; width: 52px; justify-content: center; }
+/* Skeleton loader per al buscador */
+.soc-search.skeleton {
+    background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-bg-strong) 50%, var(--glass-bg) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Resultats de la cerca */
+.soc-results {
+    margin-top: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.soc-result-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--glass-border-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-main);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.soc-result-item:last-child {
+    border-bottom: none;
+}
+
+.soc-result-item:hover {
+    opacity: 1;
+}
+
+.soc-result-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(140deg, var(--accent), #7b5cff);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.soc-result-info {
+    flex: 1;
+}
+
+.soc-result-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.soc-result-desc {
+    font-size: 10px;
+    opacity: 0.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+/* Estat "no resultats" */
+.soc-no-results {
+    padding: 12px;
+    text-align: center;
+    color: var(--text-main);
+    opacity: 0.5;
+    font-size: 12px;
 }
 
 /* ============================================================
-   Porta d'accés al Social (sense sessió / error / carregant)
+   Estat buits i targetes informatives
    ============================================================ */
 
-.social-gate {
-    display: grid;
-    place-items: center;
-    min-height: 60vh;
-    padding: 24px;
-}
-
-.social-gate-card {
-    background: linear-gradient(160deg, var(--glass-bg-strong), var(--glass-bg));
-    border: 1px solid var(--glass-border-soft);
-    border-radius: 26px;
-    padding: 40px 36px;
+.soc-empty-state {
     text-align: center;
-    max-width: 360px;
-    backdrop-filter: var(--glass-filter);
-    -webkit-backdrop-filter: var(--glass-filter);
-    box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+    padding: 40px 20px;
+    color: var(--text-main);
+    opacity: 0.5;
 }
 
-.social-gate-icon {
+.soc-empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    background: var(--glass-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.soc-empty-state h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.soc-empty-state p {
+    font-size: 12px;
+}
+
+/* Estil per targetes buides (friends, league entries, etc.) */
+.soc-empty-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+}
+
+.soc-empty-icon-large {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 12px;
+    background: var(--glass-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--accent);
+}
+
+.soc-empty-card h3 {
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: var(--text-main);
+}
+
+.soc-empty-card p {
+    font-size: 11px;
+    opacity: 0.5;
+}
+
+/* ============================================================
+   Sidebar: Estat buits i placeholders
+   ============================================================ */
+
+.sidebar .soc-empty-state {
+    padding: 32px 16px;
+}
+
+.sidebar .soc-empty-icon {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 8px;
+}
+
+.sidebar .soc-empty-state h3 {
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.sidebar .soc-empty-state p {
+    font-size: 10px;
+    opacity: 0.4;
+}
+
+/* Skeleton loader per amics */
+.skeleton-friend {
+    height: 56px;
+    background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-bg-strong) 50%, var(--glass-bg) 75%);
+    border-radius: 12px;
+    animation: shimmer 1.5s infinite ease-in-out;
+    border-radius: 8px 8px 0 0;
+}
+
+.skeleton-friend .soc-avatar {
+    height: 36px;
+    width: 36px;
+}
+
+.skeleton-friend .soc-person-main {
+    height: 20px;
+}
+
+/* Estructura skeleton per a targetes */
+.skeleton-card {
+    height: 100%;
+    background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-bg-strong) 50%, var(--glass-bg) 75%);
+    border-radius: 20px;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+.skeleton-row {
+    height: 32px;
+    background: linear-gradient(90deg, var(--glass-bg) 25%, var(--glass-bg-strong) 50%, var(--glass-bg) 75%);
+    border-radius: 10px;
+    animation: shimmer 1.5s infinite ease-in-out;
+    margin: 8px 0;
+}
+
+.skeleton-row.short { height: 20px; width: 50%; }
+.skeleton-row.medium { height: 20px; width: 70%; }
+.skeleton-row.long { height: 20px; width: 100%; }
+
+/* ============================================================
+   Estat buits de les targetes de friends/league/feed/gifts
+   ============================================================ */
+
+.friends-empty {
+    padding: 24px;
+    text-align: center;
+}
+
+.friends-empty-icon {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 12px;
+    background: var(--glass-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--accent);
+}
+
+.friends-empty h3 {
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--text-main);
+}
+
+.friends-empty p {
+    font-size: 11px;
+    opacity: 0.5;
+}
+
+/* Empty state per a entries de lliga */
+.league-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-main);
+    opacity: 0.5;
+}
+
+.league-empty-icon {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 12px;
+    background: var(--glass-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.league-empty h3 {
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.league-empty p {
+    font-size: 11px;
+}
+
+/* Empty state per a feed */
+.feed-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-main);
+    opacity: 0.5;
+}
+
+.feed-empty-icon {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 12px;
+    background: var(--glass-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.feed-empty h3 {
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.feed-empty p {
+    font-size: 11px;
+}
+
+/* Empty state per a regals */
+.gifts-empty-sidebar {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-main);
+    opacity: 0.5;
+}
+
+.gifts-empty-icon-sidebar {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto 8px;
+    background: var(--glass-bg);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.gifts-empty h3 {
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+.gifts-empty p {
+    font-size: 10px;
+}
+
+/* ============================================================
+   Estat buits del xat (sidebar)
+   ============================================================ */
+
+.chat-sidebar .soc-empty-state {
+    padding: 24px 16px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-sidebar .soc-empty-icon {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto 8px;
+}
+
+.chat-sidebar .soc-empty-state h3 {
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+.chat-sidebar .soc-empty-state p {
+    font-size: 10px;
+}
+
+/* ============================================================
+   Modal count a la targeta de friends
+   ============================================================ */
+
+.soc-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #fff;
-    font-size: 28px;
-    margin-bottom: 16px;
-}
-
-.social-gate-title {
-    font-size: 22px;
-    font-weight: 800;
-    margin: 0 0 8px;
-}
-
-.social-gate-text {
-    font-size: 14px;
-    opacity: 0.7;
-    margin: 0 0 22px;
-    line-height: 1.5;
-}
-
-.social-gate-btn {
-    appearance: none;
-    border: 1px solid var(--glass-border-soft);
-    background: var(--accent);
-    color: #fff;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 700;
-    padding: 10px 24px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
     border-radius: 999px;
-    cursor: pointer;
-    transition: transform 0.15s ease, background 0.15s ease;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--accent);
+    color: #fff;
 }
 
-.social-gate-btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
-.social-gate-btn:active { transform: scale(0.97); }
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 1300px) {
+    .social-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        position: relative;
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 560px) {
+    .social-card {
+        padding: 16px;
+        border-radius: 22px;
+    }
+    
+    .social-card-title {
+        font-size: 15px;
+    }
+    
+    .social-col { gap: 12px; }
+    
+    .sidebar {
+        padding: 12px 8px;
+    }
+    
+    .sidebar-tabs {
+        gap: 2px;
+    }
+    
+    .sidebar-tab {
+        padding: 6px 0;
+        font-size: 10px;
+    }
+}

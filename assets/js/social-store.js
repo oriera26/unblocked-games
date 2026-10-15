@@ -28,13 +28,19 @@ const listeners = new Set();
 /** Es crida sempre que `state` canvia (idioma a part). */
 export function onSocialChange(listener) {
     listeners.add(listener);
+    // Notify immediately with current status
+    try {
+        listener(state.status);
+    } catch {
+        /* un escoltador trencat no ha de tombar la resta */
+    }
     return () => listeners.delete(listener);
 }
 
 function emit() {
     for (const listener of listeners) {
         try {
-            listener();
+            listener(state.status);
         } catch {
             /* un escoltador trencat no ha de tombar la resta */
         }

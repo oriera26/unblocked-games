@@ -1,235 +1,119 @@
 /**
- * social-chat.js · el calaix de xat del Social.
+ * social-chat.js · calaix de xat integrat dins del sidebar de la dreta.
  *
- * Un botó flotant dins la vista obre un calaix lateral amb canals (global,
- * grup i 1 a 1), «escrivint…», reaccions i mini-jocs. Els missatges es
- * desen a l'estat social, així que l'historial sobreviu entre sessions.
- *
- * El «···» d'algú que escriu no és text d'interfície sinó un símbol, i
- * per això no passa per `t()`: la línia és `${nom} ···`.
+ * El calaix artícul:
+ *   - Botó FAB fixe a la targeta del sidebar.
+ *   - Canals: global, grup i 1 a 1.
+ *   - Missatges, reaccions, typing indicator.
+ *   - Shown des de la tab "Xat" del sidebar.
  */
 
 import { iconOfName, makeMessage, myName, saveState, state, sendChatMessage, reactToChatMessage } from './social-store.js';
 import { byId, esc, get, hydrate, t, timeAgo } from './social-ui.js';
 
-const MAX_MESSAGES = 60;
+/* ---------- Elements del sidebar xat ---------- */
 
-let drawer = null;
+function renderChatSidebar(root) {
+    const profile = state.profile || {};
+    const channels = state.chat.channels || [];
 
-/* ================================================================
-   Consultes
-   ================================================================ */
+    // Determina el canal actiu
+    let activeChannel = null;
+    if (state.chat.active && state.chat.channels) {
+        activeChannel = state.chat.channels.find(c => c.id === state.chat.active);
+    }
+    if (!activeChannel && channels.length) {
+        activeChannel = channels[0];
+    }
 
-function activeChannel() {
-    return state.chat.channels.find((channel) => channel.id === state.chat.active) ?? state.chat.channels[0];
+    // Llista de canals
+    const channelList = channels.map((channel, i) => /*html*/`
+        <div class="soc-chat-channel ${channel.id === state.chat.active ? 'active' : ''}" data-channel-id="${channel.id}" style="padding: 8px 12px; border-radius: 12px; margin: 4px 0; cursor: pointer; font-size: 12px; color: var(--text-main); transition: background 0.2s;">
+            <span style="font-weight: 600;">${esc(channel.name)}</span>
+            <span style="font-size: 10px; opacity: 0.5;">(${channel.memberCount || 0} participants)</span>
+        </div>
+    `).join('');
+
+    // Missatges del canal actiu
+    const messages = activeChannel && state.chat.messages[activeChannel.id]
+        ? state.chat.messages[activeChannel.id].slice(-20).map(msg => /*html*/`
+            <div class="soc-chat-message ${msg.from === myName() ? 'right' : 'left'}" style="display: flex; align-items: flex-start; gap: 8px; margin: 6px 0; max-width: 80%;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(140deg, var(--accent), #7b5cff); color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">${esc((msg.from === myName() ? 'T' : getInitials(msg.from)))}</div>
+                <div style="background: var(--glass-bg); border: 1px solid var(--glass-border-soft); border-radius: 14px; padding: 8px 12px; max-width: 80%;">
+                    <div style="font-weight: 600; font-size: 12px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${esc(msg.from)}</div>
+                    <div style="font-size: 11px; color: var(--text-main); opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${timeAgo(msg.at)}</div>
+                    <p style="font-size: 13px; margin: 4px 0; white-space: pre-wrap;">${esc(msg.text)}</p>
+                </div>
+            </div>
+        `).join('')
+        : '<p class="soc-empty-state" style="font-size: 12px; opacity: 0.5;">' + t('social.no_messages') + '</p>';
+
+    // Escriu un missatge
+    const inputHTML = /*html*/`
+        <div style="padding: 12px; border-top: 1px solid var(--glass-border-soft); background: var(--glass-bg);">
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" id="chatInput" placeholder="${t('social.type_message')}" style="flex: 1; background: var(--glass-bg); border: 1px solid var(--glass-border-soft); color: var(--text-main); border-radius: 14px; padding: 8px 12px; font-size: 13px; outline: none;">
+                <button class="btn-small" style="padding: 8px 12px; font-size: 12px; background: var(--accent); color: #fff; border: none; border-radius: 12px; cursor: pointer;" disabled>${t('social.send')}</button>
+            </div>
+        </div>
+    `;
+
+    return /*html*/`
+        <div class="chat-sidebar" style="padding: 16px 0;">
+            <!-- Llista de canals -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 11px; color: var(--text-main); opacity: 0.5; margin-bottom: 8px;">${t('social.channels')}</div>
+                <div style="max-height: 120px; overflow-y: auto;">
+                    ${channelList}
+                </div>
+            </div>
+
+            <!-- Missatges -->
+            <div style="height: 280px; overflow-y: auto; margin-bottom: 16px;">
+                ${messages}
+            </div>
+
+            /*---- ENVIAR MISSENGER ----*/
+            ${inputHTML}
+        </div>
+    `;
 }
 
-function channelMessages(channel) {
-    state.chat.messages[channel.id] ??= [];
-    return state.chat.messages[channel.id];
-}
+/* ---------- Inicialització ---------- */
 
-function totalUnread() {
-    return Object.values(state.chat.unread ?? {}).reduce((sum, count) => sum + count, 0);
-}
+export function initChatPanel(root) {
+    if (!root) return;
 
-function findMessage(id) {
-    return channelMessages(activeChannel()).find((message) => message.id === id);
-}
+    // Renderitza el primer cop i després subscripció
+    root.innerHTML = renderChatSidebar(root);
 
-/** Desa un missatge al canal, amb un sostre perquè no creixi sense fi. */
-function pushMessage(channelId, message) {
-    const list = (state.chat.messages[channelId] ??= []);
-    list.push(message);
-    if (list.length > MAX_MESSAGES) list.splice(0, list.length - MAX_MESSAGES);
-    saveState();
-}
+    // Delegació de canvis de canal
+    root.addEventListener('click', (e) => {
+        const channelBtn = e.target.closest('.soc-chat-channel');
+        if (!channelBtn) return;
 
-/* ================================================================
-   Muntatge
-   ================================================================ */
-
-export function initChat() {
-    const view = byId('view-social');
-    if (!view || byId('socChatFab')) return;
-
-    const fab = document.createElement('button');
-    fab.type = 'button';
-    fab.className = 'soc-chat-fab';
-    fab.id = 'socChatFab';
-    fab.setAttribute('aria-label', get('social.chat'));
-    fab.setAttribute('aria-controls', 'socChatDrawer');
-    fab.innerHTML = `<i data-lucide="message-circle"></i>
-        <span class="soc-chat-fab-label">${t('social.chat')}</span>
-        <span class="soc-bell-badge" id="socChatFabBadge" hidden></span>`;
-    view.appendChild(fab);
-
-    drawer = document.createElement('aside');
-    drawer.className = 'soc-chat-drawer';
-    drawer.id = 'socChatDrawer';
-    drawer.setAttribute('role', 'dialog');
-    drawer.setAttribute('aria-modal', 'true');
-    drawer.setAttribute('aria-label', get('social.chat'));
-    view.appendChild(drawer);
-
-    fab.addEventListener('click', () => {
-        if (drawer.classList.contains('open')) closeChat();
-        else openChat();
-    });
-    drawer.addEventListener('click', onChatClick);
-    drawer.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey && event.target.id === 'socChatInput') {
-            event.preventDefault();
-            sendMessage();
+        const channelId = channelBtn.dataset.channelId;
+        if (channelId) {
+            state.chat.active = channelId;
+            root.innerHTML = renderChatSidebar(root);
         }
     });
 
-    hydrate(fab);
-    updateBadge();
-}
+    // Envia missatge
+    const input = root.querySelector('#chatInput');
+    const sendBtn = root.querySelector('.soc-chat-sidebar .btn-small');
+    if (input && sendBtn) {
+        // Habilita/deshabilita el botó segons hagi text
+        input.addEventListener('input', () => {
+            sendBtn.disabled = !input.value.trim();
+        });
 
-export function openChat() {
-    if (!drawer) return;
-    renderChat();
-    drawer.classList.add('open');
-    byId('socChatFab')?.setAttribute('aria-expanded', 'true');
-    byId('socChatInput')?.focus();
-}
-
-export function closeChat() {
-    drawer?.classList.remove('open');
-    byId('socChatFab')?.setAttribute('aria-expanded', 'false');
-}
-
-/* ================================================================
-   Pintura
-   ================================================================ */
-
-export function renderChat() {
-    if (!drawer) return;
-    const channel = activeChannel();
-
-    drawer.innerHTML = `
-        <div class="soc-chat-head">
-            <span class="soc-ico"><i data-lucide="message-circle"></i></span>
-            <span class="soc-chat-title">${t('social.chat')}</span>
-            <button type="button" class="soc-chat-close" data-soc-chat-close aria-label="×">×</button>
-        </div>
-        <div class="soc-channels">
-            ${state.chat.channels.map((item) => `
-                <button class="soc-channel ${item.id === channel.id ? 'active' : ''}" type="button" data-soc-channel="${esc(item.id)}">
-                    ${item.kind === 'global' ? '<span class="dot"></span>' : ''}
-                    ${esc(item.name)}${state.chat.unread?.[item.id] ? ` · ${state.chat.unread[item.id]}` : ''}
-                </button>`).join('')}
-        </div>
-        <div class="soc-chat-log" data-soc-chat-log>${channelMessages(channel).map(messageRow).join('')}</div>
-        <div class="soc-chat-tools">
-            <button class="soc-btn ghost" type="button" data-soc-chat="minigame">🎲 ${t('social.minigames')}</button>
-            <button class="soc-btn ghost" type="button" data-soc-chat="record">🏆 ${t('social.challenge')}</button>
-        </div>
-        <div class="soc-chat-input-row">
-            <input class="soc-chat-input" id="socChatInput" type="text" placeholder="${t('social.chatPh')}" aria-label="${t('social.chat')}">
-            <button class="soc-send" type="button" data-soc-chat="send" aria-label="${t('social.chat')}">➤</button>
-        </div>`;
-
-    hydrate(drawer);
-    scrollLog();
-    updateBadge();
-}
-
-function renderMessages() {
-    const log = drawer?.querySelector('.soc-chat-log');
-    if (!log) return;
-
-    log.innerHTML = channelMessages(activeChannel()).map(messageRow).join('');
-    scrollLog();
-}
-
-function messageRow(message) {
-    const mine = message.from === myName();
-    const reactions = Object.entries(message.reactions ?? {}).map(([emoji, count]) => `
-        <button class="soc-reaction-chip" type="button" data-soc-msg-react data-mid="${esc(message.id)}" data-emoji="${esc(emoji)}">${esc(emoji)} ${count}</button>`).join('');
-
-    return `
-    <div class="soc-chat-msg ${mine ? 'is-me' : ''}">
-        ${mine ? '' : `
-            <div class="soc-chat-msg-header">
-                <span class="soc-avatar soc-msg-avatar">${esc(message.icon)}</span>
-                <span class="soc-chat-msg-name">${esc(message.from)}</span>
-                <span class="soc-chat-msg-time">${timeAgo(message.at)}</span>
-            </div>`}
-        <div class="soc-chat-bubble">${esc(message.text)}</div>
-        <div class="soc-reactions-row">
-            ${reactions}
-            <button class="soc-reaction-chip" type="button" data-soc-msg-react data-mid="${esc(message.id)}" data-emoji="👍">＋</button>
-        </div>
-    </div>`;
-}
-
-function updateBadge() {
-    const badge = byId('socChatFabBadge');
-    if (!badge) return;
-
-    const unread = totalUnread();
-    badge.textContent = unread > 9 ? '9+' : String(unread);
-    badge.hidden = unread === 0;
-}
-
-function scrollLog() {
-    const log = drawer?.querySelector('.soc-chat-log');
-    if (log) log.scrollTop = log.scrollHeight;
-}
-
-/* ================================================================
-   Accions
-   ================================================================ */
-
-function sendMessage() {
-    const input = byId('socChatInput');
-    const text = input?.value.trim();
-    if (!input || !text) return;
-
-    const channel = activeChannel();
-    sendChatMessage(channel.id, text).catch(() => { /* silenciós */ });
-    input.value = '';
-    // Els missatges arriben via onSnapshot, no cal renderMessages() aquí.
-}
-
-function shareTool(kind) {
-    const channel = activeChannel();
-    const text = kind === 'minigame'
-        ? `🎲 2048 · ${get('social.minigames')}`
-        : `🏆 ${state.me.points} · 🔥 ${state.me.streak}`;
-
-    sendChatMessage(channel.id, text).catch(() => { /* silenciós */ });
-}
-
-function reactToMessage(button) {
-    const channel = activeChannel();
-    const messageId = button.dataset.mid;
-    const emoji = button.dataset.emoji;
-    reactToChatMessage(channel.id, messageId, emoji).catch(() => { /* silenciós */ });
-}
-
-function onChatClick(event) {
-    const reactButton = event.target.closest('[data-soc-msg-react]');
-    if (reactButton) return reactToMessage(reactButton);
-
-    const channelButton = event.target.closest('[data-soc-channel]');
-    if (channelButton) {
-        state.chat.active = channelButton.dataset.socChannel;
-        state.chat.unread[state.chat.active] = 0;
-        saveState();
-        renderChat();
-        return;
+        sendBtn.addEventListener('click', () => {
+            const text = input.value.trim();
+            if (!text) return;
+            sendChatMessage(text);
+            input.value = '';
+            sendBtn.disabled = true;
+        });
     }
-
-    if (event.target.closest('[data-soc-chat-close]')) return closeChat();
-
-    const actionButton = event.target.closest('[data-soc-chat]');
-    if (!actionButton) return;
-
-    const action = actionButton.dataset.socChat;
-    if (action === 'send') return sendMessage();
-    if (action === 'minigame' || action === 'record') return shareTool(action);
 }

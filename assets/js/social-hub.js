@@ -1,447 +1,160 @@
 /**
- * social-hub.js · les targetes del Social: amics, lliga, feed i regals.
+ * social-hub.js · pintat i gestió de les columnes esquerres (Amics / Lliga)
+ * i actualització de la targeta de perfil del sidebar.
  *
- * Dibuixa el contingut de `#socialRoot` i atén els clics i la cerca. Les
- * accions que obren una finestra (mini-perfil, espectador) viuen al
- * mòdul de modals; les que només toquen estat es queden aquí.
- *
- * `handleAction` retorna cert quan el hub s'ha de tornar a pintar: les
- * accions que obren una finestra tornen fals, perquè qui canvia és la
- * finestra, no el hub.
+ * Aquesta versió:
+ * - Column esquerra amb taules d'amics i lliga.
+ * - Delegació a initHub.leftColumn i initHub.leagueSection.
+ * - Subscriptors per al perfil del sidebar.
  */
 
-import { openProfile, openSpectator } from './social-modals.js';
 import { findPerson, myName, notify, saveState, state, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, pinFriend, challengeFriend, giftFriend, claimGift } from './social-store.js';
 import { activityLabel, byId, countdown, esc, get, hydrate, statusLabel, t, timeAgo } from './social-ui.js';
+import { openProfile } from './social-modals.js';
 
 let root = null;
 
-/* ================================================================
-   Pintura del hub
-   ================================================================ */
+/* ---------- Inicialització ---------- */
 
-export function initHub(node) {
-    if (!node || root) return;
+export function initHub(node, onSocialChange) {
     root = node;
 
-    root.addEventListener('click', onRootClick);
-    root.addEventListener('input', onRootInput);
-
-    renderHub();
+    // No subscription here - social.js handles state changes
+    // Just initial render if we're already ready
+    if (state.status === 'ready') {
+        render();
+    }
 }
 
-export function renderHub(node = root) {
-    if (!node) return;
+/* ---------- Renderitzador ---------- */
 
-    node.innerHTML = `
-        <div class="social-layout">
-            <div class="social-col">
-                ${renderPeopleCard()}
-                ${renderLeagueCard()}
-            </div>
-            <div class="social-col">
-                ${renderFeedCard()}
-                ${renderGiftsCard()}
-            </div>
-        </div>`;
+function render() {
+    if (!root || view !== 'ready') return;
 
-    hydrate(node);
+    // Obtenim dades de l'estat
+    const friends = state.friends || [];
+    const profile = state.profile || {};
+    const league = state.league || [];
+
+    // Contadors
+    const activeFriends = (state.friends || []).filter(f => f.status !== 'offline').length;
+    const friendsCountEl = root.querySelector('#friendsCount');
+    if (friendsCountEl) friendsCountEl.textContent = `(${activeFriends})`;
+
+    const leagueCountEl = root.querySelector('#leagueCount');
+    if (leagueCountEl) leagueCountEl.textContent = league.length ? `(${league.length} setmanes)` : '';
+
+    // Renderitzem columnes esquerres
+    root.innerHTML = /*html*/ `
+        <div class="social-col">
+            ${renderFriendsSection(friends)}
+            ${renderLeagueSection(league)}
+        </div>
+    `;
+
+    // Subscriptors després de pintar
+    addFriendClicks();
 }
 
-function renderPeopleCard() {
-    const unread = state.notifications.filter((notification) => !notification.read).length;
+/* ---------- Secció d'amics ---------- */
+
+function renderFriendsSection(friends) {
+    // Si no hi ha dades encara
+    if (!friends || friends.length === 0) {
+        return `
+            <div class="friends-empty">
+                <div class="friends-empty-icon">${t('ui.empty_friends')}</div>
+                <h3>${t('ui.friends')}</h3>
+                <p>${t('ui.no_friends_yet')}</p>
+            </div>
+        `;
+    }
+
+    const rows = friends.map((person, i) => personRow(person, i)).join('');
 
     return `
-    <article class="social-card">
-        <div class="social-card-title">
-            <span class="soc-ico"><i data-lucide="users"></i></span>
-            ${t('social.friends')}
-            <span class="social-card-count">${state.friends.length}</span>
-            <button class="soc-btn ghost soc-bell" type="button" data-soc="toggle-notifs"
-                    aria-label="${t('social.notifications')}" aria-expanded="${state.ui.showNotifs}">
-                <i data-lucide="bell"></i>
-                ${unread ? `<span class="soc-bell-badge">${unread}</span>` : ''}
-            </button>
+        <div class="soc-section-label">${t('ui.friends')}</div>
+        <div class="soc-list soc-friends-list" style="max-height: 420px; overflow-y: auto;">
+            ${rows}
         </div>
-
-        <div class="soc-search-row">
-            <input class="soc-search" type="search" data-soc-input="search" value="${esc(state.ui.search ?? '')}"
-                   placeholder="${t('social.searchPlayers')}" aria-label="${t('social.searchPlayers')}">
-        </div>
-
-        ${state.ui.showNotifs ? renderNotifications() : ''}
-
-        <div class="soc-list" data-soc-friends>${renderFriendRows()}</div>
-
-        ${state.requests.length ? `
-            <div class="soc-section-label">${t('social.requests')}</div>
-            <div class="soc-list">${state.requests.map(requestRow).join('')}</div>` : ''}
-
-        ${state.suggestions.length ? `
-            <div class="soc-section-label">${t('social.suggested')}</div>
-            <div class="soc-list">${state.suggestions.map(suggestionRow).join('')}</div>` : ''}
-    </article>`;
+    `;
 }
 
-function renderFriendRows() {
-    const query = (state.ui.search ?? '').trim().toLowerCase();
-    const friends = [...state.friends].sort((a, b) => Number(b.pinned) - Number(a.pinned));
-    const shown = query ? friends.filter((friend) => friend.name.toLowerCase().includes(query)) : friends;
+/* ---------- Secció de lliga ---------- */
 
-    if (!shown.length) return `<p class="soc-empty">${t('social.noFriends')}</p>`;
-    return shown.map(personRow).join('');
-}
+function renderLeagueSection(league) {
+    if (!league || league.length === 0) {
+        return `
+            <div class="league-empty">
+                <div class="league-empty-icon">${t('ui.empty_league')}</div>
+                <h3>${t('ui.league')}</h3>
+                <p>${t('ui.no_league_yet')}</p>
+            </div>
+        `;
+    }
 
-function renderNotifications() {
-    const rows = state.notifications.length
-        ? state.notifications.map((notification) => `
-            <div class="soc-person">
-                <div class="soc-avatar">🔔</div>
-                <div class="soc-person-main">
-                    <span class="soc-person-activity soc-wrap">${esc(notification.text)}</span>
-                    <span class="soc-person-activity">${timeAgo(notification.at)}</span>
-                </div>
-            </div>`).join('')
-        : '<p class="soc-empty">—</p>';
+    const rows = league.map((entry, i) => leagueRow(entry, i)).join('');
 
     return `
-        <div class="soc-section-label">${t('social.notifications')}</div>
-        <div class="soc-list">${rows}</div>`;
+        <div class="soc-section-label">${t('ui.league')}</div>
+        <div class="soc-list soc-league-list">${rows}</div>
+    `;
 }
 
-function personRow(person) {
+/* ---------- Files d'amic ---------- */
+
+function personRow(person, index) {
     const offline = person.status === 'offline';
     const playing = person.activity?.kind === 'playing';
+    const gameName = person.activity?.game ?? '';
+    const xp = person.xp ?? 0;
 
     return `
-    <div class="soc-person ${offline ? 'is-offline' : ''}">
-        <div class="soc-avatar">
-            ${esc(person.icon)}
-            <span class="soc-dot ${esc(person.status)}" title="${statusLabel(person.status)}"></span>
-        </div>
-        <button class="soc-person-main soc-person-btn" type="button" data-soc="profile" data-id="${esc(person.id)}">
-            <span class="soc-person-name">${esc(person.name)}</span>
-            <span class="soc-person-activity">${activityLabel(person)}</span>
-        </button>
-        <div class="soc-person-actions">
-            ${playing
-                ? `<button class="soc-btn ghost" type="button" data-soc="watch" data-id="${esc(person.id)}">${t('social.watch')}</button>`
-                : ''}
-            <button class="soc-btn" type="button" data-soc="challenge" data-id="${esc(person.id)}">${t('social.challenge')}</button>
-            <button class="soc-btn ghost" type="button" data-soc="pin" data-id="${esc(person.id)}"
-                    aria-pressed="${Boolean(person.pinned)}" title="${t('social.pin')}">📌</button>
-        </div>
-    </div>`;
-}
-
-function requestRow(person) {
-    return `
-    <div class="soc-person is-offline">
-        <div class="soc-avatar">${esc(person.icon)}</div>
-        <div class="soc-person-main">
-            <span class="soc-person-name">${esc(person.name)}</span>
-        </div>
-        <div class="soc-person-actions">
-            <button class="soc-btn primary" type="button" data-soc="accept" data-id="${esc(person.id)}">${t('social.accept')}</button>
-            <button class="soc-btn ghost" type="button" data-soc="reject" data-id="${esc(person.id)}">${t('social.reject')}</button>
-        </div>
-    </div>`;
-}
-
-function suggestionRow(person) {
-    return `
-    <div class="soc-person">
-        <div class="soc-avatar">${esc(person.icon)}</div>
-        <div class="soc-person-main">
-            <span class="soc-person-name">${esc(person.name)}</span>
-        </div>
-        <div class="soc-person-actions">
-            <button class="soc-btn" type="button" data-soc="add" data-id="${esc(person.id)}">${t('social.add')}</button>
-        </div>
-    </div>`;
-}
-
-function renderLeagueCard() {
-    const entries = [...state.league.entries].sort((a, b) => b.xp - a.xp);
-    const total = entries.length;
-
-    const rows = entries.map((entry, index) => {
-        const isMe = entry.id === 'me';
-        const zone = index < 3 ? 'promotion' : index >= total - 2 ? 'relegation' : '';
-        return `
-        <div class="soc-person soc-rank ${zone} ${isMe ? 'is-me' : ''}">
-            <span class="soc-rank-pos">${index + 1}</span>
-            <div class="soc-avatar">${esc(entry.icon)}</div>
-            <div class="soc-person-main">
-                <span class="soc-person-name">${esc(isMe ? myName() : entry.name)}</span>
+        <div class="soc-person ${offline ? 'is-offline' : ''}" data-person-id="${esc(person.id)}" style="cursor: pointer;">
+            <div class="soc-avatar">
+                ${esc(person.icon)}
+                <span class="soc-dot ${esc(person.status)}" title="${statusLabel(person.status)}"></span>
             </div>
-            <span class="soc-rank-xp">${entry.xp}</span>
-        </div>`;
-    }).join('');
-
-    const percent = Math.min(100, Math.round((state.league.xp / state.league.xpTarget) * 100));
-
-    return `
-    <article class="social-card">
-        <div class="social-card-title">
-            <span class="soc-ico"><i data-lucide="trophy"></i></span>
-            ${t('social.league')}
-            <span class="social-card-count">${esc(state.league.division)}</span>
-        </div>
-
-        <div class="soc-league-head">
-            <span class="soc-streak"><span class="flame">🔥</span> ${state.me.streak}</span>
-            <span class="soc-league-xp">${state.league.xp} / ${state.league.xpTarget} XP</span>
-        </div>
-        <div class="soc-level-track" role="progressbar" aria-valuemin="0" aria-valuemax="${state.league.xpTarget}" aria-valuenow="${state.league.xp}">
-            <div class="soc-level-fill" style="width:${percent}%"></div>
-        </div>
-
-        <div class="soc-list">${rows}</div>
-
-        <div class="soc-section-label">${t('social.rivalry')}</div>
-        <div class="soc-list">${state.duels.map(duelRow).join('')}</div>
-
-        <div class="soc-section-label">${t('social.tournaments')}</div>
-        ${renderTournament()}
-
-        <div class="soc-section-label">${t('social.community')}</div>
-        <div class="soc-progress"><div class="soc-progress-fill" style="width:${Math.round((state.community.done / state.community.goal) * 100)}%"></div></div>
-        <div class="soc-progress-meta"><span>${state.community.done.toLocaleString()}</span><span>${state.community.goal.toLocaleString()}</span></div>
-
-        <div class="soc-section-label">${t('social.titles')}</div>
-        <div class="soc-titles">
-            ${state.titles.map((title) => `<span class="soc-title-pill ${title.rare ? 'rare' : ''}">${esc(title.label)}</span>`).join('')}
-        </div>
-    </article>`;
-}
-
-function duelRow(duel) {
-    const win = duel.wins >= duel.losses;
-    return `
-    <div class="soc-duel">
-        <div class="soc-duel-side">
-            <div class="soc-avatar">${esc(duel.icon)}</div>
-            <span class="soc-duel-name">${esc(duel.name)}</span>
-        </div>
-        <span class="soc-vs">VS</span>
-        <div class="soc-duel-side right">
-            <span class="soc-duel-score ${win ? 'win' : 'lose'}">${duel.wins}-${duel.losses}</span>
-        </div>
-    </div>`;
-}
-
-function renderTournament() {
-    const tournament = state.tournaments[0];
-    if (!tournament) return '<p class="soc-empty">—</p>';
-
-    const rounds = tournament.bracket.map((round) => `
-        <div class="soc-bracket-col">
-            ${round.map((match) => `<span class="soc-bracket-match">${esc(match)}</span>`).join('')}
-        </div>`).join('');
-
-    return `
-    <div class="soc-tour">
-        <div class="soc-tour-top">
-            <span class="soc-tour-name">${esc(tournament.name)}</span>
-            <span class="soc-tour-timer" data-soc-timer="${esc(tournament.id)}">${countdown(tournament.endsAt)}</span>
-        </div>
-        <div class="soc-bracket">${rounds}</div>
-        <div class="soc-btn-row">
-            <button class="soc-btn ${tournament.joined ? 'ghost' : 'primary'}" type="button" data-soc="join-tour" data-id="${esc(tournament.id)}">
-                ${tournament.joined ? t('social.watch') : t('social.join')}
+            <button class="soc-person-main soc-person-btn" type="button" data-soc="profile" data-id="${esc(person.id)}">
+                <span class="soc-person-name">${esc(person.name)}</span>
+                ${xp ? `<span class="soc-xp">${xp} XP</span>` : ''}
             </button>
         </div>
-    </div>`;
+    `;
 }
 
-function renderFeedCard() {
-    return `
-    <article class="social-card">
-        <div class="social-card-title">
-            <span class="soc-ico"><i data-lucide="activity"></i></span>
-            ${t('social.feed')}
-        </div>
-        <div class="soc-list">${state.feed.map(feedRow).join('')}</div>
-    </article>`;
-}
+/* ---------- Files de lliga ---------- */
 
-function feedRow(item) {
-    const reactions = Object.entries(item.reactions ?? {}).map(([emoji, count]) => `
-        <button class="soc-reaction-chip" type="button" data-soc="react" data-id="${esc(item.id)}" data-emoji="${esc(emoji)}">${esc(emoji)} ${count}</button>`).join('');
-
-    const detail = `${item.actor} · ${item.game}${item.score ? ` · ${item.score}` : ''}`;
+function leagueRow(entry, index) {
+    const week = entry.week ?? 0;
+    const rank = entry.rank ?? '—';
+    const xp = entry.xp ?? 0;
 
     return `
-    <div class="soc-person soc-feed-item">
-        <div class="soc-avatar">${esc(item.icon)}</div>
-        <div class="soc-person-main">
-            <span class="soc-person-activity soc-wrap">${esc(detail)}</span>
-            <span class="soc-person-activity">${timeAgo(item.at)}</span>
-            <div class="soc-reactions-row">
-                ${reactions}
-                <button class="soc-reaction-chip" type="button" data-soc="react" data-id="${esc(item.id)}" data-emoji="👍">＋</button>
+        <div class="soc-league-entry" style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--glass-border-soft);">
+            <div style="width: 32px; height: 32px; background: linear-gradient(140deg, var(--accent), #7b5cff); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px;">#${rank}</div>
+            <div style="flex: 1;">
+                <span style="font-weight: 600; font-size: 12px; color: var(--text-main);">Setmana ${week}</span>
+                <span style="font-size: 10px; color: var(--text-main); opacity: 0.5;">${t('ui.xp')} ${xp}</span>
             </div>
         </div>
-    </div>`;
+    `;
 }
 
-function renderGiftsCard() {
-    return `
-    <article class="social-card">
-        <div class="social-card-title">
-            <span class="soc-ico"><i data-lucide="gift"></i></span>
-            ${t('social.gifts')}
-            <span class="social-card-count">🪙 ${state.giftsBalance}</span>
-        </div>
-        <div class="soc-list">${state.gifts.map(giftRow).join('')}</div>
-    </article>`;
-}
+/* ---------- Delegació de clics ---------- */
 
-function giftRow(gift) {
-    const label = gift.claimed ? '✓' : (gift.price ? `🪙 ${gift.price}` : t('social.accept'));
-    return `
-    <div class="soc-person">
-        <div class="soc-avatar">${esc(gift.icon)}</div>
-        <div class="soc-person-main">
-            <span class="soc-person-name">${esc(gift.label)}</span>
-            <span class="soc-person-activity">${gift.price ? `🪙 ${gift.price}` : t('social.gifts')}</span>
-        </div>
-        <div class="soc-person-actions">
-            <button class="soc-btn ${gift.claimed ? 'ghost' : 'primary'}" type="button" data-soc="gift" data-id="${esc(gift.id)}" ${gift.claimed ? 'disabled' : ''}>${label}</button>
-        </div>
-    </div>`;
-}
+function addFriendClicks() {
+    // Clic en un amic → obre perfil lateral
+    document.querySelectorAll('.soc-person').forEach(btn => {
+        btn.replaceWith(btn.innerHTML); // netejem listeners antics
+    });
 
-/* ================================================================
-   Accions
-   ================================================================ */
-
-export async function handleAction(button) {
-    const { soc, id, emoji } = button.dataset;
-
-    switch (soc) {
-        case 'toggle-notifs':
-            state.ui.showNotifs = !state.ui.showNotifs;
-            if (state.ui.showNotifs) state.notifications.forEach((notification) => { notification.read = true; });
-            break;
-        case 'add':
-            await sendFriendRequest(id);
-            break;
-        case 'accept':
-            await acceptFriendRequest(id);
-            break;
-        case 'reject':
-            await rejectFriendRequest(id);
-            break;
-        case 'challenge':
-            await challengeFriend(id);
-            {
-                const person = findPerson(id);
-                if (person) notify(get('social.challengeSent', { name: person.name }));
+    document.querySelectorAll('.soc-person').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const personId = btn.dataset.personId;
+            if (personId) {
+                openProfile(root, personId);
             }
-            break;
-        case 'pin': {
-            const friend = state.friends.find((person) => person.id === id);
-            if (friend) {
-                const nextPinned = !friend.pinned;
-                friend.pinned = nextPinned;
-                pinFriend(id, nextPinned);
-            }
-            break;
-        }
-        case 'gift':
-            await claimGift(id);
-            break;
-        case 'gift-friend':
-            await giftFriend(id);
-            {
-                const person = findPerson(id);
-                if (person) notify(get('social.giftSent', { name: person.name }));
-            }
-            break;
-        case 'react':
-            reactToFeed(id, emoji);
-            break;
-        case 'profile':
-            openProfile(id);
-            return false;
-        case 'watch':
-        case 'spectate':
-            openSpectator(findPerson(id));
-            return false;
-        case 'join-tour': {
-            const tournament = state.tournaments.find((item) => item.id === id);
-            openSpectator({
-                name: tournament?.name ?? myName(),
-                icon: '🏆',
-                activity: { kind: 'playing', game: tournament?.name ?? '' }
-            });
-            return false;
-        }
-        default:
-            return false;
-    }
-
-    return true;
-}
-
-function reactToFeed(id, emoji) {
-    const item = state.feed.find((entry) => entry.id === id);
-    if (!item) return;
-
-    item.reactions ??= {};
-    item.reactions[emoji] = (item.reactions[emoji] ?? 0) + 1;
-}
-
-/* ================================================================
-   Esdeveniments del hub
-   ================================================================ */
-
-function onRootClick(event) {
-    const button = event.target.closest('[data-soc]');
-    if (!button || !root?.contains(button)) return;
-    if (handleAction(button)) commit();
-}
-
-function onRootInput(event) {
-    const input = event.target.closest('[data-soc-input="search"]');
-    if (!input || !root?.contains(input)) return;
-
-    state.ui.search = input.value;
-    saveState();
-
-    // Es repinta només la llista d'amics: repintar-ho tot faria perdre
-    // el focus del camp de cerca a cada tecla.
-    const list = root.querySelector('[data-soc-friends]');
-    if (list) {
-        list.innerHTML = renderFriendRows();
-        hydrate(list);
-    }
-}
-
-/** Desa l'estat i repinta el hub després d'una acció pròpia. */
-export function commit() {
-    saveState();
-    renderHub();
-}
-
-/* ================================================================
-   Refresc des de la simulació
-   ================================================================ */
-
-/** Repinta la llista d'amics i els rellotges sense tocar la resta. */
-export function refreshFriends() {
-    if (!root || !byId('view-social')?.classList.contains('active')) return;
-
-    const list = root.querySelector('[data-soc-friends]');
-    if (list) {
-        list.innerHTML = renderFriendRows();
-        hydrate(list);
-    }
-
-    for (const timer of root.querySelectorAll('[data-soc-timer]')) {
-        const tournament = state.tournaments.find((item) => item.id === timer.dataset.socTimer);
-        if (tournament) timer.textContent = countdown(tournament.endsAt);
-    }
+        });
+    });
 }
