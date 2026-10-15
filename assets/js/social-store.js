@@ -957,12 +957,6 @@ export function markNotificationsRead() {
     emit();
 }
 
-/** Buida la campana. */
-export function clearNotifications() {
-    state.notifications = [];
-    emit();
-}
-
 /* ================================================================
    Consultes de conveniència
    ================================================================ */

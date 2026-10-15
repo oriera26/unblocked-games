@@ -18,7 +18,6 @@ import {
     searchProfiles,
     notify,
     markNotificationsRead,
-    clearNotifications,
     isFriend
 } from './social-store.js';
 import { esc, get, t, timeAgo, statusLabel, avatarMarkup, hydrate } from './social-ui.js';
@@ -76,10 +75,6 @@ export function mountHub(container) {
                 <div class="social-card-title">
                     <span class="soc-ico" data-lucide="bell" data-size="18"></span>
                     <span>${t('social.notifications')}</span>
-                    <button type="button" class="soc-icon-btn" data-act="clear-notifs"
-                            aria-label="${t('ui.close')}" title="${t('ui.close')}" hidden>
-                        <span data-lucide="x" data-size="14"></span>
-                    </button>
                 </div>
                 <div id="hubNotifsBody"></div>
             </section>
@@ -420,10 +415,7 @@ function refreshLeague() {
 
 function refreshNotifications() {
     const body = root.querySelector('#hubNotifsBody');
-    const clearButton = root.querySelector('[data-act="clear-notifs"]');
     const list = state.notifications;
-
-    clearButton.hidden = list.length === 0;
 
     if (!list.length) {
         body.innerHTML = emptyState('🔔', t('social.noNotifications'));
@@ -509,10 +501,5 @@ async function onClick(event) {
 
     if (act === 'read-notifs') {
         markNotificationsRead();
-        return;
-    }
-
-    if (act === 'clear-notifs') {
-        clearNotifications();
     }
 }

@@ -48,8 +48,6 @@
 }
 
 .social-sidebar {
-    position: sticky;
-    top: 88px;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -670,7 +668,16 @@
 }
 
 .soc-sidebar-card {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
     padding: 12px;
+}
+
+/* La targeta del meu compte no s'ha d'encongir mai. */
+.soc-profile-card {
+    flex: 0 0 auto;
 }
 
 .soc-tabs {
@@ -702,7 +709,20 @@
 }
 
 .soc-tabpanel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border-soft) transparent;
+}
+
+/* Sense això, el `display: flex` de sobre faria visibles els panells
+   que l'orquestrador amaga amb l'atribut `hidden`. */
+.soc-tabpanel[hidden] {
+    display: none;
 }
 
 /* ============================================================
@@ -712,8 +732,8 @@
 .soc-chat {
     display: flex;
     flex-direction: column;
-    height: min(52vh, 520px);
-    min-height: 340px;
+    flex: 1 1 auto;
+    min-height: 240px;
 }
 
 .soc-chat-channels {
@@ -1198,6 +1218,36 @@
 }
 
 /* ============================================================
+   Escriptori: la vista és tan alta com el contingut (com a mínim,
+   una finestra sencera) i la pàgina es desplaça amb normalitat.
+   La barra del xat se surt del flux per quedar-se enganxada a
+   sota de la barra superior mentre es navega, amb el registre
+   movent-se per dins: el xat sempre a la vista.
+   ============================================================ */
+
+@media (min-width: 921px) {
+    #view-social.active .social-page {
+        min-height: calc(100vh - 190px);
+    }
+
+    .social-sidebar {
+        position: sticky;
+        /* Chromium (i companyia) ancorren l'enganxament a l'àrea de
+           contingut del .container, que comença 90px més avall pel
+           seu padding de dalt: perquè la barra quedi clavada a 88px
+           de la finestra, cal descomptar-los (−2px = 88 − 90). */
+        top: -2px;
+        /* Els 220px de sota són el que hi ha entre la finestra i
+           l'alçada útil de la columna (90px del marge de dalt del
+           contenidor, 80px de la capçalera i 100px del marge de
+           baix, amb marge de sobres): amb aquest sostre, quan la
+           pàgina es desplaça la barra no s'ha de moure mai d'on
+           està enganxada. */
+        height: clamp(440px, calc(100vh - 220px), 820px);
+    }
+}
+
+/* ============================================================
    Pantalles estretes
    ============================================================ */
 
@@ -1218,6 +1268,7 @@
 
     .soc-chat {
         height: min(60vh, 480px);
+        flex: 0 0 auto;
     }
 
     .social-header h2 {
