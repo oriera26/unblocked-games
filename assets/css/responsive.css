@@ -265,3 +265,33 @@
         pointer-events: none;
     }
 }
+
+/* ============================================================
+   Cerca amb text: es queda oberta
+   ============================================================ */
+
+/* Amb una cerca activa (l'input porta text) la barra no es plega en
+   marxar el ratolí: queda com si hi hagués hover i el segment del nav
+   també es queda apartat. Només amb ratolí de veritat i al format
+   d'una fila: al tàctil no hi ha hover, i a les dues files del mòbil
+   la barra eixamplada no hi cabria. */
+@media (min-width: 641px) and (hover: hover) {
+    .search-container.has-query:not(.open):not(:focus-within) {
+        background: var(--glass-bg);
+        border-color: var(--glass-border-soft);
+    }
+
+    .search-container.has-query:not(.open):not(:focus-within) .search-trigger {
+        opacity: 1;
+        background: transparent;
+        border-color: transparent;
+    }
+
+    .search-container.has-query:not(.open):not(:focus-within) .search-bar {
+        width: 140px;
+        opacity: 1;
+        padding: 6px 10px 6px 14px;
+        margin-right: 4px;
+        pointer-events: all;
+    }
+}

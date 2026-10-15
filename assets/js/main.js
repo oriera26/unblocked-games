@@ -84,6 +84,7 @@ function resetFilters() {
 
     setActiveCategory(CATEGORY_ALL);
     applyFilters();
+    syncSearchShift();
 }
 
 /* ================================================================
@@ -130,6 +131,87 @@ function bindSearch() {
     byId('resetFilters')?.addEventListener('click', resetFilters);
 }
 
+/** Punt d'entrada per refrescar el desplaçament del segment del nav;
+    l'assigna `bindSearchShift()` quan el nav hi és. */
+let syncSearchShift = () => {};
+
+/* Quan la cerca s'eixampla (hover, focus, `.open` o text viu), el
+   segment Jocs/Estadístiques/Social s'aparta per no tocar-s'hi i quedar
+   centrat entre el logo i la barra. El moviment el fa el CSS amb una
+   `cubic-bezier`; aquí només es pren la mesura, que viatja a
+   `--nav-shift`. */
+function bindSearchShift() {
+    const nav = document.querySelector('nav');
+    const center = nav?.querySelector('.nav-center');
+    const container = byId('searchContainer');
+    const search = byId('gameSearch');
+    const trigger = container?.querySelector('.search-trigger');
+    const logoZone = nav?.querySelector('.nav-left');
+    if (!nav || !center || !container || !search || !trigger || !logoZone) return;
+
+    // La barra eixamplada ocupa 144px més que plegada: 140px d'ample
+    // (amb el padding a dins: els camps són `border-box`) + 4 de
+    // `margin-right` (vegeu components.css).
+    const EXPANDED = 144;
+
+    // Marge mínim garantit a l'esquerra del cercador: si l'espai no
+    // permet centrar el segment, es prioritza aquest coixí.
+    const GAP = 22;
+
+    // A les dues files (mòbil) la píndola és lluny de la cerca, i al
+    // tàctil no hi ha hover: en aquests casos no s'ha de moure res.
+    const shiftable = () => window.matchMedia('(min-width: 641px) and (hover: hover)').matches;
+
+    const expanded = () => (
+        container.matches(':hover') ||
+        container.matches(':focus-within') ||
+        container.classList.contains('open') ||
+        container.classList.contains('has-query')
+    );
+
+    syncSearchShift = () => {
+        // El text viu decideix si, sense hover, la barra es queda
+        // oberta: `has-query` la fa perdurar (responsive.css).
+        container.classList.toggle('has-query', search.value.trim() !== '');
+
+        if (!expanded() || !shiftable()) {
+            nav.classList.remove('search-on');
+            nav.style.removeProperty('--nav-shift');
+            return;
+        }
+
+        // El botó de la lupa no es mou mai: la barra creix cap a
+        // l'esquerra des d'ell. Ja eixamplada, la barra començaria
+        // `EXPANDED` píxels a l'esquerra d'on és ara.
+        const rightStart = trigger.getBoundingClientRect().left - EXPANDED;
+        const navRect = nav.getBoundingClientRect();
+        const leftEnd = logoZone.getBoundingClientRect().right;
+
+        // El punt on aniria el centre del segment sense desplaçar-lo.
+        const centerX = navRect.left + navRect.width / 2;
+        const width = center.offsetWidth;
+        // Centrat entre el logo i la barra; si l'espai no ho permet,
+        // es garanteix com a mínim el coixí a l'esquerra del cercador.
+        // Mai cap a la dreta.
+        const shift = Math.max(
+            centerX - (leftEnd + rightStart) / 2,
+            centerX + width / 2 + GAP - rightStart,
+            0
+        );
+
+        nav.classList.add('search-on');
+        nav.style.setProperty('--nav-shift', `${Math.round(shift)}px`);
+    };
+
+    container.addEventListener('pointerenter', syncSearchShift);
+    container.addEventListener('pointerleave', syncSearchShift);
+    container.addEventListener('focusin', syncSearchShift);
+    container.addEventListener('focusout', syncSearchShift);
+    search.addEventListener('input', syncSearchShift);
+    window.addEventListener('resize', syncSearchShift);
+    syncSearchShift();
+}
+
 /** Obre o tanca la barra de cerca i explica l'estat qui no hi veu. */
 function setSearchOpen(open) {
     const container = byId('searchContainer');
@@ -143,6 +225,8 @@ function setSearchOpen(open) {
 
     if (open) search?.focus();
     else search?.blur();
+
+    syncSearchShift();
 }
 
 function bindTheme() {
@@ -322,6 +406,7 @@ async function start() {
     updateLogo();
 
     bindSearch();
+    bindSearchShift();
     bindTheme();
     bindModal();
     bindFavorites();
