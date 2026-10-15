@@ -103,6 +103,37 @@ body.dark-theme .skeleton-card {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* --- Les píndoles de categoria --------------------------------
+   Abans que el mòdul dibuixi la barra, el HTML porta una fila
+   d'aquestes; `renderCategories` fa `replaceChildren` i se les
+   emporta. Mateixa silueta que un `.category-item`. */
+
+.skeleton-cat {
+    --skeleton-base: rgba(127, 127, 137, 0.16);
+    --skeleton-highlight: rgba(127, 127, 137, 0.30);
+
+    display: block;
+    width: 84px;
+    height: 36px;
+    border-radius: 16px;
+    background: var(--skeleton-base);
+    background-image: linear-gradient(
+        100deg,
+        transparent 20%,
+        var(--skeleton-highlight) 50%,
+        transparent 80%
+    );
+    background-size: 250% 100%;
+    background-repeat: no-repeat;
+    animation: skeleton-shimmer 1.6s linear infinite;
+    pointer-events: none;
+}
+
+body.dark-theme .skeleton-cat {
+    --skeleton-base: rgba(255, 255, 255, 0.09);
+    --skeleton-highlight: rgba(255, 255, 255, 0.20);
+}
+
 /* --- Aparicio de les portades ------------------------------------
    El JS insereix el <img> directament dins de `.card`, sense classe
    d'estat. Un `animation` a l'element fa l'aparicio suau sense que
@@ -110,6 +141,33 @@ body.dark-theme .skeleton-card {
 
 .card img {
     animation: ula-fade-in 0.35s ease both;
+}
+
+/* Mentre la portada arriba, la caixa de la targeta fa un shimmer
+   (el fons és el del `.card`; aquí només hi va la llum que hi passa).
+   Així la graella no es va omplint a trossos: cada targeta ja és
+   sencera, i la portada hi apareix a sobre. El JS posa i treu
+   `.card-loading` amb els esdeveniments de la imatge. */
+
+.card.card-loading {
+    background-image: linear-gradient(
+        100deg,
+        transparent 20%,
+        rgba(127, 127, 137, 0.30) 50%,
+        transparent 80%
+    );
+    background-size: 250% 100%;
+    background-repeat: no-repeat;
+    animation: skeleton-shimmer 1.6s linear infinite;
+}
+
+body.dark-theme .card.card-loading {
+    background-image: linear-gradient(
+        100deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.20) 50%,
+        transparent 80%
+    );
 }
 
 @keyframes ula-fade-in {
@@ -122,6 +180,8 @@ body.dark-theme .skeleton-card {
 @media (prefers-reduced-motion: reduce) {
     .skeleton-card::before,
     .skeleton-grid-item,
+    .skeleton-cat,
+    .card.card-loading,
     .card img {
         animation: none;
     }
@@ -129,7 +189,9 @@ body.dark-theme .skeleton-card {
 
 /* El mode rendiment apaga el blur i les transicioes globals; el
    shimmer es pot quedar aturat, pero el contingut ha de ser llegible. */
-body.performance-mode .skeleton-card::before {
+body.performance-mode .skeleton-card::before,
+body.performance-mode .skeleton-cat,
+body.performance-mode .card.card-loading {
     animation: none;
     background-image: none;
 }
@@ -141,4 +203,38 @@ body.performance-mode .skeleton-card::before {
     .skeleton-card::after {
         height: 9px;
     }
+}
+
+/* --- El pla B quan l'aplicació no arrenca ------------------------
+   `boot-watch.js` hi converteix els esquelets de la graella si el
+   mòdul no arriba (xarxa caiguda). Ha de quedar clar i oferir el
+   botó de tornar-ho a provar. */
+
+.boot-fallback {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 48px 20px;
+    text-align: center;
+}
+
+.boot-fallback-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.boot-fallback-text {
+    margin: 0;
+    max-width: 420px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    opacity: 0.75;
+}
+
+.boot-fallback-btn {
+    margin-top: 6px;
 }

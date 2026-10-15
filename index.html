@@ -134,7 +134,35 @@
 
     <div class="container" id="scrollContainer">
         <section id="view-arcade" class="view active">
-            <div class="grid" id="gameGrid"></div>
+            <!-- L'avís de connexió del catàleg. El controla main.js: surt
+                 quan la xarxa cau i el botó torna a provar les portades
+                 que van quedar a mitges. -->
+            <div class="offline-notice" id="offlineNotice" hidden role="status">
+                <span class="offline-notice-ico" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/><path d="M5 12.859a10 10 0 0 1 5.17-2.69"/><path d="M19 12.859a10 10 0 0 0-2.007-1.523"/><path d="M2 8.82a15 15 0 0 1 4.177-2.643"/><path d="M22 8.82a15 15 0 0 0-11.288-3.764"/><path d="m2 2 20 20"/></svg>
+                </span>
+                <p class="offline-notice-text" data-i18n="offline.title">Sense connexió</p>
+                <button type="button" class="offline-notice-btn" id="offlineRetry" data-i18n="ui.retry">Torna-ho a provar</button>
+            </div>
+
+            <!-- Els esquelets del primer pintat. El mòdul d'arrencada els
+                 substitueix pel catàleg real (resetGrid els esborra); si el
+                 mòdul no arriba mai, boot-watch.js hi posa l'avís amb el
+                 botó de reintentar. -->
+            <div class="grid skeleton-grid" id="gameGrid">
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:0ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:50ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:100ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:150ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:200ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:250ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:300ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:350ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:400ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:450ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:500ms"></div>
+                <div class="skeleton skeleton-card skeleton-grid-item" aria-hidden="true" style="animation-delay:550ms"></div>
+            </div>
             <div id="loadMoreTrigger" class="load-more"></div>
         </section>
 
@@ -198,6 +226,14 @@
     <div class="category-container" id="categoryContainer">
         <div class="category-pill-wrapper" id="pillWrapper">
             <div class="category-active-bg" id="activePill"></div>
+            <!-- Esquelets de la barra mentre el mòdul arrenca; el render
+                 de categories fa replaceChildren i se'ls emporta. -->
+            <span class="skeleton skeleton-cat" aria-hidden="true"></span>
+            <span class="skeleton skeleton-cat" aria-hidden="true"></span>
+            <span class="skeleton skeleton-cat" aria-hidden="true"></span>
+            <span class="skeleton skeleton-cat" aria-hidden="true"></span>
+            <span class="skeleton skeleton-cat" aria-hidden="true"></span>
+            <span class="skeleton skeleton-cat" aria-hidden="true"></span>
         </div>
     </div>
 
@@ -343,6 +379,11 @@
 
          gameList.js ja no es carrega amb un <script> propi: el mateix fitxer
          l'importa main.js com a mòdul. i18n.js tampoc: l'importa main.js. -->
+
+    <!-- Abans del punt d'entrada, i un script clàssic a propòsit: si el
+         mòdul no arriba a baixar-se (xarxa caiguda), aquest igualment
+         corre i, al cap d'uns segons, ofereix tornar-ho a provar. -->
+    <script defer src="assets/js/boot-watch.js"></script>
     <script type="module" src="assets/js/main.js"></script>
 
 </body>

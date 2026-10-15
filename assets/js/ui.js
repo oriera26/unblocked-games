@@ -160,6 +160,42 @@ function safeCoverImage(src) {
     return /\.(webp|jpe?g|png|gif|avif)$/i.test(src) ? src : null;
 }
 
+/**
+ * Posa la portada a la caixa de la targeta, si el joc en té.
+ *
+ * Mentre la imatge arriba la caixa llueix el shimmer de
+ * `.card-loading`: així la graella no es va omplint a trossos, cada
+ * targeta ja és sencera i la portada hi apareix a sobre.
+ *
+ * Una portada que no existeix o que no pot arribar (sense xarxa) es
+ * treu del DOM: quedaria un requadre trencat al mig de la targeta, i
+ * el fons és més digne. `retryCovers()` la tornarà a provar quan la
+ * connexió torni.
+ *
+ * @returns {boolean} si el joc té portada per ensenyar
+ */
+function appendCover(media, game) {
+    const cover = game.image ? safeCoverImage(game.image) : null;
+    if (!cover) return false;
+
+    const img = document.createElement('img');
+    img.src = cover;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.alt = '';
+
+    const done = () => media.classList.remove('card-loading');
+    img.addEventListener('load', done, { once: true });
+    img.addEventListener('error', () => {
+        done();
+        img.remove();
+    }, { once: true });
+
+    media.classList.add('card-loading');
+    media.prepend(img);
+    return true;
+}
+
 function buildCard(game) {
     const favorite = isFavorite(game.url);
 
@@ -179,21 +215,8 @@ function buildCard(game) {
     const media = document.createElement('div');
     media.className = 'card';
 
-    const cover = game.image ? safeCoverImage(game.image) : null;
-    if (cover) {
-        const img = document.createElement('img');
-        img.src = cover;
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        img.alt = '';
-        // Una portada que no existeix deixa un requadre buit al mig de
-        // la targeta. Amagant-la, es veu el fons de la targeta, que és
-        // millor que un error de càrrega.
-        img.addEventListener('error', () => img.remove());
-        media.appendChild(img);
-    } else {
-        // Sense portada: la icona de mando. És el que es veu a 627 dels
-        // 697 jocs, així que ha de quedar ben centrada.
+    if (!appendCover(media, game)) {
+        // Sense portada: la icona de mando. Ha de quedar ben centrada.
         media.innerHTML = iconMarkup('gamepad-2', { size: 40, className: 'game-icon' });
     }
 
@@ -276,6 +299,27 @@ export function resetGrid() {
     grid.classList.remove('skeleton-grid');
     grid.replaceChildren();
     itemsShown = 0;
+}
+
+/**
+ * Torna a provar les portades que no van poder arribar.
+ *
+ * El cas típic és un tall de connexió mentre es navega pel catàleg:
+ * `main.js` la crida quan la xarxa torna o quan es pitja el botó de
+ * l'avís. Només mira les targetes que són al DOM i a qui falta la
+ * imatge; les que el joc no en té, es queden com estan.
+ */
+export function retryCovers() {
+    const grid = $('gameGrid');
+    if (!grid) return;
+
+    for (const wrapper of grid.querySelectorAll('.card-wrapper')) {
+        const media = wrapper.querySelector('.card');
+        if (!media || media.querySelector('img')) continue;
+
+        const game = visibleGames.find((g) => g.url === wrapper.dataset.url);
+        if (game) appendCover(media, game);
+    }
 }
 
 /**

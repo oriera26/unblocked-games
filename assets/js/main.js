@@ -18,6 +18,7 @@ import {
     renderCategories,
     renderStats,
     resetGrid,
+    retryCovers,
     setActiveCategory,
     setVisibleGames,
     updateLogo,
@@ -316,6 +317,45 @@ function bindInfiniteScroll() {
 }
 
 /**
+ * El catàleg quan la xarxa cau: un avís amb el botó de tornar-hi.
+ *
+ * El catàleg és local i continua funcionant, però les portades que no
+ * siguin a la memòria cau no arribaran i els jocs nous no s'obriran.
+ * L'avís ho diu, i el botó —o la connexió, quan torna sola— torna a
+ * provar les portades que van quedar a mitges.
+ */
+function bindOfflineNotice() {
+    const notice = byId('offlineNotice');
+    if (!notice) return;
+
+    const retry = byId('offlineRetry');
+
+    const sync = () => {
+        const offline = navigator.onLine === false;
+        notice.hidden = !offline;
+        if (!offline) retryCovers();
+    };
+
+    retry?.addEventListener('click', () => {
+        if (navigator.onLine === false) {
+            // Sense xarxa no hi ha res a tornar a provar: que es vegi
+            // que el botó hi és i respon.
+            notice.classList.remove('is-poked');
+            void notice.offsetWidth; // reinicia l'animació
+            notice.classList.add('is-poked');
+            return;
+        }
+
+        retryCovers();
+        sync();
+    });
+
+    window.addEventListener('online', sync);
+    window.addEventListener('offline', sync);
+    sync();
+}
+
+/**
  * La roda del ratolí ha de desplaçar la llista des de qualsevol punt de
  * la pàgina, no només damunt de la columna de contingut. El contenidor
  * ja ocupa tota l'amplada, però el nav i la barra de categories són
@@ -386,6 +426,11 @@ function onViewArrive(id) {
 }
 
 async function start() {
+    // L'aplicació ja corre: el marge de `boot-watch.js` es pot plegar
+    // (l'escolta al document; vegeu el seu capçal).
+    document.documentElement.dataset.booted = '1';
+    document.dispatchEvent(new CustomEvent('ula:boot-ok'));
+
     // L'idioma abans de res: categories i estadístiques es dibuixen
     // amb `t()`, i corregir-les després seria un parpelleig.
     await initI18n();
@@ -413,6 +458,7 @@ async function start() {
     bindInfiniteScroll();
     bindWheelForwarding();
     initGate();
+    bindOfflineNotice();
 
     initSettings();
     initCacheControl();

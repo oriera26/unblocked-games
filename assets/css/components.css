@@ -758,6 +758,77 @@ td:last-child {
 }
 .reset-btn:hover { transform: translateY(-1px); }
 
+/* --- AVÍS DE CONNEXIÓ DEL CATÀLEG ---
+   El controla main.js: només surt quan la xarxa cau. El botó torna a
+   provar les portades que van quedar sense carregar. */
+
+.offline-notice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border-soft);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-filter-small);
+    -webkit-backdrop-filter: var(--glass-filter-small);
+}
+
+/* `display: flex` guanyaria a l'atribut `hidden`; cal la regla. */
+.offline-notice[hidden] { display: none; }
+
+.offline-notice-ico {
+    display: inline-flex;
+    flex: 0 0 auto;
+    color: #FF9F0A;
+}
+
+.offline-notice-ico svg {
+    width: 18px;
+    height: 18px;
+}
+
+.offline-notice-text {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.offline-notice-btn {
+    flex: 0 0 auto;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.offline-notice-btn:hover { filter: brightness(1.08); }
+.offline-notice-btn:active { transform: scale(0.97); }
+
+/* Si es pitja el botó sense xarxa, l'avís sacseja: alguna cosa ha de
+   passar, encara que no hi hagi res a tornar a provar. */
+.offline-notice.is-poked {
+    animation: offline-poke 0.4s ease;
+}
+
+@keyframes offline-poke {
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .offline-notice.is-poked { animation: none; }
+}
+
 /* --- AVÍS DE L'APP INSTAL·LADA --- */
 /* El crea detection.js. Es crea per codi perquè només ha d'existir
    quan la detecció decideix que toca, i el text depèn del nom que dona
