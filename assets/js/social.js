@@ -13,7 +13,7 @@ import { initHub } from './social-hub.js';
 import { initChatPanel } from './social-chat.js';
 import { openProfileEdit } from './social-modals.js';
 import { t, statusLabel } from './social-ui.js';
-import { state, onSocialChange } from './social-store.js';
+import { state, onSocialChange, startSocialStore } from './social-store.js';
 
 let view = 'guest';
 let root = null;
@@ -153,6 +153,9 @@ export function initSocial(node) {
 
     // Inicia el hub (llista d'amics, lliga, etc.)
     initHub(root);
+
+    // Engega l'escolta d'autenticació
+    startSocialStore();
 
     // Subscripció a canvis d'estat
     const unsub = onSocialChange(handleChange);
