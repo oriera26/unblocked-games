@@ -53,6 +53,9 @@ let deviceId = '';
 const remote = new Map();
 let remoteReady = false;
 
+/** Si s'ha pogut llegir la llista de claus de `localStorage`. */
+let keysReadable = true;
+
 /** Quan tornar a llegir IndexedDB sencera. */
 let nextIdbAt = 0;
 
@@ -157,6 +160,7 @@ export async function syncNow(withIdb) {
         for (const item of plan(local).values()) {
             if (item.action === 'push') await pushOne(item);
             else if (item.action === 'pull') await pullOne(item);
+            else if (item.action === 'delete') await deleteOne(item);
         }
 
         if (pending.length) {
@@ -348,14 +352,16 @@ async function buildLocal(withIdb) {
         out.set(key, { kind: 'state', key, value: text, hash: hashOf(text) });
     }
 
-    let keys = [];
+    let keys = null;
     try {
         keys = Object.keys(localStorage);
     } catch {
-        // Un navegador en mode privat no deixa ni llegir la llista.
+        // Un navegador en mode privat no deixa ni llegir la llista: sense
+        // saber què hi ha, no es pot decidir que res s'ha esborrat.
     }
+    keysReadable = keys !== null;
 
-    for (const key of keys) {
+    for (const key of keys ?? []) {
         if (!isGameSaveKey(key)) continue;
         const value = localStorage.getItem(key);
         if (value === null) continue;
@@ -530,7 +536,17 @@ function plan(local) {
             actions.set(id, item);
             pending.push(item);
         } else if (localChanged) {
-            actions.set(id, { id, action: 'push', local: L, remote: R });
+            if (L) {
+                actions.set(id, { id, action: 'push', local: L, remote: R });
+            } else if (R?.deleted) {
+                // Ja hi ha una tomba al compte: només cal quadrar les
+                // metadades perquè la propera ronda no hi torni.
+                actions.set(id, { id, action: 'pull', local: L, remote: R });
+            } else if (keysReadable) {
+                // Una entrada coneguda que ja no és al dispositiu ha estat
+                // esborrada: s'hi deixa una tomba perquè no torni mai més.
+                actions.set(id, { id, action: 'delete', local: L, remote: R });
+            }
         } else if (remoteChanged) {
             actions.set(id, { id, action: 'pull', local: L, remote: R });
         }
@@ -546,8 +562,56 @@ function plan(local) {
 /** Escriu al compte el que hi ha al dispositiu. */
 async function pushOne(item) {
     const entry = item.local;
-    if (!entry) return;
+    if (!entry) {
+        // Sense res al dispositiu, «conserva aquest» vol dir esborrar-ho:
+        // es deixa la tomba.
+        await deleteOne(item);
+        return;
+    }
     await writeDoc(item.id, entry, entry.value, entry.hash, item.remote?.parts ?? 0);
+}
+
+/**
+ * Deixa una tomba al compte d'una entrada que ja no és al dispositiu.
+ *
+ * No s'esborra el document: es marca com a esborrat i s'hi guarda la
+ * identitat (la clau, o la base, el dipòsit i la clau d'IndexedDB) perquè
+ * els altres dispositius el puguin esborrar igualment. Si el document
+ * desaparegués del tot, el proper repàs el tornaria a pujar: el motor no
+ * podria distingir «esborrat» de «algú ha netejat la col·lecció».
+ */
+async function deleteOne(item) {
+    const identity = identityOf(item.id);
+    if (!identity) return;
+    await writeDoc(item.id, identity, null, null, item.remote?.parts ?? 0);
+}
+
+/**
+ * Reconeix de què és una entrada només pel seu id.
+ *
+ * Els ids porten el tipus al davant i prou informació per tornar a muntar
+ * el document: `local:casa`, `idb:joc/partides/{…}` o `ulaStats`. Els ids
+ * llargs van truncats darrere d'un coixinet i no es poden desfer; en
+ * aquest cas no s'hi pot deixar tomba.
+ */
+function identityOf(id) {
+    if (id.startsWith('local#')) return null;
+    if (id.startsWith('local:')) {
+        return { kind: 'local', key: decodeURIComponent(id.slice('local:'.length)) };
+    }
+
+    if (id.startsWith('idb#')) return null;
+    if (id.startsWith('idb:')) {
+        const [db, store, enc] = id.slice('idb:'.length).split('/').map(decodeURIComponent);
+        if (!db || !store || !enc) return null;
+        try {
+            return { kind: 'idb', db, store, keyEnc: JSON.parse(enc) };
+        } catch {
+            return null;
+        }
+    }
+
+    return { kind: 'state', key: id };
 }
 
 /** Aplana al dispositiu el que diu el compte. */
@@ -559,7 +623,10 @@ async function pullOne(item) {
     await applyLocal(source, value);
 
     entries.set(item.id, {
-        hash: hashOf(value ?? ''),
+        // Sense valor (una tomba), el hash de referència és `null`: així
+        // una clau absent i una tomba compten com el mateix estat i no es
+        // torna a decidir res a cada ronda.
+        hash: source.deleted ? null : hashOf(value ?? ''),
         updatedAt: source.updatedAt ?? 0,
         localAt: Date.now()
     });
