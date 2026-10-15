@@ -282,11 +282,17 @@ function loadSdk() {
             // compte: la sessió durarà el que duri la pestanya.
         }
 
-        authApi.onAuthStateChanged(auth, (next) => {
+        authApi.onAuthStateChanged(auth, async (next) => {
             account = next;
             remember(next);
             render();
-            for (const listener of listeners) listener(next);
+            for (const listener of listeners) {
+                try {
+                    await listener(next);
+                } catch (err) {
+                    console.warn('[ula] auth listener error:', err);
+                }
+            }
             markReady(next);
         });
 
