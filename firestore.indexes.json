@@ -15,34 +15,6 @@
         { "fieldPath": "uids", "arrayConfig": "CONTAINS" },
         { "fieldPath": "requestedBy", "order": "ASCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "league",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "week", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "feed",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "at", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "gifts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "chat",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "at", "order": "ASCENDING" }
-      ]
     }
   ],
   "fieldOverrides": []

@@ -2,7 +2,7 @@
    SERVICE WORKER · ulaGames
    ============================================================ */
 
-const CACHE_VERSION = 'ula-v1.6.2';
+const CACHE_VERSION = 'ula-v1.6.3';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const GAMES_CACHE = CACHE_VERSION + '-games';
 const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
@@ -367,12 +367,13 @@ self.addEventListener('fetch', (event) => {
                     return response;
                 })
                 .catch(() => {
-                    // Fallback: busquem al cache sense query string (per SPA amb routing client)
-                    const baseUrl = new URL(request.url);
-                    baseUrl.search = '';
-                    baseUrl.hash = '';
-                    return caches.match(baseUrl.toString()).then((cached) => {
-                        return cached || caches.match(rel('./offline.html'));
+                    // Fallback robust: provem d'obrir offline.html des del STATIC_CACHE
+                    // (on es va precachejar a l'install). Si no hi és, tornem l'error.
+                    const offlineUrl = new URL('./offline.html', self.location.href).href;
+                    return caches.open(STATIC_CACHE).then((cache) => {
+                        return cache.match(offlineUrl).then((offlineResponse) => {
+                            return offlineResponse || Response.error();
+                        });
                     });
                 })
         );
