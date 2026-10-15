@@ -28,20 +28,30 @@
     position: relative;
 }
 
-.social-container {
+.social-layout {
     display: grid;
-    grid-template-columns: 1fr 280px;
+    grid-template-columns: 1fr;
     gap: 24px;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 20px;
+    align-items: start;
 }
 
-@media (max-width: 1300px) {
-    .social-container {
-        grid-template-columns: 1fr;
-        max-width: none;
+@media (min-width: 1301px) {
+    .social-layout {
+        grid-template-columns: 1fr 280px;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 20px;
     }
+}
+
+.social-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.main-area {
+    flex: 1;
 }
 
 .sidebar {
@@ -230,33 +240,6 @@
 
 .chat-sidebar .soc-chat-fab-label {
     display: block;
-}
-
-/* ============================================================
-   Contingut principal (llestat a la esquerra)
-   ============================================================ */
-
-.social-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 24px;
-    align-items: start;
-}
-
-@media (min-width: 1301px) {
-    .social-layout {
-        grid-template-columns: 1fr 280px;
-    }
-}
-
-.social-col {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.main-area {
-    flex: 1;
 }
 
 /* ============================================================
