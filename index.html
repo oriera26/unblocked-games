@@ -27,6 +27,12 @@
     <script defer src="assets/vendor/lucide.min.js"></script>
     <link rel="icon" type="image/x-icon" href="assets/icons/icon.ico">
 
+    <!-- Preload del recurs crític: el logotip de la barra, que si no
+         esperava rere l'esquelet. El mòdul principal no s'hi preloada:
+         el <script> del final del cos el descobreix al mateix tick
+         (mesurat amb sonda), i un modulepreload no guanyaria mai. -->
+    <link rel="preload" as="image" href="assets/icons/icon-large-dark.png">
+
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#007AFF">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
