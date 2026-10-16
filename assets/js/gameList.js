@@ -1034,7 +1034,7 @@ export const GAMES = [
    { name: "Dynamite Headdy", url: "cldynamiteheaddy.html", image: "assets/images/cldynamiteheaddy.webp", type: "retro" },
    { name: "Earn to Die", url: "clearntodie.html", image: "assets/images/clearntodie.webp", type: "esports" },
    { name: "Earn to Die 2", url: "clearntodie2.html", image: "assets/images/clearntodie2.webp", type: "esports" },
-   { name: "EarthBound", url: "clearthbound.html", image: "assets/images/clearthbound.jpg", type: "retro" },
+   { name: "EarthBound", url: "clearthbound.html", image: "assets/images/clearthbound.webp", type: "retro" },
    { name: "EarthBound 3", url: "clearthbound3.html", image: "assets/images/clearthbound3.webp", type: "retro" },
    { name: "Earth Taken", url: "clearthtaken.html", image: "assets/images/clearthtaken.webp", type: "accio" },
    { name: "Earth Taken 2", url: "clearthtaken2.html", image: "assets/images/clearthtaken2.webp", type: "accio" },
