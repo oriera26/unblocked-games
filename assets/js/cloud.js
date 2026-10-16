@@ -223,27 +223,51 @@ async function onUser(user) {
 
     // En sortir, la darrera cosa que es fa és desar el que ha canviat.
     window.addEventListener('pagehide', flush);
-    document.addEventListener('visibilitychange', onHide);
+    document.addEventListener('visibilitychange', onVisibility);
 
     await syncNow(true);
 
+    // Amb la pestanya amagada (sessió restaurada, oberta en segon pla)
+    // el rellotge no arrenca: ho farà quan es torni a veure.
+    if (document.visibilityState === 'visible') startTimer();
+}
+
+function startTimer() {
+    stopTimer();
     timer = window.setInterval(() => syncNow(false), SYNC_INTERVAL_MS);
 }
 
-function stop() {
+function stopTimer() {
     if (timer) window.clearInterval(timer);
     timer = null;
+}
+
+function stop() {
+    stopTimer();
     // Si s'ha sortit de sessió a mig cop, el senyal queda alliberat: de
     // l'altra forma la propera entrada no podria sincronitzar mai.
     syncing = false;
     for (const off of unsubscribes) off();
     unsubscribes.length = 0;
     window.removeEventListener('pagehide', flush);
-    document.removeEventListener('visibilitychange', onHide);
+    document.removeEventListener('visibilitychange', onVisibility);
 }
 
-function onHide() {
-    if (document.visibilityState === 'hidden') flush();
+/**
+ * Amb la pestanya amagada no es sincronitza: el rellotge de cada
+ * `SYNC_INTERVAL_MS` s'atura i, de passada, es desa el que falti. En
+ * tornar-se a veure, es fa una ronda per posar-se al dia i el rellotge
+ * reprèn (a segon pla els navegadors van coixos de tota manera: és
+ * feina que no s'hi pot aprofitar).
+ */
+function onVisibility() {
+    if (document.visibilityState === 'hidden') {
+        stopTimer();
+        flush();
+    } else if (!timer) {
+        syncNow(false).catch(() => {});
+        startTimer();
+    }
 }
 
 function flush() {
