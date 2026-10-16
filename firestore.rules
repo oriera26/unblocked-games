@@ -29,6 +29,10 @@ service cloud.firestore {
     //   feed/{docId}                    activitat pública (darreres 20)
     //   gifts/{docId}                   regals globals (reclamables)
     //   chat/{channelId}/messages/{msgId} xat per canals
+    //   chats/{uid1__uid2}              xat 1 a 1: els dos uids, les fitxes
+    //                                   i l'últim missatge
+    //   chats/{uid1__uid2}/messages/{msgId}
+    //                                   missatges del xat 1 a 1
     //   config/{docId}                  configuració de l'aplicació (la
     //                                   clau d'imgbb; només es llegeix)
     //
@@ -237,6 +241,34 @@ service cloud.firestore {
           && request.resource.data.fromUid == request.auth.uid
           && request.resource.data.keys().hasOnly(['fromUid', 'fromName', 'fromIcon', 'text', 'at', 'reactions']);
       allow update: if request.auth != null
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']);
+    }
+
+    // --- Social: Xat 1 a 1 (parella = uid1__uid2 ordenats) ---
+    // Com a les amistats, la parella viu dins del propi identificador.
+    // El document porta els dos uids i les fitxes; els missatges només
+    // són per a les dues persones.
+    match /chats/{pairId} {
+      allow get: if request.auth != null && request.auth.uid in pairId.split('__');
+      allow list: if request.auth != null && request.auth.uid in resource.data.uids;
+      allow create: if request.auth != null
+          && request.auth.uid in request.resource.data.uids
+          && request.resource.data.uids.size() == 2
+          && request.resource.data.keys().hasOnly(['uids', 'members', 'at', 'last']);
+      allow update: if request.auth != null
+          && request.auth.uid in resource.data.uids
+          && request.resource.data.uids == resource.data.uids
+          && request.resource.data.keys().hasOnly(['uids', 'members', 'at', 'last']);
+    }
+
+    match /chats/{pairId}/messages/{messageId} {
+      allow read: if request.auth != null && request.auth.uid in pairId.split('__');
+      allow create: if request.auth != null
+          && request.auth.uid in pairId.split('__')
+          && request.resource.data.fromUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['fromUid', 'fromName', 'fromIcon', 'text', 'at', 'reactions']);
+      allow update: if request.auth != null
+          && request.auth.uid in pairId.split('__')
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']);
     }
 

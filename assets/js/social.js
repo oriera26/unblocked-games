@@ -12,7 +12,7 @@
  * text escrit i el hub el focus del cercador.
  */
 
-import { state, onSocialChange, startSocialStore, retrySocialStore, claimGift, notify } from './social-store.js';
+import { state, onSocialChange, startSocialStore, retrySocialStore, claimGift, notify, openChatWith } from './social-store.js';
 import { mountHub, destroyHub, refresh as refreshHub } from './social-hub.js';
 import { mountChat, destroyChat, refresh as refreshChat } from './social-chat.js';
 import { openProfile } from './social-modals.js';
@@ -23,6 +23,7 @@ let root = null;
 let mounted = false;
 let unsubscribeStore = null;
 let langBound = false;
+let chatBound = false;
 
 /** Per no repintar l'avatar del sidebar (i recarregar la foto) sense canvis. */
 let profileSignature = '';
@@ -44,6 +45,17 @@ export function initSocial(node) {
     if (!langBound) {
         langBound = true;
         onLangChange(() => renderCurrent());
+    }
+
+    if (!chatBound) {
+        chatBound = true;
+        // Des de la fitxa d'una persona (o des d'on calgui): obre el xat
+        // amb ella i porta la barra lateral a la pestanya del xat.
+        window.addEventListener('ula:chat', (event) => {
+            if (!root) return;
+            selectTab('chat');
+            openChatWith(event.detail?.uid, event.detail ?? {}).catch(() => {});
+        });
     }
 
     startSocialStore();
@@ -140,7 +152,10 @@ function renderShell() {
         <div class="social-page">
             <header class="social-header">
                 <div>
-                    <h2>${t('social.title')}</h2>
+                    <div class="social-title-row">
+                        <h2>${t('social.title')}</h2>
+                        <span class="soc-beta">${t('social.beta')}</span>
+                    </div>
                     <p>${t('social.subtitle')}</p>
                 </div>
             </header>

@@ -189,11 +189,29 @@ export async function openProfile(uid) {
 
     const actions = modal.el.querySelector('.soc-modal-card');
     const button = profileAction(person);
-    if (button) actions.insertAdjacentHTML('beforeend', `<div class="soc-modal-actions">${button}</div>`);
+    if (button) actions.insertAdjacentHTML('beforeend', `
+        <div class="soc-modal-actions">
+            <button type="button" class="soc-btn" data-act="chat">${t('social.chatWith')}</button>
+            ${button}
+        </div>
+    `);
 
     modal.el.addEventListener('click', async (event) => {
         const action = event.target.closest('[data-act]');
         if (!action) return;
+
+        if (action.dataset.act === 'chat') {
+            modal.close();
+            window.dispatchEvent(new CustomEvent('ula:chat', {
+                detail: {
+                    uid: person.uid,
+                    name,
+                    icon: person.icon ?? '',
+                    photo: person.photo ?? '',
+                    status: person.status ?? 'offline'
+                }
+            }));
+        }
 
         if (action.dataset.act === 'add') {
             const result = await sendFriendRequest(person.uid);

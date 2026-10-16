@@ -23,6 +23,11 @@
  *   gifts/{id}          label, icon, price, createdAt, claimedBy: []
  *   chat/{canal}/messages/{id}
  *                       fromUid, fromName, fromIcon, text, at, reactions
+ *   chats/{parella}     uids: [a, b], members: { uid: { name, photo, icon } },
+ *                       at, last: { fromUid, text, at }
+ *   chats/{parella}/messages/{id}
+ *                       igual que els del canal global (xat 1 a 1; la
+ *                       parella és uid1__uid2 ordenats)
  */
 
 import { onAuthChange, currentUser } from './auth.js';
@@ -86,8 +91,9 @@ function blankState() {
         giftBalance: 0,
 
         chat: {
-            active: 'global',
-            channels: [{ id: 'global' }],
+            active: 'global',       // el canal o la conversa oberta
+            view: 'home',           // home (llista) | thread (conversa)
+            channels: [{ id: 'global', kind: 'global' }],
             messages: { global: [] }
         }
     };
@@ -105,6 +111,9 @@ function reset() {
 
 let started = false;
 let unsubs = [];
+
+/** Els canals del xat que ja tenen l'escolta engegada. */
+const watched = new Set();
 
 /** Engega l'escolta de la sessió. Es pot cridar tantes vegades com calgui. */
 export function startSocialStore() {
@@ -159,6 +168,7 @@ function stopWatching() {
         try { off(); } catch { /* ja no hi era */ }
     }
     unsubs = [];
+    watched.clear();
 }
 
 async function connect(user) {
@@ -1215,29 +1225,133 @@ export async function claimGift(giftId) {
    ================================================================ */
 
 function watchChat() {
-    const connection = fs();
-    if (!connection) return;
-    const { api, db } = connection;
-
-    for (const channel of state.chat.channels) {
-        state.chat.messages[channel.id] = [];
-
-        const q = api.query(
-            api.collection(db, 'chat', channel.id, 'messages'),
-            api.orderBy('at', 'desc'),
-            api.limit(50)
-        );
-
-        unsubs.push(api.onSnapshot(q, (snap) => {
-            state.chat.messages[channel.id] = snap.docs
-                .map((doc) => ({ id: doc.id, ...doc.data() }))
-                .reverse();
-            emit();
-        }));
-    }
+    for (const channel of state.chat.channels) watchChannel(channel);
 }
 
-/** Envia un missatge al canal. Els camps són els que deixen passar les regles. */
+/** Escolta els missatges d'un canal: el global o un xat 1 a 1. */
+function watchChannel(channel) {
+    const connection = fs();
+    if (!connection || watched.has(channel.id)) return;
+    const { api, db } = connection;
+    watched.add(channel.id);
+
+    state.chat.messages[channel.id] = [];
+
+    const q = api.query(
+        api.collection(db, ...channelPath(channel)),
+        api.orderBy('at', 'desc'),
+        api.limit(50)
+    );
+
+    unsubs.push(api.onSnapshot(q, (snap) => {
+        state.chat.messages[channel.id] = snap.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .reverse();
+        emit();
+    }));
+}
+
+/** El camí de la col·lecció de missatges d'un canal. */
+function channelPath(channel) {
+    return channel.kind === 'dm'
+        ? ['chats', channel.id, 'messages']
+        : ['chat', channel.id, 'messages'];
+}
+
+/** La fitxa d'un membre, tal com queda dins del document del xat. */
+function memberCard(person, uid) {
+    return {
+        name: person?.name ?? (isMe(uid) ? '' : 'Jugador'),
+        photo: person?.photo ?? '',
+        icon: person?.icon ?? ''
+    };
+}
+
+/** Deixa a punt el document del xat 1 a 1 (les regles el volen amb tots dos uids). */
+async function ensureChatDoc(channel) {
+    const connection = fs();
+    const me = myUid();
+    if (!connection || !me || !channel?.uid) return;
+    const { api, db } = connection;
+
+    try {
+        await api.setDoc(api.doc(db, 'chats', channel.id), {
+            uids: [me, channel.uid].sort(),
+            members: {
+                [me]: memberCard(state.me, me),
+                [channel.uid]: memberCard(channel, channel.uid)
+            },
+            at: Date.now()
+        }, { merge: true });
+    } catch { /* si ara no es pot, enviar un missatge ho tornarà a provar */ }
+}
+
+/* ================================================================
+   Xat: pantalla d'inici, canals i xats 1 a 1
+   ================================================================ */
+
+/** Les converses de la pantalla d'inici: amics i xats ja oberts. */
+export function chatHome() {
+    const rows = (state.friends ?? []).map((friend) => ({ ...friend }));
+    for (const channel of state.chat.channels) {
+        if (channel.kind !== 'dm') continue;
+        if (rows.some((row) => row.uid === channel.uid)) continue;
+        rows.push({ uid: channel.uid, name: channel.name, icon: channel.icon, photo: channel.photo });
+    }
+
+    rows.sort((a, b) => (
+        (b.pinned === true) - (a.pinned === true)
+        || (a.name ?? '').localeCompare(b.name ?? '')
+    ));
+    return rows;
+}
+
+/** Torna a la llista de converses del xat. */
+export function showChatHome() {
+    if (state.chat.view === 'home') return;
+    state.chat.view = 'home';
+    emit();
+}
+
+/** Obre un canal que ja existeix (el global, per ara). */
+export function openChatChannel(channelId) {
+    const channel = state.chat.channels.find((c) => c.id === channelId);
+    if (!channel) return;
+    state.chat.active = channel.id;
+    state.chat.view = 'thread';
+    emit();
+    watchChannel(channel);
+}
+
+/**
+ * Obre el xat 1 a 1 amb una persona, hi hagi conversa o no: crea el
+ * canal, deixa el document a punt i escolta'n els missatges.
+ */
+export async function openChatWith(uid, person = {}) {
+    const me = myUid();
+    if (!me || !uid || uid === me) return { ok: false };
+
+    const id = pairId(me, uid);
+    let channel = state.chat.channels.find((c) => c.id === id);
+    if (!channel) {
+        channel = { id, kind: 'dm', uid, name: '', icon: '', photo: '' };
+        state.chat.channels.push(channel);
+    }
+    channel.name = person.name ?? channel.name;
+    channel.icon = person.icon ?? channel.icon;
+    channel.photo = person.photo ?? channel.photo;
+    channel.status = person.status ?? channel.status ?? 'offline';
+
+    state.chat.active = id;
+    state.chat.view = 'thread';
+    emit();
+
+    watchChannel(channel);
+    await ensureChatDoc(channel);
+    return { ok: true };
+}
+
+/** Envia un missatge al canal actiu. Els camps són els que deixen passar les regles. */
 export async function sendChatMessage(channelId, text) {
     const user = currentUser();
     const message = String(text ?? '').trim().slice(0, 500);
@@ -1247,8 +1361,13 @@ export async function sendChatMessage(channelId, text) {
     if (!connection) return { ok: false, reason: 'offline' };
     const { api, db } = connection;
 
+    const id = channelId || 'global';
+    const channel = state.chat.channels.find((c) => c.id === id) ?? { id, kind: 'global' };
+    const dm = channel.kind === 'dm';
+    if (dm) await ensureChatDoc(channel);
+
     try {
-        await api.addDoc(api.collection(db, 'chat', channelId || 'global', 'messages'), {
+        await api.addDoc(api.collection(db, ...channelPath(channel)), {
             fromUid: user.uid,
             fromName: state.me?.name ?? 'Jugador',
             fromIcon: state.me?.icon ?? '',
@@ -1256,6 +1375,15 @@ export async function sendChatMessage(channelId, text) {
             at: Date.now(),
             reactions: {}
         });
+
+        if (dm) {
+            // El document del xat guarda l'últim missatge i quan va ser:
+            // la pantalla d'inici el podrà ensenyar sense llegir res més.
+            await api.setDoc(api.doc(db, 'chats', id), {
+                at: Date.now(),
+                last: { fromUid: user.uid, text: message.slice(0, 80), at: Date.now() }
+            }, { merge: true });
+        }
         return { ok: true };
     } catch (error) {
         return { ok: false, reason: describeError(error) };

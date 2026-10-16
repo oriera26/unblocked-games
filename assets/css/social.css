@@ -36,6 +36,30 @@
     opacity: 0.6;
 }
 
+.social-title-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 4px;
+}
+
+.social-title-row h2 {
+    margin: 0;
+}
+
+/* La insígnia «Beta»: el Social encara s'està coent. */
+.soc-beta {
+    padding: 2px 8px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    color: var(--accent);
+    font-size: 10.5px;
+    font-weight: 800;
+    line-height: 1.6;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .social-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 340px;
@@ -896,30 +920,111 @@
     min-height: 240px;
 }
 
-.soc-chat-channels {
+/* Les dues pantalles de la targeta: l'inici (llista de converses) i la
+   conversa oberta. Només se'n veu una; l'altra va amb l'atribut `hidden`. */
+.soc-chat-home,
+.soc-chat-thread {
     display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    padding-bottom: 8px;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
-.soc-channel {
-    padding: 4px 10px;
+.soc-chat-home[hidden],
+.soc-chat-thread[hidden] {
+    display: none;
+}
+
+.soc-chat-home-title {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.55;
+}
+
+.soc-chat-people {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border-soft) transparent;
+}
+
+.soc-chat-person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 9px;
     border: none;
-    border-radius: 999px;
-    background: var(--pill-bg);
+    border-radius: 12px;
+    background: transparent;
     color: inherit;
     font: inherit;
-    font-size: 12px;
-    font-weight: 700;
-    opacity: 0.65;
+    font-size: 13.5px;
+    text-align: left;
     cursor: pointer;
 }
 
-.soc-channel.active {
-    background: var(--accent);
-    color: #fff;
-    opacity: 1;
+.soc-chat-person:hover,
+.soc-chat-person:focus-visible {
+    background: var(--pill-bg);
+}
+
+.soc-chat-thread-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 2px 9px;
+    border-bottom: 1px solid var(--glass-border-soft);
+}
+
+.soc-chat-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 9px;
+    background: var(--pill-bg);
+    color: inherit;
+    cursor: pointer;
+}
+
+.soc-chat-back:hover {
+    background: var(--glass-bg-strong);
+}
+
+.soc-chat-thread-id {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+}
+
+.soc-chat-thread-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.soc-chat-thread-sub {
+    font-size: 11px;
+    opacity: 0.6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .soc-chat-log {
@@ -1401,13 +1506,12 @@
            seu padding de dalt: perquè la barra quedi clavada a 88px
            de la finestra, cal descomptar-los (−2px = 88 − 90). */
         top: -2px;
-        /* Els 220px de sota són el que hi ha entre la finestra i
+        /* Els 130px de sota són el que hi ha entre la finestra i
            l'alçada útil de la columna (90px del marge de dalt del
-           contenidor, 80px de la capçalera i 100px del marge de
-           baix, amb marge de sobres): amb aquest sostre, quan la
-           pàgina es desplaça la barra no s'ha de moure mai d'on
-           està enganxada. */
-        height: clamp(440px, calc(100vh - 220px), 820px);
+           contenidor, 80px de la capçalera i la resta, marge de
+           baix): amb aquest sostre, quan la pàgina es desplaça la
+           barra no s'ha de moure mai d'on està enganxada. */
+        height: clamp(500px, calc(100vh - 130px), 1000px);
     }
 }
 
@@ -1431,7 +1535,7 @@
     }
 
     .soc-chat {
-        height: min(60vh, 480px);
+        height: min(72vh, 620px);
         flex: 0 0 auto;
     }
 
