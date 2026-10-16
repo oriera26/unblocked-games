@@ -20,6 +20,7 @@ import {
     updateProfile,
     createLeague,
     addLeagueMembers,
+    fetchMedals,
     notify
 } from './social-store.js';
 import { esc, get, t, activityLabel, avatarMarkup, hydrate } from './social-ui.js';
@@ -172,12 +173,23 @@ export async function openProfile(uid) {
             <div class="soc-stat"><strong>${level}</strong><span>${t('stats.level')}</span></div>
             <div class="soc-stat"><strong>${streak}</strong><span>🔥 ${t('stats.streak')}</span></div>
         </div>
+        <div class="soc-medals" id="profileMedals" hidden>
+            <p class="soc-medals-title">${t('league.medals')}</p>
+            <div class="soc-medals-row">
+                ${medalSlot(1, t('league.medalGold'))}
+                ${medalSlot(2, t('league.medalSilver'))}
+                ${medalSlot(3, t('league.medalBronze'))}
+            </div>
+        </div>
         ${own ? `
             <div class="soc-modal-actions">
                 <button type="button" class="soc-btn soc-btn-primary" data-act="edit">${t('ui.edit_profile')}</button>
             </div>
         ` : ''}
     `, { label, className: 'soc-modal-profile' });
+
+    // El comptador de medalles arriba després: la fitxa no espera ningú.
+    loadMedals(modal, person.uid ?? uid);
 
     if (own) {
         modal.el.querySelector('[data-act="edit"]').addEventListener('click', () => {
@@ -239,6 +251,34 @@ export async function openProfile(uid) {
             modal.close();
         }
     });
+}
+
+/** Una butxaca de medalla de la fitxa: la imatge i el comptador.
+    L'etiqueta arriba de `t()`, que ja la deixa escapada. */
+function medalSlot(place, label) {
+    return `
+        <span class="soc-medal" title="${label}">
+            <img src="assets/images/medals/medal-${place}.png" alt="${label}" width="30" height="30">
+            <strong data-medals="${place}">0</strong>
+        </span>`;
+}
+
+/**
+ * Omple el comptador de medalles quan arriba (i l'amaga si no es poden
+ * llegir: val més no ensenyar-ne cap que ensenyar-ne de falses).
+ */
+async function loadMedals(modal, uid) {
+    const box = modal.el.querySelector('#profileMedals');
+    if (!box || !uid) return;
+
+    const medals = await fetchMedals(uid);
+    if (!medals || !box.isConnected) return;
+
+    medals.forEach((count, index) => {
+        const slot = box.querySelector(`[data-medals="${index + 1}"]`);
+        if (slot) slot.textContent = String(count);
+    });
+    box.hidden = false;
 }
 
 /** El botó que toca segons la relació amb aquesta persona. */

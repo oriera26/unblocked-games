@@ -855,6 +855,44 @@ function topThree(scores, members) {
         .slice(0, 3);
 }
 
+/**
+ * Compta les medalles d'un uid a partir dels documents de guanyador.
+ *
+ * A cada temporada, `winnerUids` va ordenat pel lloc: qui hi apareix
+ * primer té l'or, després la plata i després el bronze. La lectura dels
+ * documents la fa `fetchMedals`; aquí només es compta, que és el que es
+ * pot comprovar sense xarxa.
+ */
+export function medalCounts(winnerDocs, uid) {
+    const medals = [0, 0, 0];
+    for (const doc of winnerDocs ?? []) {
+        const index = (doc?.winnerUids ?? []).indexOf(uid);
+        if (index >= 0 && index < medals.length) medals[index] += 1;
+    }
+    return medals;
+}
+
+/**
+ * Les medalles d'un perfil: [or, plata, bronze] o `null` si no es poden
+ * llegir. La consulta només mira els rètols on hi surt el uid; per
+ * comptar-les no cal saber de quina lliga són.
+ */
+export async function fetchMedals(uid) {
+    const connection = fs();
+    if (!connection || !uid) return null;
+    const { api, db } = connection;
+
+    try {
+        const snap = await api.getDocs(api.query(
+            api.collection(db, 'leagueWinners'),
+            api.where('winnerUids', 'array-contains', uid)
+        ));
+        return medalCounts(snap.docs.map((doc) => doc.data() ?? {}), uid);
+    } catch {
+        return null;
+    }
+}
+
 /** L'entrada d'algú al mapa de membres d'una lliga. */
 function memberEntry(person) {
     return {

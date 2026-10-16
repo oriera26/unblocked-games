@@ -1403,6 +1403,46 @@
     overflow-wrap: anywhere;
 }
 
+/* Comptador de medalles de lliga */
+
+.soc-medals {
+    margin: 10px 0 0;
+}
+
+.soc-medals-title {
+    margin: 0 0 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.soc-medals-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.soc-medal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 6px;
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 14px;
+    background: var(--glass-bg-soft);
+}
+
+.soc-medal img {
+    display: block;
+    width: 30px;
+    height: 30px;
+}
+
+.soc-medal strong {
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+}
+
 /* Formulari d'edició */
 
 .soc-edit {
