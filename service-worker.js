@@ -2,7 +2,7 @@
    SERVICE WORKER · ulaGames
    ============================================================ */
 
-const CACHE_VERSION = 'ula-v1.11.0';
+const CACHE_VERSION = 'ula-v1.12.0';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const GAMES_CACHE = CACHE_VERSION + '-games';
 const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
@@ -23,6 +23,19 @@ const OFFLINE_CACHE = 'ula-offline-games';
    ordre d'inserció, que és el més a prop d'un LRU que hi ha). */
 const GAMES_CACHE_MAX = 40;
 const RUNTIME_CACHE_MAX = 80;
+
+/* Els jocs que passen d'aquest pes no s'emmagatzemen sols: obrir un
+   client de 70 MB ompliria la cau sense que l'usuari hagi demanat res, i
+   aquests jocs ja es tornen a baixar a demanda cada cop que es juguen.
+   El comptatge es fa sobre el cos descomprimit de debò: la
+   `content-length` de GitHub Pages mesura la mida comprimida. */
+const GAMES_CACHE_MAX_BYTES = 20 * 1024 * 1024;
+
+/* Frescor de les imatges del catàleg. Dins d'aquesta finestra la cau
+   mana i no es toca la xarxa; passada, es revalida de fons. Sense això,
+   cada vista tornava a demanar cada portada (el servidor local envia
+   `no-cache` i el navegador no té res a què agafar-se). */
+const IMAGE_REVALIDATE_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Tot es resol respecte d'aquest mateix fitxer.
@@ -192,15 +205,69 @@ async function trimCache(cacheName, max) {
     }
 }
 
-async function serveGame(request, url) {
+/**
+ * Desa un joc a la cau tret que passi del sostre de mida.
+ *
+ * El cos es va comptant mentre passa; si se supera el sostre, la
+ * insercció s'avorta i no queda res desat (la Cache API no confirma
+ * l'entrada fins que el cos acaba sencer). L'usuari no en pateix res:
+ * el joc li arriba per l'altra branca del `clone`, que va a part.
+ */
+function storeGame(cache, request, response) {
+    const body = response.body;
+
+    // Sense cos o sense TransformStream (navegadors vells) es desa tal
+    // com es feia abans; hi ha marge de sobres a la cau.
+    if (!body || typeof TransformStream !== 'function') {
+        return cache.put(request, response)
+            .then(() => trimCache(GAMES_CACHE, GAMES_CACHE_MAX))
+            .catch(() => {});
+    }
+
+    let seen = 0;
+    const counted = body.pipeThrough(
+        new TransformStream({
+            transform(chunk, controller) {
+                seen += chunk.byteLength;
+                if (seen > GAMES_CACHE_MAX_BYTES) {
+                    controller.error(new Error('el joc passa del sostre de la cau'));
+                    return;
+                }
+                controller.enqueue(chunk);
+            }
+        })
+    );
+
+    // El cos que arriba aquí ja ve descomprimit: les capçaleres de mida
+    // i de compressió de l'origen deixarien de ser certes.
+    const headers = new Headers(response.headers);
+    headers.delete('content-length');
+    headers.delete('content-encoding');
+
+    const storable = new Response(counted, {
+        status: response.status,
+        statusText: response.statusText,
+        headers
+    });
+
+    return cache.put(request, storable)
+        .then(() => trimCache(GAMES_CACHE, GAMES_CACHE_MAX))
+        .catch(() => {
+            /* passat del sostre: no es desa, i prou */
+        });
+}
+
+async function serveGame(request, url, event) {
     const cache = await caches.open(GAMES_CACHE);
     let response = await cache.match(request);
 
     if (!response) {
         response = await fetch(request);
         if (response.ok) {
-            await cache.put(request, response.clone());
-            trimCache(GAMES_CACHE, GAMES_CACHE_MAX);
+            // No s'espera: el joc ha d'arribar de seguida. El
+            // `waitUntil` manté el service worker viu fins que la cau
+            // confirma l'entrada (o la descarta, si el joc és gros).
+            event.waitUntil(storeGame(cache, request, response.clone()));
         }
     }
 
@@ -330,6 +397,41 @@ async function downloadOffline(absUrl, client) {
     }
 }
 
+/**
+ * Serveix una imatge des de la cau d'assets.
+ *
+ * Dins de la finestra de frescor no es toca la xarxa: el catàleg sencer
+ * es pot recórrer amb una sola descàrrega per portada. Passada la
+ * finestra, es lliura la còpia de seguida i s'actualitza de fons (el
+ * mateix tracte que la resta d'assets, però sense la petició a cada
+ * vista). Si encara no hi ha còpia, es baixa i es desa.
+ *
+ * Quan la xarxa falla es mira a les altres caches: el logotip i l'orba
+ * surten del precache d'INSTALL i han de seguir sortint sense xarxa.
+ */
+async function serveImage(request) {
+    const cache = await caches.open(RUNTIME_CACHE);
+    const cached = await cache.match(request);
+
+    if (cached && Date.now() - dateOf(cached) < IMAGE_REVALIDATE_MS) return cached;
+
+    const network = fetch(request)
+        .then((response) => {
+            if (response && response.ok) {
+                cache.put(request, response.clone()).then(() => trimCache(RUNTIME_CACHE, RUNTIME_CACHE_MAX));
+            }
+            return response;
+        })
+        .catch(() => cached || caches.match(request).then((r) => r || Response.error()));
+
+    return cached || network;
+}
+
+/** Quan es va rebre una resposta (0 si la capçalera no ho diu). */
+function dateOf(response) {
+    return Date.parse(response.headers.get('date') || '') || 0;
+}
+
 /* ============================================================
    FETCH · Estratègies per tipus de recurs
    ============================================================ */
@@ -352,7 +454,7 @@ self.addEventListener('fetch', (event) => {
     /* Jocs: cache-first amb fallback a xarxa, i amb el pedaç de volum
        insertat a l'HTML abans de lliurar-lo. */
     if (url.pathname.startsWith(GAMES_PATH)) {
-        event.respondWith(serveGame(request, url));
+        event.respondWith(serveGame(request, url, event));
         return;
     }
 
@@ -378,6 +480,12 @@ self.addEventListener('fetch', (event) => {
                     });
                 })
         );
+        return;
+    }
+
+    /* Imatges del catàleg: cau amb revalidació diària */
+    if (request.destination === 'image') {
+        event.respondWith(serveImage(request));
         return;
     }
 
