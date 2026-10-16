@@ -98,7 +98,7 @@ function bindSearch() {
     const container = byId('searchContainer');
     const trigger = container?.querySelector('.search-trigger');
 
-    // Es filtra amb un debounce curt. Amb 1.864 jocs, fer la filtració a
+    // Es filtra amb un debounce curt. Amb 1.865 jocs, fer la filtració a
     // cada pulsació treballa el fil principal per cada tecla i repinta la
     // graella; esperar 120 ms no es nota i estalvia molts repintats.
     let searchTimer = 0;

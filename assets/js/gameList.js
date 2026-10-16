@@ -7,12 +7,12 @@
  *   image  portada a assets/images/, o "" si el joc encara no en té
  *   type   categoria; ha de coincidir amb un id de config.js
  *
- * 1864 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
+ * 1865 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
  * només exporta la llista.
  *
  * El camp image l'omple tools/fetch-covers.mjs. Els jocs que no tenen
  * portada mostren la icona de mando que dibuixa ui.js, que és el que es
- * veu ara mateix a 1864 dels 1864 jocs.
+ * veu ara mateix a 1865 dels 1865 jocs.
  */
 
 export const GAMES = [
@@ -1879,5 +1879,6 @@ export const GAMES = [
    { name: "Rocket Knight 2", url: "rocketknight2.html", image: "assets/images/rocketknight2.webp", type: "retro" },
    { name: "Snow Bros", url: "snowbros.html", image: "assets/images/snowbros.webp", type: "retro" },
    { name: "NGAHHH! Simulator v0.99", url: "vxc.html", image: "assets/images/vxc.webp", type: "accio" },
-   { name: "Wily Wars", url: "wilywars.html", image: "assets/images/wilywars.webp", type: "retro" }
+   { name: "Wily Wars", url: "wilywars.html", image: "assets/images/wilywars.webp", type: "retro" },
+   { name: "Unmatched Ego 2", url: "clunmatchedego2.html", image: "assets/images/clunmatchedego2.webp", type: "esports" }
 ];
