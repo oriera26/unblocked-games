@@ -121,8 +121,8 @@ export const STORAGE_KEYS = {
      * no es sincronitza amb el compte.
      */
     gamePerformance: 'ulaGamePerf',
-    /** Mida triada per al requadre del reproductor (−1…2). Del dispositiu. */
-    playerSize: 'ulaPlayerSize',
+    /** Zoom triat per al reproductor, en % (50…200). Del dispositiu. */
+    playerZoom: 'ulaPlayerZoom',
     /**
      * Metadades de sincronització d'aquest dispositiu (sense sincronitzar).
      *

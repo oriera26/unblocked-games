@@ -721,15 +721,16 @@ td:last-child {
     white-space: nowrap;
 }
 
-/* La icona del volum (alt / baix / mut) viu a l'esquerra del lliscant,
-   diu el nivell sense cap número i la pinta volume.js. */
-.volume-state {
-    display: flex;
-    align-items: center;
+/* La icona de cada fila, tota igual: 18 px i el mateix to suau. La del
+   volum (alt / baix / mut) és un contenidor amb tres dibuixos i
+   volume.js tria quin es veu. */
+.game-menu-ico {
+    display: block;
+    width: 18px; height: 18px;
     flex: none;
     color: rgba(255, 255, 255, 0.85);
 }
-.volume-state svg { width: 16px; height: 16px; }
+.game-menu-ico svg { display: block; width: 100%; height: 100%; }
 .volume-state .ico-low,
 .volume-state .ico-mute { display: none; }
 .volume-state.is-low .ico-high,
@@ -737,8 +738,8 @@ td:last-child {
 .volume-state.is-low .ico-low { display: block; }
 .volume-state.is-muted .ico-mute { display: block; }
 
-/* El lliscant del volum, horitzontal i sense marques. */
-.game-volume-slider {
+/* Els lliscants del menú (volum i zoom), horitzontals i sense marques. */
+.game-menu-slider {
     flex: 1;
     min-width: 0;
     height: 20px;
@@ -751,12 +752,12 @@ td:last-child {
     -webkit-appearance: none;
     appearance: none;
 }
-.game-volume-slider::-webkit-slider-runnable-track {
+.game-menu-slider::-webkit-slider-runnable-track {
     height: 6px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.26);
 }
-.game-volume-slider::-webkit-slider-thumb {
+.game-menu-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px; height: 18px;
@@ -766,49 +767,36 @@ td:last-child {
     border: none;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
 }
-.game-volume-slider::-moz-range-track {
+.game-menu-slider::-moz-range-track {
     height: 6px;
     border: none;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.26);
 }
-.game-volume-slider::-moz-range-thumb {
+.game-menu-slider::-moz-range-thumb {
     width: 18px; height: 18px;
     border: none;
     border-radius: 50%;
     background: #fff;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
 }
-.game-volume-slider:focus { outline: none; }
-.game-volume-slider:focus-visible {
+.game-menu-slider:focus { outline: none; }
+.game-menu-slider:focus-visible {
     outline: 2px solid rgba(255, 255, 255, 0.75);
     outline-offset: 4px;
     border-radius: 999px;
 }
 
-/* Els dos passos de mida, a la dreta de la seva fila. */
-.game-size-stepper {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: auto;
+/* La xifra del zoom, a la dreta del seu lliscant. */
+.zoom-state {
+    flex: none;
+    min-width: 38px;
+    text-align: right;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    font-variant-numeric: tabular-nums;
 }
-.game-size-btn {
-    width: 28px; height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 8px;
-    color: #fff;
-    cursor: pointer;
-    padding: 0;
-    transition: background 0.15s ease;
-}
-.game-size-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
-.game-size-btn:disabled { opacity: 0.35; cursor: default; }
-.game-size-btn svg { width: 15px; height: 15px; }
 
 /* Les files d'acció (favorit i rendiment): tota la fila és un botó. */
 .game-menu-action {
@@ -820,7 +808,6 @@ td:last-child {
     cursor: pointer;
 }
 .game-menu-action:hover { background: rgba(255, 255, 255, 0.09); }
-.game-menu-action .fav-star { width: 17px; height: 17px; flex: none; }
 
 /* L'estrella s'omple de groc quan el joc és favorit, com a les targetes. */
 .game-menu-action.is-fav .fav-star { fill: #FFD60A; stroke: #FFD60A; }
@@ -833,11 +820,21 @@ td:last-child {
 }
 .game-menu-action.on .toggle::after { transform: translateX(16px); }
 
-/* La mida del requadre de joc, triada des del menú. El valor 0 (el de
-   sèrie) no té regla i val el `max-width` de `.modal-content`. */
-#gameModal[data-size="-1"] .modal-content { max-width: 880px; }
-#gameModal[data-size="1"] .modal-content { max-width: 1500px; }
-#gameModal[data-size="2"] .modal-content { max-width: 1900px; max-height: 94vh; }
+/* El zoom del joc, triat des del menú: com el del navegador, però només
+   dins de l'iframe. La propietat `zoom` fa que l'amplada del 100% es
+   resolgui en termes visuals: l'iframe segueix omplint el modal i el seu
+   interior queda com un requadre lògic més ample (100/zoom %), amb el
+   contingut més petit — o més gran a més de 100%. El requadre del modal
+   NO canvia mai de mida. Sense suport de `zoom` es queda al 100% de
+   sempre. */
+#gameIframe {
+    display: block;
+    width: 100%; height: 100%;
+    border: none; background: #000;
+}
+@supports (zoom: 1) {
+    #gameIframe { zoom: var(--game-zoom, 1); }
+}
 
 /* El modal a pantalla completa ha d'omplir la pantalla: sense el `max`
    de la versió enfinestrada (88vh) ni la vora rodona, que en un
@@ -849,8 +846,6 @@ td:last-child {
     border-radius: 0;
     border: none;
 }
-
-#gameIframe { flex: 1; width: 100%; height: 100%; border: none; background: #000; }
 
 .game-loader-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;

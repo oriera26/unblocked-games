@@ -13,7 +13,7 @@
  */
 
 import { FALLBACK_DURATION, LOADER_DURATION, OFFLINE_URL } from './config.js';
-import { getGamePerformance, getPlayerSize, recordPlay } from './state.js';
+import { getGamePerformance, getPlayerZoom, recordPlay } from './state.js';
 import { bindPlaytimeFrame, startPlaytime, stopPlaytime } from './playtime.js';
 import { bindVolumeGame, clearVolumeGame, gameKeyOf, syncVolumeGame, watchVolumeGame } from './volume.js';
 import { perfModeEnabled } from './settings.js';
@@ -166,12 +166,13 @@ export function launch(game) {
 }
 
 /**
- * Aplica el mode rendiment i la mida del requadre en obrir un joc.
+ * Aplica el mode rendiment i el zoom del joc en obrir-lo.
  *
  * El mode rendiment el pot haver triat l'usuari per a aquell joc des del
  * menú del reproductor; sense tria pròpia, val el que digui l'ajust
- * global. La mida és una sola tria per a tots els jocs i s'aplica amb
- * `[data-size]` al modal (mai amb el zoom de la pàgina).
+ * global. El zoom és una sola tria per a tots els jocs i s'aplica amb
+ * `--game-zoom` al modal: el CSS fa la resta (mai amb el zoom de la
+ * pàgina, que es menjaria la interfície).
  */
 function applyPlayerPreferences(game) {
     const key = gameKeyOf(gameSrc(game));
@@ -180,7 +181,7 @@ function applyPlayerPreferences(game) {
     document.body.classList.toggle('performance-mode', choice === null ? perfModeEnabled() : choice);
 
     const modal = document.getElementById('gameModal');
-    if (modal) modal.dataset.size = String(getPlayerSize());
+    if (modal) modal.style.setProperty('--game-zoom', String(getPlayerZoom() / 100));
 }
 
 /**
@@ -196,8 +197,9 @@ function openGame(game) {
     currentGame = game;
     sessionStart = Date.now();
 
-    // La tria de mode rendiment d'aquest joc i la mida del requadre; en
-    // tancar es restaura el que hi havia abans (ho fa `close`).
+    // La tria de mode rendiment d'aquest joc i el zoom que li toca; en
+    // tancar, el mode rendiment torna a deixar manar el global (ho fa
+    // `close`) i el zoom es queda per al joc següent.
     applyPlayerPreferences(game);
     document.dispatchEvent(new CustomEvent('ula:player', { detail: { game, open: true } }));
 

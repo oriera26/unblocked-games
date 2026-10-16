@@ -37,13 +37,13 @@ import { GAMES_DIR, OFFLINE_GAMES_DIR } from './config.js';
 import {
     getGamePerformance,
     getGameVolume,
-    getPlayerSize,
+    getPlayerZoom,
     isFavorite,
-    PLAYER_SIZE_MAX,
-    PLAYER_SIZE_MIN,
+    PLAYER_ZOOM_MAX,
+    PLAYER_ZOOM_MIN,
     setGamePerformance,
     setGameVolume,
-    setPlayerSize,
+    setPlayerZoom,
     toggleFavorite
 } from './state.js';
 import { perfModeEnabled } from './settings.js';
@@ -154,13 +154,26 @@ function paintPerformance(on) {
     button.setAttribute('aria-checked', String(on));
 }
 
-/** Els botons de mida es tanquen quan ja no es pot anar més enllà. */
-function paintSize() {
-    const size = getPlayerSize();
-    const down = byId('sizeDown');
-    const up = byId('sizeUp');
-    if (down) down.disabled = size <= PLAYER_SIZE_MIN;
-    if (up) up.disabled = size >= PLAYER_SIZE_MAX;
+/** Posa el factor de zoom al modal; el CSS el fa servir a l'iframe. */
+function applyZoom(percent) {
+    const modal = byId('gameModal');
+    if (modal) modal.style.setProperty('--game-zoom', String(percent / 100));
+}
+
+/**
+ * El zoom: el lliscant, la xifra del costat i el factor de l'iframe. És
+ * una sola tria per a tots els jocs, així que no mira el joc obert.
+ */
+function paintZoom() {
+    const value = getPlayerZoom();
+
+    const slider = byId('zoomSlider');
+    if (slider) slider.value = String(value);
+
+    const state = byId('zoomState');
+    if (state) state.textContent = `${value}%`;
+
+    applyZoom(value);
 }
 
 /** L'estrella i el text del favorit, segons l'estat del joc obert. */
@@ -179,7 +192,7 @@ function paintFavorite() {
 /** Repinta les files que porten estat del joc obert. */
 function paintRows() {
     paintFavorite();
-    paintSize();
+    paintZoom();
 
     const key = openGameEntry ? gameKeyOf(gameSrc(openGameEntry)) : null;
     if (key === null) return;
@@ -339,6 +352,7 @@ export function bindVolumeGame(src) {
     targetKey = gameKeyOf(src);
     setMenuOpen(false);
     paint(targetKey === null ? 1 : getGameVolume(targetKey));
+    paintZoom();
 }
 
 /** El joc s'ha tancat: sense objectiu, sense entrada i amb el menú plegat. */
@@ -351,20 +365,7 @@ export function clearVolumeGame() {
 
 /* --- Interfície ------------------------------------------------------- */
 
-/** La mida: es desa, s'aplica al modal i es repinten els botons. */
-function stepSize(delta) {
-    const size = getPlayerSize() + delta;
-    if (size < PLAYER_SIZE_MIN || size > PLAYER_SIZE_MAX) return;
-
-    setPlayerSize(size);
-
-    const modal = byId('gameModal');
-    if (modal) modal.dataset.size = String(size);
-
-    paintSize();
-}
-
-/** Enganxa el botó, el lliscant, la mida, les accions i els tancaments. */
+/** Enganxa el botó, els lliscants, les accions i els tancaments. */
 export function initPlayerMenu() {
     // player.js avisa quan un joc s'obre o es tanca; el menú repinta les
     // files que porten estat perquè sempre ensenyin el del joc del davant.
@@ -417,8 +418,34 @@ export function initPlayerMenu() {
         sendValue();
     });
 
-    byId('sizeDown')?.addEventListener('click', () => stepSize(-1));
-    byId('sizeUp')?.addEventListener('click', () => stepSize(1));
+    // El zoom es veu de seguida (s'aplica a l'iframe), però el valor es
+    // desa en un sol fotograma, com el volum: un desat per píxel de
+    // lliscant no aporta res.
+    const zoomSlider = byId('zoomSlider');
+    let zoomFrame = 0;
+    zoomSlider?.addEventListener('input', () => {
+        const value = Number(zoomSlider.value);
+        const state = byId('zoomState');
+        if (state) state.textContent = `${value}%`;
+        applyZoom(value);
+        if (zoomFrame) return;
+
+        zoomFrame = requestAnimationFrame(() => {
+            zoomFrame = 0;
+            setPlayerZoom(zoomSlider.value);
+        });
+    });
+
+    // En deixar anar el lliscant, el valor es desa de seguida: si el
+    // navegador tenia el fotograma pendent o l'usuari tanca el joc tot
+    // seguit, la tria ja és a l'emmagatzematge.
+    zoomSlider?.addEventListener('change', () => {
+        if (zoomFrame) {
+            cancelAnimationFrame(zoomFrame);
+            zoomFrame = 0;
+        }
+        setPlayerZoom(zoomSlider.value);
+    });
 
     // El favorit és el mateix que el de la targeta; la graella del
     // darrere es repinta amb l'esdeveniment perquè la seva estrella no

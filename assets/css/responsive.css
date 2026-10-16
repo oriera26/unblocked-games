@@ -123,9 +123,6 @@
         max-height: none;
         border-radius: 0;
     }
-    /* La tria de mida és una cosa de pantalla gran: aquí el requadre
-       sempre ocupa tot el que pot i cap regla de `[data-size]` hi toca. */
-    #gameModal[data-size] .modal-content { max-width: none; max-height: none; }
     .game-loader-overlay,
     .mobile-gate { border-radius: 0; }
 

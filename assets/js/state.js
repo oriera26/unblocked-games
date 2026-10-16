@@ -254,24 +254,28 @@ export function setGamePerformance(id, value) {
     writeJson(STORAGE_KEYS.gamePerformance, gamePerformance);
 }
 
-/* --- Mida del reproductor ------------------------------------------ */
+/* --- Zoom del reproductor ------------------------------------------ */
 
-/** Els límits de la mida: −1 petita · 0 normal · 1 gran · 2 enorme. */
-export const PLAYER_SIZE_MIN = -1;
-export const PLAYER_SIZE_MAX = 2;
+/** Els límits del zoom (en %): 50 tot petit · 100 de sèrie · 200. */
+export const PLAYER_ZOOM_MIN = 50;
+export const PLAYER_ZOOM_MAX = 200;
 
-/** La mida triada; 0 (la de sempre) si no n'hi ha cap o és espatllada. */
-export function getPlayerSize() {
-    const value = Number(readJson(STORAGE_KEYS.playerSize, 0));
-    if (!Number.isInteger(value)) return 0;
-    return Math.min(PLAYER_SIZE_MAX, Math.max(PLAYER_SIZE_MIN, value));
+/** El zoom va de 5 en 5 perquè la xifra quedi rodona. */
+export const PLAYER_ZOOM_STEP = 5;
+
+/** El zoom triat; 100 (el de sempre) si no n'hi ha cap o és espatllat. */
+export function getPlayerZoom() {
+    const value = Number(readJson(STORAGE_KEYS.playerZoom, 100));
+    if (!Number.isFinite(value)) return 100;
+    return Math.min(PLAYER_ZOOM_MAX, Math.max(PLAYER_ZOOM_MIN, Math.round(value)));
 }
 
-/** Desa la mida triada, arrodonida i dins dels límits. */
-export function setPlayerSize(value) {
-    const size = Math.round(Number(value));
-    if (!Number.isFinite(size)) return;
-    writeJson(STORAGE_KEYS.playerSize, Math.min(PLAYER_SIZE_MAX, Math.max(PLAYER_SIZE_MIN, size)));
+/** Desa el zoom triat, arrodonit al pas i dins dels límits. */
+export function setPlayerZoom(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return;
+    const zoom = Math.round(number / PLAYER_ZOOM_STEP) * PLAYER_ZOOM_STEP;
+    writeJson(STORAGE_KEYS.playerZoom, Math.min(PLAYER_ZOOM_MAX, Math.max(PLAYER_ZOOM_MIN, zoom)));
 }
 
 /* --- Filtres ------------------------------------------------------- */
