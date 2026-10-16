@@ -192,6 +192,7 @@
         min-width: 0;
         width: min(320px, calc(100vw - 24px));
     }
+    .lang-select { width: 104px; }
 
     /* --- Vista 404 ------------------------------------------- */
     .error-container { margin-top: 40px; padding: 44px 20px; }

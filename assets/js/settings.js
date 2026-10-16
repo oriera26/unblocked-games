@@ -4,7 +4,7 @@
  */
 
 import { SERVICE_WORKER_URL, STORAGE_KEYS } from './config.js';
-import { LANGS, currentLang, setLang, t } from './i18n.js';
+import { LANGS, currentLang, onLangChange, setLang, t } from './i18n.js';
 
 /* ================================================================
    Idioma
@@ -13,28 +13,126 @@ import { LANGS, currentLang, setLang, t } from './i18n.js';
 /**
  * Muntxa el desplegable d'idioma de Configuració.
  *
+ * És un desplegable fet a casa i no un <select>: amb ~100 files, la
+ * cara nativa del sistema (blanca al Windows) trencava el vidre i no
+ * es podia estilitzar. El botó ensenya l'idioma actual i la llista
+ * s'obre amb scroll propi; el teclat hi entra amb les fletxes i
+ * Inici/Final, i cada fila és un botó que es tria amb Retorn.
+ *
  * Les opcions es diuen cadascuna en la seva llengua («Deutsch», no
  * «Alemany»): qui busca alemany el reconeixerà així, i qui el parla
  * potser no sap com es diu en català.
  */
 export function initLangSelect() {
-    const select = document.getElementById('langSelect');
-    if (!select) return;
+    const root = document.getElementById('langSelect');
+    const trigger = document.getElementById('langTrigger');
+    const menu = document.getElementById('langMenu');
+    const current = document.getElementById('langCurrent');
+    if (!root || !trigger || !menu || !current) return;
 
-    select.replaceChildren();
+    menu.replaceChildren();
 
     for (const lang of LANGS) {
-        const option = document.createElement('option');
-        option.value = lang.code;
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'lang-option';
+        option.dataset.code = lang.code;
+        option.setAttribute('role', 'option');
         option.textContent = lang.native;
-        select.appendChild(option);
+        option.addEventListener('click', () => {
+            close();
+            trigger.focus();
+            void setLang(lang.code);
+        });
+        menu.appendChild(option);
     }
 
-    select.value = currentLang();
+    const isOpen = () => root.classList.contains('open');
 
-    select.addEventListener('change', () => {
-        void setLang(select.value);
+    /** El botó i la fila marcada segueixen l'idioma actiu. */
+    function syncChoice() {
+        const code = currentLang();
+        const lang = LANGS.find((l) => l.code === code);
+        current.textContent = lang ? lang.native : code;
+
+        for (const option of menu.children) {
+            const on = option.dataset.code === code;
+            option.classList.toggle('active', on);
+            option.setAttribute('aria-selected', String(on));
+        }
+
+        return menu.querySelector('.lang-option.active');
+    }
+
+    function open() {
+        root.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+
+        // Amb ~100 files, la tria actual ha de quedar a la vista en obrir.
+        const active = syncChoice();
+        if (active) {
+            menu.scrollTop = active.offsetTop - menu.clientHeight / 2 + active.offsetHeight / 2;
+        }
+    }
+
+    function close() {
+        root.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    trigger.addEventListener('click', () => {
+        if (isOpen()) close();
+        else open();
     });
+
+    // Les fletxes obren la llista i hi fan entrar el focus per la tria
+    // actual, que és on vol ser qui hi arriba amb el teclat.
+    trigger.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+        event.preventDefault();
+        if (!isOpen()) open();
+
+        const marked = menu.querySelector('.lang-option.active');
+        (marked ?? menu.firstElementChild)?.focus();
+    });
+
+    menu.addEventListener('keydown', (event) => {
+        const options = [...menu.children];
+        const index = options.indexOf(document.activeElement);
+
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            const step = event.key === 'ArrowDown' ? 1 : -1;
+            const next = options[(index + step + options.length) % options.length];
+            next?.focus();
+            next?.scrollIntoView({ block: 'nearest' });
+        } else if (event.key === 'Home' || event.key === 'End') {
+            event.preventDefault();
+            const next = options[event.key === 'Home' ? 0 : options.length - 1];
+            next?.focus();
+            next?.scrollIntoView({ block: 'nearest' });
+        } else if (event.key === 'Escape') {
+            // Que no arribi al menú de configuració: aquí només es plega
+            // la llista d'idiomes.
+            event.stopPropagation();
+            close();
+            trigger.focus();
+        } else if (event.key === 'Tab') {
+            close();
+        }
+    });
+
+    // Clic fora del control: la llista es plega. El de dins (una fila o
+    // el propi botó) no compta com a fora.
+    document.addEventListener('click', (event) => {
+        if (isOpen() && !root.contains(event.target)) close();
+    });
+
+    // L'idioma pot canviar per altres camins (la sincronització, un
+    // enllaç…): el botó i la marca interior s'han de posar al dia igual.
+    onLangChange(syncChoice);
+
+    syncChoice();
 }
 
 /* ================================================================

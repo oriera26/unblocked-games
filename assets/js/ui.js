@@ -75,6 +75,8 @@ export function renderCategories(onSelect) {
 
         wrapper.appendChild(pill);
     }
+
+    watchPills();
 }
 
 /** Marca com a activa la píldora de la categoria filtrada. */
@@ -85,6 +87,7 @@ export function setActiveCategory(categoryId) {
         pill.setAttribute('aria-pressed', String(active));
     }
     moveActivePill();
+    observePills();
 }
 
 /**
@@ -102,6 +105,40 @@ export function moveActivePill() {
 
     pill.style.width = `${active.offsetWidth}px`;
     pill.style.left = `${active.offsetLeft}px`;
+}
+
+/**
+ * Manté el fons de la categoria activa al seu lloc.
+ *
+ * `moveActivePill` llegeix mides reals (offsetWidth/offsetLeft), i hi ha
+ * dos moments en què aquestes mides canvien sense que cap clic ho
+ * provoqui: en canviar d'idioma (les etiquetes fan una altra amplada) i
+ * quan la barra passa d'amagada a visible (en tornar de les vistes
+ * d'estadístiques o social les mides encara eren zero i el fons quedava
+ * invisible). Un ResizeObserver sobre la barra i la píndola activa
+ * cobreix tots dos casos i qualsevol altre canvi de mida.
+ *
+ * El reposicionament va dins d'un rAF per no llegir mides dins del
+ * mateix callback de l'observer, que dispararia l'avís de bucle.
+ */
+let pillObserver = null;
+
+function watchPills() {
+    if (pillObserver || typeof ResizeObserver !== 'function') return;
+    pillObserver = new ResizeObserver(() => requestAnimationFrame(moveActivePill));
+    observePills();
+}
+
+/** La barra i la píndola activa són les que es vigilen. */
+function observePills() {
+    if (!pillObserver) return;
+    pillObserver.disconnect();
+
+    const wrapper = $('pillWrapper');
+    if (wrapper) pillObserver.observe(wrapper);
+
+    const active = document.querySelector('.category-item.active');
+    if (active) pillObserver.observe(active);
 }
 
 /* ================================================================
@@ -505,30 +542,37 @@ const dateOptions = {
     minute: '2-digit'
 };
 
-function formatDuration(totalSeconds) {
-    const seconds = Math.max(0, Math.floor(totalSeconds));
-    const minutes = Math.floor(seconds / 60);
-    const rest = seconds % 60;
-    return t('stats.duration', { m: minutes, s: rest });
-}
-
 /**
- * Els minuts sols, amb la seva unitat en l'idioma triat.
+ * Una durada en dies, hores i minuts.
  *
- * En comptes d'inventar una clau nova (i haver de fer-la arribar als
- * 100 fitxers), es reutilitza la plantilla de durada: tot el que hi ha
- * abans de `{s}` és el nombre amb la seva unitat — «12m» en català,
- * «12 นาที» en tailandès, «12 min» en italià.
+ * La plantilla `stats.durationDHM` («{d}d {h}h {m}m») porta la unitat i
+ * el separador de cada idioma darrere del seu marcador. Els minuts
+ * sempre es veuen; les hores, quan hi ha dies o hores; els dies, quan
+ * n'hi ha: «2d 3h 15m», «45m», «0m». Així la xifra diu el que pesa cada
+ * bloc sense haver de comptar minuts amb la mirada.
  */
-function formatMinutes(totalSeconds) {
-    const minutes = Math.floor(Math.max(0, totalSeconds) / 60);
-    const head = t('stats.duration', {}).split('{s}')[0];
+function formatPlaytime(totalSeconds) {
+    const seconds = Math.max(0, Math.floor(totalSeconds));
+    const values = {
+        d: Math.floor(seconds / 86400),
+        h: Math.floor((seconds % 86400) / 3600),
+        m: Math.floor((seconds % 3600) / 60)
+    };
+    const shown = { d: values.d > 0, h: values.d > 0 || values.h > 0, m: true };
 
-    // Si alguna plantilla no comença pels minuts (no n'hi ha cap, però
-    // el fitxer el pot editar qualsevol), no es queda la casella buida.
-    if (!head.includes('{m}')) return `${minutes}m`;
+    const template = t('stats.durationDHM');
+    // Es parteix pels marcadors: darrere de cada un hi ha la seva unitat
+    // («d », «時間 », « นาที»…) i el separador cap a la següent.
+    const parts = template.split(/(\{[dhm]\})/);
+    if (parts.length !== 7) return `${values.d}d ${values.h}h ${values.m}m`;
 
-    return head.replace('{m}', String(minutes)).trim();
+    let out = parts[0];
+    ['d', 'h', 'm'].forEach((unit, index) => {
+        if (!shown[unit]) return;
+        out += `${values[unit]}${parts[index * 2 + 2]}`;
+    });
+
+    return out.trim();
 }
 
 function formatDate(iso) {
@@ -547,7 +591,7 @@ export function renderStats() {
 
     if (streak) streak.textContent = String(stats.streak);
     if (points) points.textContent = String(stats.points);
-    if (time) time.textContent = formatMinutes(stats.timeSeconds);
+    if (time) time.textContent = formatPlaytime(stats.timeSeconds);
 
     const level = getLevelForPoints(stats.points);
     if (levelEl) levelEl.textContent = level.title;
@@ -589,7 +633,7 @@ export function renderStats() {
 
         const timeCell = document.createElement('td');
         timeCell.className = 'history-count';
-        timeCell.textContent = formatDuration(entry.timePlayed ?? 0);
+        timeCell.textContent = formatPlaytime(entry.timePlayed ?? 0);
 
         const dateCell = document.createElement('td');
         dateCell.className = 'history-date';

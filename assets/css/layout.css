@@ -49,6 +49,8 @@ nav.search-on .nav-center {
 }
 
 .nav-link {
+    position: relative;
+    z-index: 1;
     font-size: 14px;
     font-weight: 600;
     padding: 6px 18px;
@@ -65,10 +67,34 @@ nav.search-on .nav-center {
     border-color: var(--glass-border-soft);
 }
 .nav-link.active {
-    background: var(--accent);
     color: white;
-    border-color: rgba(255, 255, 255, 0.25);
+}
+.nav-link.active:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* El fons blau de la pestanya activa.
+   
+   És un element propi que llisca cap a la pestanya triada amb una corba
+   que sobrepassa una mica el destí i torna (la mateixa família que el
+   fons de les categories); el `left` i el `width` els posa el router
+   llegint les mides reals de la pestanya. */
+.nav-active-bg {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    height: calc(100% - 8px);
+    background: var(--accent);
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow: 0 4px 14px rgba(var(--glow-color-rgb), 0.30);
+    transition: left 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-active-bg { transition: none; }
 }
 
 .logo {

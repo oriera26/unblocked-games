@@ -48,6 +48,10 @@
             </div>
         </div>
         <div class="nav-center">
+            <!-- El fons blau el dibuixa aquest element i el mou el router:
+                 així el canvi de pestanya llisca amb una corba pròpia en
+                 lloc d'aparèixer i desaparèixer de cop. -->
+            <div class="nav-active-bg" id="activeTab" aria-hidden="true"></div>
             <span class="nav-link active" id="link-arcade" data-view="arcade" data-i18n="nav.jocs">Jocs</span>
             <span class="nav-link" id="link-stats" data-view="stats" data-i18n="nav.stats">Estadístiques</span>
             <span class="nav-link" id="link-social" data-view="social" data-i18n="nav.social">Social</span>
@@ -67,8 +71,6 @@
                 <div class="settings-menu" id="settingsMenu" role="menu">
                     <div class="settings-menu-title" data-i18n="settings.title">Configuració</div>
 
-                    <!-- El desplegable d'idioma viu dins del menú de
-                         configuració: és un desplegable dins d'un altre. -->
                     <div class="settings-item settings-item-lang">
                         <div class="settings-item-left">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
@@ -77,7 +79,18 @@
                                 <span class="settings-item-desc" data-i18n="settings.lang.desc">Canvia l'idioma de la web</span>
                             </div>
                         </div>
-                        <select id="langSelect" class="lang-select" aria-label="Tria l'idioma de la interfície" data-i18n-aria="settings.lang.aria"></select>
+                        <!-- El desplegable d'idioma viu dins del menú de
+                             configuració: és un desplegable dins d'un altre.
+                             Fet a casa (res de <select> natiu): botó amb
+                             l'idioma actual i llista pròpia amb scroll, que
+                             amb ~100 files és imprescindible. -->
+                        <div class="lang-select" id="langSelect">
+                            <button class="lang-trigger" id="langTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Tria l'idioma de la interfície" data-i18n-aria="settings.lang.aria">
+                                <span class="lang-current" id="langCurrent">Català</span>
+                                <svg class="lang-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <div class="lang-menu" id="langMenu" role="listbox" aria-label="Idioma" data-i18n-aria="settings.lang.label"></div>
+                        </div>
                     </div>
 
                     <div class="settings-item" id="perfModeItem" role="menuitemcheckbox" aria-checked="false" tabindex="0">
@@ -195,7 +208,7 @@
             </div>
 
             <div class="history-section">
-                <div class="history-title" data-i18n="stats.historyTitle">📊 Historial Detallat de Jocs</div>
+                <div class="history-title" data-i18n="stats.historyTitle">Historial Detallat de Jocs</div>
                 <div class="table-container">
                     <table id="historyTable">
                         <thead><tr>

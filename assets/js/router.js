@@ -30,6 +30,22 @@ function markNav(id) {
     for (const link of document.querySelectorAll('.nav-link')) {
         link.classList.toggle('active', link.dataset.view === id);
     }
+    moveNavPill();
+}
+
+/**
+ * Col·loca el fons blau sota la pestanya activa.
+ *
+ * Depèn de les mides reals dels elements, així que s'ha de cridar amb
+ * maquetat fet; el moviment el fa la transició CSS del fons.
+ */
+function moveNavPill() {
+    const active = document.querySelector('.nav-link.active');
+    const bg = document.getElementById('activeTab');
+    if (!active || !bg) return;
+
+    bg.style.width = `${active.offsetWidth}px`;
+    bg.style.left = `${active.offsetLeft}px`;
 }
 
 function showCategoriesBar(visible) {
@@ -164,6 +180,18 @@ export function startRouter({ onArrive } = {}) {
     window.addEventListener('popstate', () => {
         go(viewFromUrl(), { animate: false, onArrive });
     });
+
+    // El fons lliscant de la pestanya activa necessita mides reals: es
+    // col·loca un cop maquetat i, a partir d'aquí, qualsevol canvi
+    // d'amplada —idioma, zoom, tipografia— el torna a situar. El rAF
+    // evita llegir mides dins del propi callback de l'observer.
+    requestAnimationFrame(moveNavPill);
+    window.addEventListener('resize', moveNavPill);
+
+    const center = document.querySelector('.nav-center');
+    if (center && typeof ResizeObserver === 'function') {
+        new ResizeObserver(() => requestAnimationFrame(moveNavPill)).observe(center);
+    }
 
     return viewFromUrl();
 }
