@@ -348,20 +348,23 @@ export function initProgressReset(buttonId, onDone) {
 export function registerServiceWorker(isDesktop) {
     if (isDesktop || !('serviceWorker' in navigator)) return;
 
-    window.addEventListener(
-        'load',
-        () => {
-            navigator.serviceWorker
-                .register(SERVICE_WORKER_URL)
-                .then((registration) => {
-                    console.info('[ula] service worker registrat a', registration.scope);
-                })
-                .catch((err) => {
-                    // Sense service worker l'aplicació continua fent
-                    // serves, només que no serà offline.
-                    console.warn('[ula] no s\'ha pogut registrar el service worker', err);
-                });
-        },
-        { once: true }
-    );
+    const register = () => {
+        navigator.serviceWorker
+            .register(SERVICE_WORKER_URL)
+            .then((registration) => {
+                console.info('[ula] service worker registrat a', registration.scope);
+            })
+            .catch((err) => {
+                // Sense service worker l'aplicació continua fent
+                // serves, només que no serà offline.
+                console.warn('[ula] no s\'ha pogut registrar el service worker', err);
+            });
+    };
+
+    // Arribats aquí amb la pàgina ja carregada (arrencada ràpida: el
+    // `load` pot haver passat abans que `start()` acabi), cal registrar
+    // de seguida: esperar un `load` que no tornarà deixaria l'app sense
+    // service worker per sempre.
+    if (document.readyState === 'complete') register();
+    else window.addEventListener('load', register, { once: true });
 }
