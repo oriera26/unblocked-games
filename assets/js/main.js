@@ -22,7 +22,8 @@ import {
     setActiveCategory,
     setVisibleGames,
     updateLogo,
-    updateOfflineCard
+    updateOfflineCard,
+    watchLogoLoad
 } from './ui.js';
 import { hydrateDataLucide } from './icons.js';
 import { initAuth } from './auth.js';
@@ -36,7 +37,7 @@ import { checkStreak, filters, resetProgress, toggleFavorite } from './state.js'
 import { initCacheControl, initLangSelect, initProgressReset, initSettings, registerServiceWorker } from './settings.js';
 import { startDetection } from './detection.js';
 import { initI18n, onLangChange, t } from './i18n.js';
-import { initVolume } from './volume.js';
+import { initPlayerMenu } from './volume.js';
 
 /** Dins d'Electron no hi ha pestanya: la detecció i el SW no hi tenen sentit. */
 const isDesktop = Boolean(window.ulaDesktop);
@@ -246,7 +247,7 @@ function bindTheme() {
 function bindModal() {
     byId('closeModal')?.addEventListener('click', close);
     byId('fullscreenModal')?.addEventListener('click', toggleFullscreen);
-    initVolume();
+    initPlayerMenu();
 
     // La icona i l'etiqueta del botó han de seguir el que fa el navegador:
     // Esc surt de pantalla completa sense passar per aquest codi.
@@ -388,6 +389,11 @@ function bindFavorites() {
             applyFilters();
         }
     });
+
+    // El menú del reproductor també pot canviar un favorit; quan ho fa,
+    // la graella s'ha de repintar igual que si s'hagués pitjat
+    // l'estrella de la targeta.
+    document.addEventListener('ula:favorites', applyFilters);
 }
 
 function onCategorySelect(categoryId) {
@@ -430,6 +436,11 @@ async function start() {
     // (l'escolta al document; vegeu el seu capçal).
     document.documentElement.dataset.booted = '1';
     document.dispatchEvent(new CustomEvent('ula:boot-ok'));
+
+    // El forat del logotip (esquelet del HTML) s'allibera tan bon
+    // punt la imatge és sencera: la descàrrega no ha d'esperar que
+    // arribi l'idioma ni la resta d'arrencada.
+    watchLogoLoad();
 
     // L'idioma abans de res: categories i estadístiques es dibuixen
     // amb `t()`, i corregir-les després seria un parpelleig.

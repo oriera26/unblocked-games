@@ -223,6 +223,57 @@ export function setGameVolume(id, value) {
     writeJson(STORAGE_KEYS.gameVolumes, gameVolumes);
 }
 
+/* --- Mode rendiment per joc ---------------------------------------- */
+
+/**
+ * La tria de mode rendiment de cada joc, com un mapa `{ "cl2048.html": true }`.
+ *
+ * Només hi ha entrada quan l'usuari ha triat alguna cosa per aquell joc
+ * des del menú del reproductor; absent vol dir «segueix l'ajust global»,
+ * que és una preferència del dispositiu amb clau pròpia.
+ */
+const storedGamePerformance = readJson(STORAGE_KEYS.gamePerformance, {});
+export const gamePerformance =
+    storedGamePerformance && typeof storedGamePerformance === 'object' && !Array.isArray(storedGamePerformance)
+        ? storedGamePerformance
+        : {};
+
+/**
+ * La tria explícita per a un joc: `true`, `false` o `null` si no n'hi ha
+ * cap i, per tant, mana el global.
+ */
+export function getGamePerformance(id) {
+    const value = gamePerformance[id];
+    return typeof value === 'boolean' ? value : null;
+}
+
+/** Desa la tria d'un joc; `null` la treu (torna al global). */
+export function setGamePerformance(id, value) {
+    if (value === null) delete gamePerformance[id];
+    else gamePerformance[id] = Boolean(value);
+    writeJson(STORAGE_KEYS.gamePerformance, gamePerformance);
+}
+
+/* --- Mida del reproductor ------------------------------------------ */
+
+/** Els límits de la mida: −1 petita · 0 normal · 1 gran · 2 enorme. */
+export const PLAYER_SIZE_MIN = -1;
+export const PLAYER_SIZE_MAX = 2;
+
+/** La mida triada; 0 (la de sempre) si no n'hi ha cap o és espatllada. */
+export function getPlayerSize() {
+    const value = Number(readJson(STORAGE_KEYS.playerSize, 0));
+    if (!Number.isInteger(value)) return 0;
+    return Math.min(PLAYER_SIZE_MAX, Math.max(PLAYER_SIZE_MIN, value));
+}
+
+/** Desa la mida triada, arrodonida i dins dels límits. */
+export function setPlayerSize(value) {
+    const size = Math.round(Number(value));
+    if (!Number.isFinite(size)) return;
+    writeJson(STORAGE_KEYS.playerSize, Math.min(PLAYER_SIZE_MAX, Math.max(PLAYER_SIZE_MIN, size)));
+}
+
 /* --- Filtres ------------------------------------------------------- */
 
 export const filters = {

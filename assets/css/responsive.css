@@ -123,12 +123,15 @@
         max-height: none;
         border-radius: 0;
     }
+    /* La tria de mida és una cosa de pantalla gran: aquí el requadre
+       sempre ocupa tot el que pot i cap regla de `[data-size]` hi toca. */
+    #gameModal[data-size] .modal-content { max-width: none; max-height: none; }
     .game-loader-overlay,
     .mobile-gate { border-radius: 0; }
 
     .close-modal,
     .fullscreen-modal,
-    .volume-modal {
+    .game-menu-btn {
         top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
         right: 12px;
         width: 40px;
@@ -137,13 +140,15 @@
     /* Mateix càlcul que a components.css, amb els nous 40px:
        12 de vora + 40 del botó de tancar + 8 de separació. */
     .fullscreen-modal { right: 60px; }
-    /* El de volum ja no es posiciona sol: ho fa el seu contenidor,
+    /* El del menú ja no es posiciona sol: ho fa el seu contenidor,
        que ara ocupa el lloc que abans tenia el botó. */
-    .volume-wrap {
+    .game-menu-wrap {
         top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
         right: 108px;
     }
-    .volume-modal { top: auto; right: auto; }
+    .game-menu-btn { top: auto; right: auto; }
+    /* El panell ha de cap en una pantalla estreta. */
+    .game-menu-panel { width: min(270px, calc(100vw - 132px)); }
 
     /* --- Barra de categories a l'amplada del mòbil ------------ */
     .category-container {

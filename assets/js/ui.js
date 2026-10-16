@@ -500,10 +500,39 @@ export function filterGames(games) {
    Logo i tema
    ================================================================ */
 
+/**
+ * El forat del logotip fa d'esquelet fins que la imatge és sencera.
+ *
+ * `.logo-loading` ve del HTML perquè l'esquelet ja es vegi a la
+ * primera pintada, abans que cap mòdul corri; aquí el retirem quan la
+ * imatge ha arribat sencera. Si no el traguéssim, el shimmer es
+ * veuria per les vores transparents del PNG per sempre. `start()`
+ * (main.js) la crida aviat — la imatge no ha d'esperar l'idioma — i
+ * `updateLogo` la torna a cridar en canviar de tema, que fa tornar a
+ * baixar la imatge.
+ */
+export function watchLogoLoad() {
+    const logo = $('logoImg');
+    if (!logo) return;
+
+    const clear = () => logo.classList.remove('logo-loading');
+    if (logo.complete && logo.naturalWidth) {
+        clear();
+        return;
+    }
+    logo.classList.add('logo-loading');
+    logo.addEventListener('load', clear, { once: true });
+    logo.addEventListener('error', clear, { once: true });
+}
+
 export function updateLogo() {
     const logo = $('logoImg');
     if (!logo) return;
-    logo.src = document.body.classList.contains('dark-theme') ? LOGO_DARK : LOGO_LIGHT;
+    const want = document.body.classList.contains('dark-theme') ? LOGO_DARK : LOGO_LIGHT;
+    // Sense la guarda, reescriure la mateixa `src` tornaria a començar
+    // la descàrrega del logotip a cada arrencada.
+    if (logo.getAttribute('src') !== want) logo.src = want;
+    watchLogoLoad();
 }
 
 /**

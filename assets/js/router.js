@@ -46,6 +46,9 @@ function moveNavPill() {
 
     bg.style.width = `${active.offsetWidth}px`;
     bg.style.left = `${active.offsetLeft}px`;
+    // Ara que té la mida de debò es pot ensenyar (el CSS el té
+    // amagat perquè, sense col·locar, era un filet blau de 2px).
+    bg.classList.add('is-placed');
 }
 
 function showCategoriesBar(visible) {

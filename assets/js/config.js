@@ -114,6 +114,16 @@ export const STORAGE_KEYS = {
      */
     gameVolumes: 'ulaGameVolumes',
     /**
+     * Tria de mode rendiment feta des del menú del joc, per joc: mapa
+     * `{ "cl2048.html": true }`. Sense entrada, val el global.
+     *
+     * Com el mode rendiment global, és una preferència del dispositiu i
+     * no es sincronitza amb el compte.
+     */
+    gamePerformance: 'ulaGamePerf',
+    /** Mida triada per al requadre del reproductor (−1…2). Del dispositiu. */
+    playerSize: 'ulaPlayerSize',
+    /**
      * Metadades de sincronització d'aquest dispositiu (sense sincronitzar).
      *
      * Per a cada entrada guardada al compte, què hi havia quan es va

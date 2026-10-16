@@ -43,6 +43,22 @@
         return STRINGS[lang] || STRINGS.en;
     }
 
+    // El forat del logotip del nav porta un esquelet (`logo-loading` al
+    // HTML). S'ha de treure tan bon punt la imatge és sencera: si
+    // esperéssim l'arrencada dels mòduls, en una xarxa lenta el PNG
+    // arribaria molt abans i el shimmer es veuria per les vores
+    // transparents del logo. ui.js fa la mateixa comprovació quan corre.
+    (function watchLogo() {
+        var img = document.getElementById('logoImg');
+        if (!img) return;
+        var clear = function () {
+            img.classList.remove('logo-loading');
+        };
+        if (img.complete && img.naturalWidth) return clear();
+        img.addEventListener('load', clear, { once: true });
+        img.addEventListener('error', clear, { once: true });
+    })();
+
     var timer = null;
     var ok = false;
 

@@ -13,9 +13,10 @@
  */
 
 import { FALLBACK_DURATION, LOADER_DURATION, OFFLINE_URL } from './config.js';
-import { recordPlay } from './state.js';
+import { getGamePerformance, getPlayerSize, recordPlay } from './state.js';
 import { bindPlaytimeFrame, startPlaytime, stopPlaytime } from './playtime.js';
-import { bindVolumeGame, clearVolumeGame, syncVolumeGame, watchVolumeGame } from './volume.js';
+import { bindVolumeGame, clearVolumeGame, gameKeyOf, syncVolumeGame, watchVolumeGame } from './volume.js';
+import { perfModeEnabled } from './settings.js';
 import { gameSrc } from './game-path.js';
 import { downloadGame, isOfflineGame, isOfflineReady } from './offline-games.js';
 
@@ -165,6 +166,24 @@ export function launch(game) {
 }
 
 /**
+ * Aplica el mode rendiment i la mida del requadre en obrir un joc.
+ *
+ * El mode rendiment el pot haver triat l'usuari per a aquell joc des del
+ * menú del reproductor; sense tria pròpia, val el que digui l'ajust
+ * global. La mida és una sola tria per a tots els jocs i s'aplica amb
+ * `[data-size]` al modal (mai amb el zoom de la pàgina).
+ */
+function applyPlayerPreferences(game) {
+    const key = gameKeyOf(gameSrc(game));
+    const choice = key === null ? null : getGamePerformance(key);
+
+    document.body.classList.toggle('performance-mode', choice === null ? perfModeEnabled() : choice);
+
+    const modal = document.getElementById('gameModal');
+    if (modal) modal.dataset.size = String(getPlayerSize());
+}
+
+/**
  * Carrega el joc dins de l'iframe i obre el modal.
  *
  * @param {object} game
@@ -176,6 +195,11 @@ function openGame(game) {
 
     currentGame = game;
     sessionStart = Date.now();
+
+    // La tria de mode rendiment d'aquest joc i la mida del requadre; en
+    // tancar es restaura el que hi havia abans (ho fa `close`).
+    applyPlayerPreferences(game);
+    document.dispatchEvent(new CustomEvent('ula:player', { detail: { game, open: true } }));
 
     iframe.src = gameSrc(game);
     modal.classList.add('active');
@@ -329,6 +353,12 @@ export function close() {
     }
     sessionStart = null;
     currentGame = null;
+
+    // El mode rendiment que hi havia aplicat era, potser, el d'aquest
+    // joc: en sortir, torna a manar l'ajust global. I el menú del
+    // reproductor s'assabenta que ja no queda cap joc obert.
+    document.body.classList.toggle('performance-mode', perfModeEnabled());
+    document.dispatchEvent(new CustomEvent('ula:player', { detail: { game: null, open: false } }));
 
     const modal = document.getElementById('gameModal');
     if (modal) modal.classList.remove('active');

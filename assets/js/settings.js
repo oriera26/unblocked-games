@@ -139,7 +139,13 @@ export function initLangSelect() {
    Mode rendiment
    ================================================================ */
 
-function perfModeEnabled() {
+/**
+ * El mode rendiment global està engegat?
+ *
+ * El fa servir també `player.js`: en obrir un joc sense tria pròpia i en
+ * tancar-lo (per restaurar el que hi havia abans de la tria per joc).
+ */
+export function perfModeEnabled() {
     try {
         return localStorage.getItem(STORAGE_KEYS.performanceMode) === '1';
     } catch {

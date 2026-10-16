@@ -170,6 +170,38 @@ body.dark-theme .card.card-loading {
     );
 }
 
+/* --- El forat del logotip mentre la imatge arriba -----------------
+   El logo és un PNG de 52 KB: amb xarxa lenta el forat del nav es
+   veu buit i la imatge es pinta a trossos. Amb `logo-loading` (classe
+   que ve del HTML) el forat és un esquelet; `ui.js` la retira quan la
+   imatge és sencera. Llavors el shimmer s'ha d'apagar del tot: el PNG
+   té vores transparents i, si no, es veuria per sota. */
+
+.logo-img.logo-loading {
+    --skeleton-base: rgba(127, 127, 137, 0.16);
+    --skeleton-highlight: rgba(127, 127, 137, 0.30);
+
+    background-color: var(--skeleton-base);
+    background-image: linear-gradient(
+        100deg,
+        transparent 20%,
+        var(--skeleton-highlight) 50%,
+        transparent 80%
+    );
+    background-size: 250% 100%;
+    background-repeat: no-repeat;
+    animation: skeleton-shimmer 1.6s linear infinite;
+    border-radius: 8px;
+    /* Si la imatge falla, l'«alt» també es pinta: no ha de sortir
+       lletrejat a sobre de l'esquelet. */
+    color: transparent;
+}
+
+body.dark-theme .logo-img.logo-loading {
+    --skeleton-base: rgba(255, 255, 255, 0.09);
+    --skeleton-highlight: rgba(255, 255, 255, 0.20);
+}
+
 @keyframes ula-fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -182,6 +214,7 @@ body.dark-theme .card.card-loading {
     .skeleton-grid-item,
     .skeleton-cat,
     .card.card-loading,
+    .logo-img.logo-loading,
     .card img {
         animation: none;
     }
@@ -191,7 +224,8 @@ body.dark-theme .card.card-loading {
    shimmer es pot quedar aturat, pero el contingut ha de ser llegible. */
 body.performance-mode .skeleton-card::before,
 body.performance-mode .skeleton-cat,
-body.performance-mode .card.card-loading {
+body.performance-mode .card.card-loading,
+body.performance-mode .logo-img.logo-loading {
     animation: none;
     background-image: none;
 }
