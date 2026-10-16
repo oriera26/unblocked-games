@@ -12,7 +12,7 @@
  * text escrit i el hub el focus del cercador.
  */
 
-import { state, onSocialChange, startSocialStore, retrySocialStore, claimGift, notify, openChatWith } from './social-store.js';
+import { state, onSocialChange, startSocialStore, retrySocialStore, claimGift, notify, openChatWith, openLeagueChannel } from './social-store.js';
 import { mountHub, destroyHub, refresh as refreshHub } from './social-hub.js';
 import { mountChat, destroyChat, refresh as refreshChat } from './social-chat.js';
 import { openProfile } from './social-modals.js';
@@ -55,6 +55,13 @@ export function initSocial(node) {
             if (!root) return;
             selectTab('chat');
             openChatWith(event.detail?.uid, event.detail ?? {}).catch(() => {});
+        });
+
+        // Des de la targeta d'una lliga: obre el seu canal de xat.
+        window.addEventListener('ula:league-chat', (event) => {
+            if (!root) return;
+            selectTab('chat');
+            openLeagueChannel(event.detail?.leagueId);
         });
     }
 

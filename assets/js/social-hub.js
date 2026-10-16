@@ -437,6 +437,7 @@ function renderLeague(league) {
             </div>
 
             <div class="soc-league-actions">
+                <button type="button" class="soc-btn" data-act="league-chat" data-league="${esc(league.id)}">${t('social.chat')}</button>
                 ${isOwner ? `<button type="button" class="soc-btn" data-act="league-invite" data-league="${esc(league.id)}">${t('league.invite')}</button>` : ''}
                 <button type="button" class="soc-btn soc-btn-danger-outline" data-act="league-leave" data-league="${esc(league.id)}">${t('league.leave')}</button>
             </div>
@@ -601,6 +602,13 @@ async function onClick(event) {
         const key = `${target.dataset.league}:${uid}`;
         openLeagueMember = openLeagueMember === key ? null : key;
         refreshLeague();
+        return;
+    }
+
+    if (act === 'league-chat') {
+        window.dispatchEvent(new CustomEvent('ula:league-chat', {
+            detail: { leagueId: target.dataset.league }
+        }));
         return;
     }
 

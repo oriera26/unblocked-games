@@ -742,6 +742,7 @@ function watchLeagues(user) {
         list.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 
         state.leagues = list;
+        ensureLeagueChannels(list);
         watchLeagueSeasons(list);
         emit();
     }, (error) => {
@@ -1313,7 +1314,7 @@ export function showChatHome() {
     emit();
 }
 
-/** Obre un canal que ja existeix (el global, per ara). */
+/** Obre un canal que ja existeix (el global o el d'una lliga). */
 export function openChatChannel(channelId) {
     const channel = state.chat.channels.find((c) => c.id === channelId);
     if (!channel) return;
@@ -1321,6 +1322,48 @@ export function openChatChannel(channelId) {
     state.chat.view = 'thread';
     emit();
     watchChannel(channel);
+}
+
+/** L'id del canal de xat d'una lliga (ho ha d'entendre firestore.rules). */
+export function leagueChannelId(leagueId) {
+    return `league__${leagueId}`;
+}
+
+/**
+ * Manté la llista de canals de lliga al dia: un per cada lliga de què
+ * som membres, amb el nom i la icona frescos. Els canals de lligues que
+ * ja no hi són (hem marxat) desapareixen, i si la conversa oberta era
+ * d'una d'aquestes es torna a l'inici del xat.
+ */
+export function ensureLeagueChannels(leagues) {
+    const wanted = new Map((leagues ?? []).map((league) => [leagueChannelId(league.id), league]));
+
+    for (let i = state.chat.channels.length - 1; i >= 0; i--) {
+        const channel = state.chat.channels[i];
+        if (channel.kind !== 'league' || wanted.has(channel.id)) continue;
+        state.chat.channels.splice(i, 1);
+        delete state.chat.messages[channel.id];
+        if (state.chat.active === channel.id) {
+            state.chat.active = 'global';
+            state.chat.view = 'home';
+        }
+    }
+
+    for (const [id, league] of wanted) {
+        let channel = state.chat.channels.find((c) => c.id === id);
+        if (!channel) {
+            channel = { id, kind: 'league', leagueId: league.id, name: '', icon: '' };
+            state.chat.channels.push(channel);
+        }
+        channel.name = league.name ?? '';
+        channel.icon = league.icon ?? '';
+        watchChannel(channel);
+    }
+}
+
+/** Obre el canal de xat d'una lliga de la qual som membres. */
+export function openLeagueChannel(leagueId) {
+    openChatChannel(leagueChannelId(leagueId));
 }
 
 /**

@@ -2,8 +2,8 @@
  * social-chat.js · el xat dins del panell lateral (pestanya Xat).
  *
  * Dues pantalles dins de la mateixa targeta: l'inici, amb la llista de
- * converses (el canal global i un xat per persona), i la conversa
- * oberta, amb la seva capçalera, el registre i el formulari. Com al
+ * converses (el canal global, un per lliga i un xat per persona), i la
+ * conversa oberta, amb la seva capçalera, el registre i el formulari. Com al
  * hub, l'estructura es munta una sola vegada i el refresc només toca el
  * que canvia: així l'input no perd ni el text ni el focus quan arriba
  * un missatge nou.
@@ -64,6 +64,11 @@ export function mountChat(container) {
     root.querySelector('#chatPeople').addEventListener('click', async (event) => {
         const row = event.target.closest('[data-chat]');
         if (!row) return;
+
+        if (row.dataset.chat === 'league') {
+            openChatChannel(row.dataset.id);
+            return;
+        }
 
         if (row.dataset.chat === 'global') {
             openChatChannel('global');
@@ -143,6 +148,17 @@ function refreshHome() {
         </button>
     `];
 
+    // Un canal per cada lliga de què som membres.
+    for (const channel of state.chat.channels) {
+        if (channel.kind !== 'league') continue;
+        rows.push(`
+            <button type="button" class="soc-chat-person" data-chat="league" data-id="${esc(channel.id)}">
+                <span class="soc-avatar soc-avatar-mini"><span class="soc-avatar-glyph">${esc(channel.icon || '🏆')}</span></span>
+                <span class="soc-person-name">${esc(channel.name || t('social.league'))}</span>
+            </button>
+        `);
+    }
+
     for (const person of chatHome()) {
         rows.push(`
             <button type="button" class="soc-chat-person" data-chat="dm"
@@ -170,7 +186,11 @@ function refreshThread() {
     const channel = state.chat.channels.find((c) => c.id === state.chat.active)
         ?? { id: 'global', kind: 'global' };
 
-    const name = channel.kind === 'dm' ? (channel.name || 'Jugador') : t('social.chat');
+    const name = channel.kind === 'dm'
+        ? (channel.name || 'Jugador')
+        : channel.kind === 'league'
+            ? (channel.name || t('social.league'))
+            : t('social.chat');
     const nameEl = root.querySelector('#chatThreadName');
     if (nameEl.textContent !== name) nameEl.textContent = name;
 
@@ -185,7 +205,9 @@ function refreshThread() {
         avatar.dataset.signature = signature;
         avatar.innerHTML = channel.kind === 'dm'
             ? avatarMarkup(channel)
-            : '<span class="soc-avatar-glyph">🌐</span>';
+            : channel.kind === 'league'
+                ? `<span class="soc-avatar-glyph">${esc(channel.icon || '🏆')}</span>`
+                : '<span class="soc-avatar-glyph">🌐</span>';
     }
 
     refreshMessages();

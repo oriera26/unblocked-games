@@ -28,7 +28,8 @@ service cloud.firestore {
     //                                   (es crea un cop i ja no es toca)
     //   feed/{docId}                    activitat pública (darreres 20)
     //   gifts/{docId}                   regals globals (reclamables)
-    //   chat/{channelId}/messages/{msgId} xat per canals
+    //   chat/{channelId}/messages/{msgId} xat per canals (global obert;
+    //                                   de lliga, només per als membres)
     //   chats/{uid1__uid2}              xat 1 a 1: els dos uids, les fitxes
     //                                   i l'últim missatge
     //   chats/{uid1__uid2}/messages/{msgId}
@@ -235,12 +236,26 @@ service cloud.firestore {
     }
 
     // --- Social: Xat per canals ---
+    // El canal global («global») és obert a tothom qui ha iniciat sessió.
+    // Els canals de lliga («league__<id>») són només per als membres: el
+    // nom del canal porta l'id de la lliga i la regla hi consulta la
+    // pertinença. (Els ids de Firestore són alfanumèrics: cap lliga no
+    // pot dur «__» i el prefix no es pot confondre amb res més.)
     match /chat/{channelId}/messages/{messageId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null
+      function isLeagueChannel() {
+        return channelId.split('__')[0] == 'league'
+            && channelId.split('__').size() == 2;
+      }
+      function isForMember() {
+        return !isLeagueChannel()
+            || request.auth.uid in get(/databases/$(database)/documents/leagues/$(channelId.split('__')[1]))
+                  .data.memberUids;
+      }
+      allow read: if request.auth != null && isForMember();
+      allow create: if request.auth != null && isForMember()
           && request.resource.data.fromUid == request.auth.uid
           && request.resource.data.keys().hasOnly(['fromUid', 'fromName', 'fromIcon', 'text', 'at', 'reactions']);
-      allow update: if request.auth != null
+      allow update: if request.auth != null && isForMember()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']);
     }
 
