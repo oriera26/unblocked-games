@@ -7,6 +7,8 @@
    Tallants:
 
      ≤900px    tauleta i portàtil estret
+     641–760px escriptori estret: els enllaços del nav s'estrenyen
+               perquè la píndola no arribi a tocar el botó de cerca
      ≤640px    mòbil: el nav es parteix en dues files, la cerca
                s'obre com a barra damunt del nav, el modal es torna
                a pantalla completa i la barra de categories agafa
@@ -29,6 +31,25 @@
 @media (max-width: 900px) {
     .container { padding: 90px 20px 110px; }
     .error-container { margin-top: 50px; }
+}
+
+/* ============================================================
+   Escriptori estret
+   ============================================================ */
+
+/* Just a sobre del tall del mòbil (641–760px d'ample), la píndola
+   del centre amb les tres pestanyes no cap entre el logotip i els
+   botons: a 657px, amb prou feines, el botó de cerca acabava tapant
+   la darrera lletra de «Social». Els enllaços del nav han d'anar
+   centrats —el marge ha de ser el mateix als dos costats—, així que
+   l'única sortida en aquesta franja és que la píndola hi càpiga
+   sencera: els enllaços es recullen fins a la mida del mòbil petit
+   i els botons de la dreta se separen una mica menys. */
+
+@media (min-width: 641px) and (max-width: 760px) {
+    .nav-right { gap: 8px; }
+    .nav-link { font-size: 12px; padding: 6px 8px; }
+    .nav-center { gap: 4px; }
 }
 
 /* ============================================================
