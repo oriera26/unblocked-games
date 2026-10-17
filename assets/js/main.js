@@ -387,10 +387,15 @@ function bindWheelForwarding() {
  *
  * 1. Es pausa mentre l'usuari navega (scroll): el gest ja tapa el
  *    moviment i s'estalvia la recomposició just quan més cou.
- * 2. Si, amb les portades ja a lloc, el navegador no manté el ritme
- *    (menys de ~44 fps en repòs), s'atura del tot amb `low-fx`: l'orba
- *    queda quieta al mateix lloc, com amb `prefers-reduced-motion`, i
- *    els shimmers queden quiets. La resta d'equips no noten cap canvi.
+ * 2. Als equips de gamma baixa (quatre nuclis o menys, o amb poca
+ *    memòria) no s'espera cap mesura: l'orba queda quieta des de
+ *    l'arrencada. És el cas que ho va motivar —un N150 amb 8 GB—, on
+ *    cada fotograma de l'orba se serveix de tota la CPU que dona la
+ *    màquina.
+ * 3. A la resta, si amb les portades ja a lloc el navegador no manté
+ *    el ritme (menys de ~44 fps en repòs), s'atura del tot amb
+ *    `low-fx`: l'orba queda quieta al mateix lloc, com amb
+ *    `prefers-reduced-motion`, i els shimmers queden quiets.
  */
 function optimitzaOrba() {
     let timer = 0;
@@ -409,6 +414,14 @@ function optimitzaOrba() {
     );
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // `hardwareConcurrency` i `deviceMemory` són pistes de gamma baixa i
+    // no hi són a tots els navegadors: si no existeixen, el `undefined`
+    // no activa res i l'equip passa per la mesura de sempre.
+    if (navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4) {
+        document.body.classList.add('low-fx');
+        return;
+    }
 
     // La mostra s'avorta si la pestanya no és visible: amb
     // `document.hidden` els fotogrames no corren i el comptatge sortiria

@@ -122,9 +122,14 @@ body.is-scrolling #orb-1 { animation-play-state: paused; }
 
 /* `low-fx`: la posa main.js quan l'equip no manté el ritme. L'orba
    s'atura al mateix lloc que amb `prefers-reduced-motion` i els
-   shimmers queden quiets des de skeleton.css. */
+   shimmers queden quiets des de skeleton.css.
+
+   Amb `animation-name` i no l'àlies `animation`: l'àlies reseteja
+   `animation-play-state` i trepitjaria la pausa de `is-scrolling`,
+   que ve abans al full. Amb el nom sol, la pausa del scroll
+   segueix aplicant-se i l'estat es llegeix igualment aturat. */
 body.low-fx #orb-1 {
-    animation: none;
+    animation-name: none;
     transform: translate3d(calc(50vw - 350px), calc(34vh - 350px), 0);
 }
 
