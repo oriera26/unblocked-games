@@ -10,13 +10,20 @@
  */
 
 import {
-    state, onSocialChange, sendChatMessage, myUid,
+    state, sendChatMessage, myUid,
     chatHome, showChatHome, openChatChannel, openChatWith
 } from './social-store.js';
 import { esc, t, timeAgo, avatarMarkup, activityLabel, hydrate } from './social-ui.js';
 
 let root = null;
-let unsubscribeStore = null;
+
+/** Fins on està pintat el registre: canal, quants missatges i quin és l'últim. */
+let messagesSig = null;
+
+/** Oblida el que hi ha pintat (per exemple, després d'un canvi d'idioma). */
+export function invalidate() {
+    messagesSig = null;
+}
 
 export function mountChat(container) {
     root = container;
@@ -82,14 +89,10 @@ export function mountChat(container) {
             status: row.dataset.status
         });
     });
-
-    unsubscribeStore = onSocialChange(() => refresh());
-    refresh();
 }
 
 export function destroyChat() {
-    if (unsubscribeStore) unsubscribeStore();
-    unsubscribeStore = null;
+    messagesSig = null;
     root = null;
 }
 
@@ -220,8 +223,28 @@ function refreshMessages() {
     const channelId = state.chat.active;
     const messages = state.chat.messages[channelId] ?? [];
     const nearBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 80;
-    const switched = log.dataset.channel !== channelId;
-    log.dataset.channel = channelId;
+
+    const keyOf = (message) => message
+        ? `${message.fromUid ?? ''}|${message.at ?? 0}|${String(message.text ?? '').length}`
+        : '';
+    const lastKey = keyOf(messages[messages.length - 1]);
+
+    const sameChannel = messagesSig !== null && messagesSig.channel === channelId;
+    const switched = !sameChannel;
+
+    // Mateix canal i mateix final: no hi ha res de nou (les reaccions no
+    // es pinten), així que el registre es queda tal com era.
+    if (sameChannel && messagesSig.count === messages.length && messagesSig.last === lastKey) {
+        log.dataset.ready = '1';
+        return;
+    }
+
+    // Només han arribat missatges al darrere: s'afegeixen les files noves
+    // i la resta del registre es queda quiet.
+    const appendable = sameChannel
+        && messagesSig.count > 0
+        && messagesSig.count < messages.length
+        && messagesSig.last === keyOf(messages[messagesSig.count - 1]);
 
     if (!messages.length) {
         log.innerHTML = `
@@ -230,21 +253,39 @@ function refreshMessages() {
                 <p>${t('social.no_messages')}</p>
             </div>
         `;
+        messagesSig = { channel: channelId, count: 0, last: '' };
         log.dataset.ready = '1';
         if (switched) log.scrollTop = 0;
         return;
     }
 
-    // El nom dels altres només surt al primer missatge d'una tongada de
-    // la mateixa persona; del meu compte no en surt mai res.
-    let previousAuthor = null;
-    log.innerHTML = messages.map((message) => {
-        const mine = Boolean(message.fromUid) && message.fromUid === myUid();
-        const author = message.fromUid ?? message.fromName ?? '';
-        const withName = !mine && author !== previousAuthor;
-        previousAuthor = author;
-        return messageRow(message, { mine, withName });
-    }).join('');
+    if (appendable) {
+        let previousAuthor = messages[messagesSig.count - 1].fromUid
+            ?? messages[messagesSig.count - 1].fromName ?? '';
+
+        const html = messages.slice(messagesSig.count).map((message) => {
+            const mine = Boolean(message.fromUid) && message.fromUid === myUid();
+            const author = message.fromUid ?? message.fromName ?? '';
+            const withName = !mine && author !== previousAuthor;
+            previousAuthor = author;
+            return messageRow(message, { mine, withName });
+        }).join('');
+
+        log.insertAdjacentHTML('beforeend', html);
+    } else {
+        // El nom dels altres només surt al primer missatge d'una tongada de
+        // la mateixa persona; del meu compte no en surt mai res.
+        let previousAuthor = null;
+        log.innerHTML = messages.map((message) => {
+            const mine = Boolean(message.fromUid) && message.fromUid === myUid();
+            const author = message.fromUid ?? message.fromName ?? '';
+            const withName = !mine && author !== previousAuthor;
+            previousAuthor = author;
+            return messageRow(message, { mine, withName });
+        }).join('');
+    }
+
+    messagesSig = { channel: channelId, count: messages.length, last: lastKey };
     log.dataset.ready = '1';
 
     // Canviar de conversa comença a baix de tot, com un xat de debò.

@@ -31,7 +31,6 @@ import { initCloud } from './cloud.js';
 import { initCloudUi } from './cloud-ui.js';
 import { initOffline, onOfflineChange } from './offline-games.js';
 import { currentView, go, startRouter } from './router.js';
-import { initSocial } from './social.js';
 import { close, initGate, isGameOpen, launch } from './player.js';
 import { checkStreak, filters, resetProgress, toggleFavorite } from './state.js';
 import { initCacheControl, initLangSelect, initProgressReset, initSettings, registerServiceWorker } from './settings.js';
@@ -537,6 +536,19 @@ function onLanguageChange() {
 function onViewArrive(id) {
     if (id !== 'arcade' && isGameOpen()) close();
     if (id === 'stats') renderStats();
+    if (id === 'social') openSocial();
+}
+
+/**
+ * El Social només es carrega quan s'hi arriba: són uns quants mòduls i
+ * unes quantes escoltes de Firestore que qui no hi entra no ha de pagar
+ * —ni a l'arrencada ni de fons—. El primer cop es demana el mòdul; els
+ * vinents ja el tenen a la memòria.
+ */
+let socialLoad = null;
+function openSocial() {
+    if (!socialLoad) socialLoad = import('./social.js');
+    return socialLoad.then((mod) => mod.initSocial());
 }
 
 async function start() {
@@ -599,10 +611,6 @@ async function start() {
     // canvis de sessió i, si algú ja hi és, no es perd el primer avís.
     initCloud();
     initCloudUi();
-
-    // La secció Social viu de dades locals, però el seu text sí que es
-    // tradueix: es munten les peces després de l'idioma i del compte.
-    initSocial();
 
     // Quan el compte envia progrés (els punts, els favorits o els
     // volums), el que es veu ha de canviar també: la graella i les

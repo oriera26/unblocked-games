@@ -2,28 +2,40 @@
  * social.js · l'orquestrador de la secció Social.
  *
  * Munta l'esquelet (capçalera, columna del hub i barra lateral) segons
- * l'estat de la sessió i deixa que cada peça es refresqui tota sola:
+ * l'estat de la sessió i reparteix els refrescs:
  *
- *   - hub i xat s'escolten a si mateixos (subscripció a social-store)
- *   - el perfil de la barra lateral i els panells d'activitat i regals es
- *     refresquen des d'aquí a cada canvi d'estat
+ *   - la botiga avisa de cada canvi i d'aquí en surt un sol refresc per
+ *     fotograma (`scheduleRefresh`): els esclats de canvis es fonen
+ *   - fora de la vista del Social no es pinta res; tot queda pendent
+ *     fins que s'hi torna (main.js hi passa en arribar-hi)
+ *   - de la barra lateral només es repinta la pestanya visible
  *
  * L'esquelet NO es torna a muntar a cada canvi: sinó el xat perdria el
  * text escrit i el hub el focus del cercador.
  */
 
 import { state, onSocialChange, startSocialStore, retrySocialStore, claimGift, notify, openChatWith, openLeagueChannel } from './social-store.js';
-import { mountHub, destroyHub, refresh as refreshHub } from './social-hub.js';
-import { mountChat, destroyChat, refresh as refreshChat } from './social-chat.js';
+import { mountHub, destroyHub, invalidate as invalidateHub, refresh as refreshHub } from './social-hub.js';
+import { mountChat, destroyChat, invalidate as invalidateChat, refresh as refreshChat } from './social-chat.js';
 import { openProfile } from './social-modals.js';
 import { esc, get, t, timeAgo, avatarMarkup, hydrate } from './social-ui.js';
 import { onLangChange } from './i18n.js';
+import { currentView } from './router.js';
 
 let root = null;
 let mounted = false;
 let unsubscribeStore = null;
 let langBound = false;
 let chatBound = false;
+
+/** chat | activity | gifts: només es repinta la pestanya visible. */
+let activeTab = 'chat';
+
+/** Un refresc per fotograma: els esclats de canvis es fonen. */
+let refreshScheduled = false;
+
+/** Darrer estat pintat fora de «ready»: no es repeteix porta ni càrrega. */
+let lastStatus = null;
 
 /** Per no repintar l'avatar del sidebar (i recarregar la foto) sense canvis. */
 let profileSignature = '';
@@ -66,19 +78,46 @@ export function initSocial(node) {
     }
 
     startSocialStore();
+
+    // En entrar-hi (o tornar-hi), pinta l'estat actual: mentre érem fora
+    // no s'hi ha pintat res.
+    handleStatus(state.status);
 }
 
 /* ================================================================
    Estats de la pàgina
    ================================================================ */
 
+/** Som a la vista del Social? Fora d'aquí no s'hi pinta res. */
+function enRuta() {
+    return currentView() === 'social';
+}
+
+/**
+ * Demana un refresc per al proper fotograma. Si n'arriben deu en un
+ * esclat (les escoltes de Firestore solen venir de dues en dues), només
+ * se'n fa un. Amb la pestanya amagada queda pendent fins que es veu.
+ */
+function scheduleRefresh() {
+    if (refreshScheduled) return;
+    refreshScheduled = true;
+    requestAnimationFrame(() => {
+        refreshScheduled = false;
+        refreshDynamic();
+    });
+}
+
 function handleStatus(status) {
+    // Fora de la vista no es pinta res: qui hi arribi trobarà l'estat a
+    // punt perquè `initSocial` torna a cridar això en entrar-hi.
+    if (!enRuta()) return;
+
     if (status === 'ready') {
         if (!mounted) {
             renderShell();
             mounted = true;
         }
-        refreshDynamic();
+        scheduleRefresh();
         return;
     }
 
@@ -89,12 +128,23 @@ function handleStatus(status) {
         mounted = false;
     }
 
+    // Un mateix estat de porta/càrrega no es repinta; l'error sí, que pot
+    // ser un error diferent (per exemple, després de reintentar).
+    if (status === lastStatus && status !== 'error') return;
+    lastStatus = status;
+
     if (status === 'loading') renderLoading();
     else if (status === 'error') renderError();
     else renderGate();
 }
 
 function renderCurrent() {
+    // Canvi d'idioma: el text viu al DOM pintat i les seccions guarden
+    // signatures del contingut. Es buiden perquè es torni a dibuixar tot
+    // amb el nou idioma.
+    invalidateHub();
+    invalidateChat();
+    lastStatus = null;
     handleStatus(state.status);
 }
 
@@ -232,13 +282,15 @@ function renderShell() {
         else notify(get('social.error_action'));
     });
 
+    activeTab = 'chat';
+
     mountHub(root.querySelector('#hubRoot'));
     mountChat(root.querySelector('#sidebarChatTab'));
-
-    refreshDynamic();
 }
 
 function selectTab(name) {
+    activeTab = name;
+
     const tabs = { chat: 'sidebarChatTab', activity: 'sidebarActivityTab', gifts: 'sidebarGiftsTab' };
 
     for (const [id, panelId] of Object.entries(tabs)) {
@@ -249,6 +301,13 @@ function selectTab(name) {
         tab.classList.toggle('active', active);
         tab.setAttribute('aria-selected', active ? 'true' : 'false');
     }
+
+    // El panell que s'acaba de mostrar pot estar pendent de pintar: fora
+    // de la pestanya visible no es refresca ningú.
+    if (name === 'chat') refreshChat();
+    else if (name === 'activity') refreshActivity();
+    else refreshGifts();
+    hydrate(root);
 }
 
 /* ================================================================
@@ -256,13 +315,16 @@ function selectTab(name) {
    ================================================================ */
 
 function refreshDynamic() {
-    if (!root || !mounted || state.status !== 'ready') return;
+    if (!root || !mounted || state.status !== 'ready' || !enRuta()) return;
 
     refreshSidebarProfile();
     refreshHub();
-    refreshChat();
-    refreshActivity();
-    refreshGifts();
+
+    // De la barra lateral, només la pestanya que es veu: les altres
+    // queden pendents i es pinten en canviar-hi.
+    if (activeTab === 'chat') refreshChat();
+    else if (activeTab === 'activity') refreshActivity();
+    else refreshGifts();
 
     hydrate(root);
 }

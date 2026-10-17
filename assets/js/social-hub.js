@@ -10,7 +10,6 @@
 
 import {
     state,
-    onSocialChange,
     acceptFriendRequest,
     rejectFriendRequest,
     sendFriendRequest,
@@ -27,7 +26,14 @@ import { esc, get, t, timeAgo, statusLabel, avatarMarkup, hydrate } from './soci
 import { openProfile, openLeagueCreate, openLeagueInvite, openConfirm } from './social-modals.js';
 
 let root = null;
-let unsubscribeStore = null;
+
+/** El darrer HTML pintat de cada secció: si no canvia, no es toca el DOM. */
+const sigs = {};
+
+/** Oblida el que hi ha pintat (per exemple, després d'un canvi d'idioma). */
+export function invalidate() {
+    for (const key of Object.keys(sigs)) delete sigs[key];
+}
 
 let activeTab = 'friends';     // friends | requests | sent
 let searchTerm = '';           // el que hi ha escrit al cercador
@@ -97,16 +103,12 @@ export function mountHub(container) {
     });
 
     root.addEventListener('click', onClick);
-
-    unsubscribeStore = onSocialChange(() => refresh());
-    refresh();
 }
 
 export function destroyHub() {
     if (searchTimer) clearTimeout(searchTimer);
     searchTimer = null;
-    if (unsubscribeStore) unsubscribeStore();
-    unsubscribeStore = null;
+    invalidate();
     root = null;
 }
 
@@ -171,6 +173,13 @@ export function refresh() {
     hydrate(root);
 }
 
+/** Pinta un tros només si l'HTML ha canviat de debò. */
+function paint(el, html, key) {
+    if (sigs[key] === html) return;
+    sigs[key] = html;
+    el.innerHTML = html;
+}
+
 function refreshHeader() {
     const online = state.friends.filter((friend) => friend.status === 'online').length;
     const badge = root.querySelector('#hubOnlineBadge');
@@ -203,33 +212,33 @@ function refreshSubtabs() {
 
     if (!tabs.some((tab) => tab.id === activeTab)) activeTab = 'friends';
 
-    bar.innerHTML = tabs.map((tab) => `
+    paint(bar, tabs.map((tab) => `
         <button type="button" class="soc-subtab ${tab.id === activeTab ? 'active' : ''}"
                 data-act="tab" data-tab="${tab.id}" role="tab"
                 aria-selected="${tab.id === activeTab}">
             ${tab.label}${tab.id === 'friends' ? '' : ` (${tab.count})`}
         </button>
-    `).join('');
+    `).join(''), 'subtabs');
 }
 
 function refreshFriendsBody() {
     const body = root.querySelector('#hubFriendsBody');
 
     if (searchTerm.length > 0) {
-        body.innerHTML = renderSearchResults();
+        paint(body, renderSearchResults(), 'friendsBody');
         return;
     }
 
     if (activeTab === 'requests') {
-        body.innerHTML = renderRequests();
+        paint(body, renderRequests(), 'friendsBody');
         return;
     }
     if (activeTab === 'sent') {
-        body.innerHTML = renderSent();
+        paint(body, renderSent(), 'friendsBody');
         return;
     }
 
-    body.innerHTML = renderFriends();
+    paint(body, renderFriends(), 'friendsBody');
 }
 
 /* ================================================================
@@ -368,7 +377,7 @@ function refreshSuggestions() {
     const box = root.querySelector('#hubSuggestions');
 
     if (searchTerm.length > 0 || !state.suggestions.length) {
-        box.innerHTML = '';
+        paint(box, '', 'suggestions');
         return;
     }
 
@@ -376,10 +385,10 @@ function refreshSuggestions() {
         <button type="button" class="soc-btn soc-btn-primary" data-act="add" data-uid="${esc(person.uid)}" data-name="${esc(person.name ?? '')}">${t('social.add')}</button>
     `)).join('');
 
-    box.innerHTML = `
+    paint(box, `
         <div class="soc-section-label">${t('social.suggested')}</div>
         <div class="soc-list">${rows}</div>
-    `;
+    `, 'suggestions');
 }
 
 /* ================================================================
@@ -391,16 +400,16 @@ function refreshLeague() {
     const leagues = state.leagues ?? [];
 
     if (!leagues.length) {
-        body.innerHTML = `
+        paint(body, `
             ${emptyState(t('ui.empty_league'), t('ui.no_league_yet'))}
             <div class="soc-league-actions">
                 <button type="button" class="soc-btn soc-btn-primary" data-act="league-create">${t('league.create')}</button>
             </div>
-        `;
+        `, 'league');
         return;
     }
 
-    body.innerHTML = leagues.map((league) => renderLeague(league)).join('');
+    paint(body, leagues.map((league) => renderLeague(league)).join(''), 'league');
 }
 
 function renderLeague(league) {
@@ -511,17 +520,17 @@ function refreshNotifications() {
     const list = state.notifications;
 
     if (!list.length) {
-        body.innerHTML = emptyState('🔔', t('social.noNotifications'));
+        paint(body, emptyState('🔔', t('social.noNotifications')), 'notifs');
         return;
     }
 
-    body.innerHTML = `<div class="soc-list">${list.map((notification) => `
+    paint(body, `<div class="soc-list">${list.map((notification) => `
         <div class="soc-notification ${notification.read ? 'is-read' : ''}" data-act="read-notifs">
             <span class="soc-notification-dot" aria-hidden="true"></span>
             <span class="soc-notification-text">${esc(notification.text)}</span>
             <span class="soc-when">${timeAgo(notification.at)}</span>
         </div>
-    `).join('')}</div>`;
+    `).join('')}</div>`, 'notifs');
 }
 
 /* ================================================================
