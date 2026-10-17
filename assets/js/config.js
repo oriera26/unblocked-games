@@ -93,6 +93,17 @@ export const CHUNK_SIZE = 30;
 /** Retard escalonat entre l'aparició de dues targetes consecutives. */
 export const REVEAL_STAGGER = 15;
 
+/* --- Cua de les portades ------------------------------------------ */
+
+/**
+ * Quantes portades es demanen alhora com a màxim i quant es respira
+ * entre tanda i tanda. És el que manté la CPU i la RAM planes mentre
+ * la graella es va omplint: més val trigar una estona que clavar
+ * l'equip (30 portades de cop, en un equip fluix, es noten).
+ */
+export const COVER_CONCURRENCY = 2;
+export const COVER_GAP_MS = 60;
+
 /** Punts que suma cada partida. */
 export const POINTS_PER_PLAY = 15;
 

@@ -12,6 +12,8 @@ import {
     CATEGORIES,
     CATEGORY_ALL,
     CHUNK_SIZE,
+    COVER_CONCURRENCY,
+    COVER_GAP_MS,
     LOGO_DARK,
     LOGO_LIGHT,
     MAX_DOM_CARDS,
@@ -21,6 +23,7 @@ import { filters, isFavorite, stats } from './state.js';
 import { getLevelForPoints } from './levels.js';
 import { iconMarkup } from './icons.js';
 import { localeOf, t } from './i18n.js';
+import { createQueue, SKIP } from './load-queue.js';
 import { isOfflineGame, stateOf } from './offline-games.js';
 
 export const $ = (id) => document.getElementById(id);
@@ -197,17 +200,23 @@ function safeCoverImage(src) {
     return /\.(webp|jpe?g|png|gif|avif)$/i.test(src) ? src : null;
 }
 
+/** La cua compartida que reparteix les portades de tot el grid. */
+const coverQueue = createQueue({ concurrency: COVER_CONCURRENCY, gap: COVER_GAP_MS });
+
 /**
  * Posa la portada a la caixa de la targeta, si el joc en té.
  *
- * Mentre la imatge arriba la caixa llueix el shimmer de
- * `.card-loading`: així la graella no es va omplint a trossos, cada
- * targeta ja és sencera i la portada hi apareix a sobre.
+ * La imatge no es demana a l'instant: passa per la cua compartida
+ * (`load-queue.js`), que en serveix poques alhora i amb pausa per no
+ * clavar la CPU ni la RAM. Mentrestant, la caixa llueix el shimmer de
+ * `.card-loading`: la graella no s'omple a trossos —cada targeta ja és
+ * sencera— i la portada hi apareix a sobre quan li arriba el torn.
  *
  * Una portada que no existeix o que no pot arribar (sense xarxa) es
  * treu del DOM: quedaria un requadre trencat al mig de la targeta, i
  * el fons és més digne. `retryCovers()` la tornarà a provar quan la
- * connexió torni.
+ * connexió torni, i també passa per la cua: una tanda de reintents no
+ * torna a sacsejar l'equip.
  *
  * @returns {boolean} si el joc té portada per ensenyar
  */
@@ -216,20 +225,30 @@ function appendCover(media, game) {
     if (!cover) return false;
 
     const img = document.createElement('img');
-    img.src = cover;
-    img.loading = 'lazy';
     img.decoding = 'async';
     img.alt = '';
 
-    const done = () => media.classList.remove('card-loading');
-    img.addEventListener('load', done, { once: true });
-    img.addEventListener('error', () => {
-        done();
-        img.remove();
-    }, { once: true });
-
     media.classList.add('card-loading');
     media.prepend(img);
+
+    coverQueue.add(async () => {
+        // La poda o un canvi de filtre poden haver desmuntat la targeta
+        // abans que li toqués el torn: no cal anar a la xarxa per res.
+        if (!img.isConnected) return SKIP;
+
+        img.src = cover;
+        try {
+            await img.decode();
+        } catch {
+            // La portada no ha arribat (sense xarxa, 404...): es treu
+            // del DOM i es reintentarà quan convingui, com abans.
+        }
+        if (!img.isConnected) return SKIP;
+
+        media.classList.remove('card-loading');
+        if (img.naturalWidth === 0) img.remove();
+    });
+
     return true;
 }
 
@@ -334,6 +353,9 @@ export function resetGrid() {
     if (!grid) return;
 
     grid.classList.remove('skeleton-grid');
+    // Igual que a la poda: sense `src`, els bitmaps de les portades que
+    // es desmunten queden lliures perquè el navegador els reculli.
+    for (const img of grid.querySelectorAll('img')) img.removeAttribute('src');
     grid.replaceChildren();
     itemsShown = 0;
 }
@@ -432,7 +454,14 @@ function pruneGrid() {
     if (!grid) return;
 
     const excess = grid.children.length - MAX_DOM_CARDS;
-    for (let i = 0; i < excess; i++) grid.firstElementChild.remove();
+    for (let i = 0; i < excess; i++) {
+        // Abans de desmuntar-la, es deixa la portada: el navegador ja
+        // pot alliberar el seu bitmap (RAM), perquè la targeta no hi
+        // tornarà. Si la graella es refés, es reconstruiria sencera.
+        const card = grid.firstElementChild;
+        card.querySelector('img')?.removeAttribute('src');
+        card.remove();
+    }
 }
 
 export function hasMoreGames() {
