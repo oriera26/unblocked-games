@@ -143,31 +143,39 @@ body.dark-theme .skeleton-cat {
     animation: ula-fade-in 0.35s ease both;
 }
 
-/* Mentre la portada arriba, la caixa de la targeta fa un shimmer
-   (el fons és el del `.card`; aquí només hi va la llum que hi passa).
-   Així la graella no es va omplint a trossos: cada targeta ja és
-   sencera, i la portada hi apareix a sobre. El JS posa i treu
-   `.card-loading` amb els esdeveniments de la imatge. */
+/* Mentre la portada arriba, la caixa de la targeta fa un sweep. Abans
+   era el `background-position` de `skeleton-shimmer`, però això obliga
+   a repintar el degradat a cada fotograma; ara la llum viu en un
+   `::after` que només es desplaça amb `transform` (el compositor no
+   ha de repintar res). El JS posa i treu `.card-loading` amb els
+   esdeveniments de la imatge. */
 
-.card.card-loading {
-    background-image: linear-gradient(
+.card.card-loading::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
         100deg,
         transparent 20%,
         rgba(127, 127, 137, 0.30) 50%,
         transparent 80%
     );
-    background-size: 250% 100%;
-    background-repeat: no-repeat;
-    animation: skeleton-shimmer 1.6s linear infinite;
+    animation: card-sweep 1.6s linear infinite;
+    pointer-events: none;
 }
 
-body.dark-theme .card.card-loading {
-    background-image: linear-gradient(
+body.dark-theme .card.card-loading::after {
+    background: linear-gradient(
         100deg,
         transparent 20%,
         rgba(255, 255, 255, 0.20) 50%,
         transparent 80%
     );
+}
+
+@keyframes card-sweep {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
 }
 
 /* --- El forat del logotip mentre la imatge arriba -----------------
@@ -213,19 +221,29 @@ body.dark-theme .logo-img.logo-loading {
     .skeleton-card::before,
     .skeleton-grid-item,
     .skeleton-cat,
-    .card.card-loading,
+    .card.card-loading::after,
     .logo-img.logo-loading,
     .card img {
         animation: none;
     }
 }
 
-/* El mode rendiment apaga el blur i les transicioes globals; el
-   shimmer es pot quedar aturat, pero el contingut ha de ser llegible. */
+/* El mode rendiment apaga el blur i les transicions globals; el
+   shimmer es pot quedar aturat, però el contingut ha de ser llegible. */
 body.performance-mode .skeleton-card::before,
 body.performance-mode .skeleton-cat,
-body.performance-mode .card.card-loading,
+body.performance-mode .card.card-loading::after,
 body.performance-mode .logo-img.logo-loading {
+    animation: none;
+    background-image: none;
+}
+
+/* `low-fx`: la posa main.js quan l'equip no manté el ritme. Els sweeps
+   queden quiets; el fons base fa de marcador. */
+body.low-fx .skeleton-card::before,
+body.low-fx .skeleton-cat,
+body.low-fx .card.card-loading::after,
+body.low-fx .logo-img.logo-loading {
     animation: none;
     background-image: none;
 }

@@ -115,6 +115,19 @@ body {
     #orb-1 { animation: none; transform: translate3d(calc(50vw - 350px), calc(34vh - 350px), 0); }
 }
 
+/* L'orba es pausa mentre l'usuari navega (la classe la posa main.js):
+   el gest ja tapa el moviment i, a cada fotograma en què l'orba es mou,
+   s'estalvia recompondre els vidres que té a sobre. */
+body.is-scrolling #orb-1 { animation-play-state: paused; }
+
+/* `low-fx`: la posa main.js quan l'equip no manté el ritme. L'orba
+   s'atura al mateix lloc que amb `prefers-reduced-motion` i els
+   shimmers queden quiets des de skeleton.css. */
+body.low-fx #orb-1 {
+    animation: none;
+    transform: translate3d(calc(50vw - 350px), calc(34vh - 350px), 0);
+}
+
 body::after {
     content: "";
     position: fixed;

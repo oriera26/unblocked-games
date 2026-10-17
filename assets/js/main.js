@@ -379,6 +379,101 @@ function bindWheelForwarding() {
     }, { passive: true });
 }
 
+/**
+ * L'orba de fons (`#orb-1`) es mou amb una animació de 60 s i, a cada
+ * fotograma que es mou, obliga el navegador a tornar a compondre tots
+ * els vidres que té a sobre (les targetes, el nav...). Als equips
+ * fluixos això és el que enfonsa els fotogrames. Aquí:
+ *
+ * 1. Es pausa mentre l'usuari navega (scroll): el gest ja tapa el
+ *    moviment i s'estalvia la recomposició just quan més cou.
+ * 2. Si, amb les portades ja a lloc, el navegador no manté el ritme
+ *    (menys de ~44 fps en repòs), s'atura del tot amb `low-fx`: l'orba
+ *    queda quieta al mateix lloc, com amb `prefers-reduced-motion`, i
+ *    els shimmers queden quiets. La resta d'equips no noten cap canvi.
+ */
+function optimitzaOrba() {
+    let timer = 0;
+    document.addEventListener(
+        'scroll',
+        () => {
+            document.body.classList.add('is-scrolling');
+            window.clearTimeout(timer);
+            timer = window.setTimeout(() => {
+                document.body.classList.remove('is-scrolling');
+            }, 180);
+        },
+        // L'esdeveniment de scroll no fa bombolla fins al document: cal
+        // la fase de captura. Passiu perquè aquí només es mira.
+        { capture: true, passive: true }
+    );
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // La mostra s'avorta si la pestanya no és visible: amb
+    // `document.hidden` els fotogrames no corren i el comptatge sortiria
+    // esbiaixat. El llindar és ~44 fps de mitjana: per sota, l'orba
+    // animada val més el rendiment que el moviment.
+    let decidit = false;
+    const mostra = () => {
+        if (decidit) return;
+        decidit = true;
+        // Dues finestres seguides de 1,2 s. Amb una de sola, un sot
+        // puntual (una imatge que acaba d'arribar, una recollida de
+        // brossa...) podria aturar l'orba d'un equip que va bé.
+        let frames = 0;
+        let t0 = 0;
+        let primera = -1;
+        const tick = () => {
+            if (document.hidden) return;
+            if (!t0) t0 = performance.now();
+            frames += 1;
+            if (performance.now() - t0 < 1200) {
+                requestAnimationFrame(tick);
+            } else if (primera < 0) {
+                primera = frames;
+                frames = 0;
+                t0 = 0;
+                requestAnimationFrame(tick);
+            } else if (primera + frames < 105) {
+                document.body.classList.add('low-fx');
+            }
+        };
+        requestAnimationFrame(tick);
+    };
+
+    // No es mesura fins que la graella té targetes i les seves portades
+    // han arribat: mentre la graella treballa els fotogrames baixen per
+    // la xarxa i les imatges, no per l'equip, i la decisió sortiria
+    // esbiaixada (mesurat: un equip capaç baixa fins a 5-40 fps amb les
+    // portades a mig arribar). Amb un sostre, per si alguna cosa no
+    // acaba d'arribar mai.
+    let arrancat = false;
+    const arrenca = () => {
+        if (arrancat) return;
+        arrancat = true;
+        window.setTimeout(mostra, 7000);
+        const espera = () => {
+            if (decidit) return;
+            const grid = document.querySelectorAll('#gameGrid .card-wrapper').length;
+            const carregant = document.querySelectorAll('.card-loading').length;
+            if (grid > 0 && carregant === 0) {
+                window.setTimeout(mostra, 300);
+            } else {
+                window.setTimeout(espera, 400);
+            }
+        };
+        espera();
+    };
+    if (document.readyState === 'complete') {
+        arrenca();
+    } else {
+        window.addEventListener('load', arrenca, { once: true });
+    }
+    // Si `load` no arribés mai (algun recurs que penja), no ens hi quedem.
+    window.setTimeout(arrenca, 8000);
+}
+
 function bindFavorites() {
     bindGrid({
         onLaunch: launch,
@@ -468,6 +563,7 @@ async function start() {
     bindFavorites();
     bindInfiniteScroll();
     bindWheelForwarding();
+    optimitzaOrba();
     initGate();
     bindOfflineNotice();
 

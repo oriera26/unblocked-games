@@ -398,9 +398,11 @@ html[dir="rtl"] .lang-menu {
     position: relative; width: 100%; aspect-ratio: 1;
     background: var(--glass-bg);
     display: flex; align-items: center; justify-content: center;
-    /* Vidre líquid: menys blur perquè la portada es vegi nítida. */
-    backdrop-filter: var(--glass-filter);
-    -webkit-backdrop-filter: var(--glass-filter);
+    /* Sense `backdrop-filter`: la portada (`object-fit: cover`) cobreix
+       la targeta sencera i el blur no es veia, però amb la graella
+       plena obliga a compondre centenars de capes a cada fotograma que
+       l'orba de fons es mou. El vidre el fa el fons translúcid; el
+       gruix de vidre visible (nav, cercador, píndoles) es conserva. */
     overflow: hidden;
     border-radius: 24%;
     border: 1px solid var(--glass-border-soft);
