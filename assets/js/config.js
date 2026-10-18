@@ -57,6 +57,18 @@ export const SYNC_INTERVAL_MS = 10000;
  */
 export const SYNC_IDB_INTERVAL_MS = 40000;
 
+/**
+ * Sostres del que s'agafa d'IndexedDB.
+ *
+ * Les bases dels jocs no només contenen desats: els motors (Unity, per
+ * exemple) hi deixen memòries cau senceres de megabytes. Un valor gros
+ * gairebé mai no és una partida, i llegir-lo i codificar-lo costaria
+ * CPU i memòria per a res. Aquests límits el deixen fora sense deixar
+ * de sincronitzar els desats de debò, que són petits.
+ */
+export const SYNC_IDB_MAX_ROW_BYTES = 1024 * 1024;
+export const SYNC_IDB_MAX_DB_BYTES = 2 * 1024 * 1024;
+
 /* --- Categories -------------------------------------------------- */
 
 /**

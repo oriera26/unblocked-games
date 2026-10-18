@@ -24,13 +24,16 @@
  * cap document passi mai d'un megabyte.
  */
 
-import { STORAGE_KEYS, SYNC_IDB_INTERVAL_MS, SYNC_INTERVAL_MS } from './config.js';
+import {
+    STORAGE_KEYS, SYNC_IDB_INTERVAL_MS, SYNC_IDB_MAX_DB_BYTES, SYNC_IDB_MAX_ROW_BYTES,
+    SYNC_INTERVAL_MS
+} from './config.js';
 import { IS_CONFIGURED } from './firebase-config.js';
 import { ensureSdk, onAuthChange } from './auth.js';
 import { applyCloudState, readCloudState } from './state.js';
 import {
     chunkText, decodeIdbKey, decodeValue, encodeIdbKey, encodeValue,
-    hashOf, isExcludedIdb, isGameSaveKey, mergeProgress, utf8Length
+    hashOf, isExcludedIdb, isGameSaveKey, mergeProgress, roughBytes, utf8Length
 } from './sync-core.js';
 
 /* --- Estat del mòdul ---------------------------------------------- */
@@ -58,6 +61,9 @@ let keysReadable = true;
 
 /** Quan tornar a llegir IndexedDB sencera. */
 let nextIdbAt = 0;
+
+/** Bases que ja s'han avisat que són massa grosses (un avís per sessió). */
+const idbNotes = new Set();
 
 let timer = null;
 let syncing = false;
@@ -150,12 +156,14 @@ export async function syncNow(withIdb) {
 
     try {
         const readIdb = withIdb === true || Date.now() >= nextIdbAt;
-        const local = await buildLocal(readIdb);
+        const { out: local, skipped } = await buildLocal(readIdb);
 
         // Sense el que diu el compte de debò, no es decideix res: una
         // llista buida feta servir com si fos el compte real esborraria
         // tot el progrés del dispositiu.
         if (!remoteReady) return false;
+
+        settleSkipped(skipped, local);
 
         for (const item of plan(local).values()) {
             if (item.action === 'push') await pushOne(item);
@@ -365,11 +373,17 @@ function chunkId(index) {
 /**
  * Una instantània de tot el que s'ha de sincronitzar.
  *
+ * A més del mapa, torna el conjunt `skipped`: ids de registres
+ * d'IndexedDB que existeixen però que aquesta ronda no s'han llegit
+ * (massa grossos). No són desats esborrats i el motor de decisió ho ha
+ * de saber.
+ *
  * @param {boolean} withIdb  si s'ha de tornar a llegir IndexedDB sencera
- * @returns {Promise<Map<string, object>>}
+ * @returns {Promise<{out: Map<string, object>, skipped: Set<string>}>}
  */
 async function buildLocal(withIdb) {
     const out = new Map();
+    const skipped = new Set();
 
     for (const [key, value] of Object.entries(readCloudState())) {
         const text = JSON.stringify(value);
@@ -395,14 +409,14 @@ async function buildLocal(withIdb) {
 
     if (withIdb) {
         nextIdbAt = Date.now() + SYNC_IDB_INTERVAL_MS;
-        const rows = await readAllIdb();
+        const rows = await readAllIdb(skipped);
         for (const [id, row] of rows) {
             row.hash = hashOf(row.value);
             out.set(id, row);
         }
     }
 
-    return out;
+    return { out, skipped };
 }
 
 /**
@@ -412,9 +426,14 @@ async function buildLocal(withIdb) {
  * seria donar el token del compte al propi compte, i a més xocaria amb
  * el SDK.
  *
+ * També hi ha sostres de mida: als desats d'un joc no hi ha d'anar la
+ * seva memòria cau. Tot el que es deixi fora pel sostre es marca a
+ * `skipped`, perquè el que decideix què fer sàpiga que hi és.
+ *
+ * @param {Set<string>} skipped  s'hi afegeixen els ids no llegits
  * @returns {Promise<Map<string, object>>}
  */
-async function readAllIdb() {
+async function readAllIdb(skipped) {
     const out = new Map();
 
     let listed = [];
@@ -436,8 +455,25 @@ async function readAllIdb() {
         }
 
         try {
+            // El pressupost és de tota la base: una base amb molts
+            // registres val el mateix de car, es miri com es miri.
+            let budget = SYNC_IDB_MAX_DB_BYTES;
+            let full = false;
+
             for (const storeName of [...handle.objectStoreNames]) {
-                for (const row of await readStore(handle, storeName)) {
+                if (full) {
+                    // Només les claus (no els valors): prou per saber
+                    // que hi són i no deixar-hi cap tomba a sobre.
+                    for (const key of await readKeys(handle, storeName)) {
+                        skipped.add(idbRecordId(name, storeName, key));
+                    }
+                    continue;
+                }
+
+                const read = await readStore(handle, storeName, budget, name, skipped);
+                budget -= read.bytes;
+
+                for (const row of read.rows) {
                     out.set(
                         idbRecordId(name, storeName, row.key),
                         {
@@ -446,6 +482,16 @@ async function readAllIdb() {
                             value: JSON.stringify(encodeValue(row.value))
                         }
                     );
+                }
+
+                if (read.full) {
+                    full = true;
+                    // Les claus que no s'han arribat a llegir d'aquest
+                    // magatzem, perquè tampoc no es prenguin per tombs.
+                    for (const key of await readKeys(handle, storeName)) {
+                        skipped.add(idbRecordId(name, storeName, key));
+                    }
+                    noteIdb(name);
                 }
             }
         } catch (err) {
@@ -456,6 +502,13 @@ async function readAllIdb() {
     }
 
     return out;
+}
+
+/** Un avís per base, no un a cada ronda de sincronització. */
+function noteIdb(name) {
+    if (idbNotes.has(name)) return;
+    idbNotes.add(name);
+    console.info(`[ula] «${name}» passa del que es pot sincronitzar: se'n deixa la resta`);
 }
 
 function idbRecordId(dbName, storeName, key) {
@@ -483,10 +536,20 @@ function openIdb(name) {
     });
 }
 
-/** Totes les dades d'un dipòsit, amb la clau de cadascuna. */
-function readStore(handle, storeName) {
+/**
+ * Totes les dades d'un dipòsit, amb la clau de cadascuna i amb sostre.
+ *
+ * Un valor que passa del sostre d'un registre es descarta (als jocs,
+ * un valor així és una memòria cau) i la seva clau queda a `skipped`.
+ * Quan el pressupost del dipòsit s'exhaureix es deixa de llegir, però
+ * la resta de claus també es marquen.
+ *
+ * @returns {Promise<{rows: Array, bytes: number, full: boolean}>}
+ */
+function readStore(handle, storeName, budget, dbName, skipped) {
     return new Promise((resolve, reject) => {
-        const out = [];
+        const rows = [];
+        let bytes = 0;
         let request;
 
         try {
@@ -499,10 +562,51 @@ function readStore(handle, storeName) {
         request.onsuccess = () => {
             const cursor = request.result;
             if (!cursor) {
-                resolve(out);
+                resolve({ rows, bytes, full: false });
                 return;
             }
-            out.push({ key: cursor.key, value: cursor.value });
+
+            const size = roughBytes(cursor.value);
+            if (size > SYNC_IDB_MAX_ROW_BYTES) {
+                skipped.add(idbRecordId(dbName, storeName, cursor.key));
+                cursor.continue();
+                return;
+            }
+
+            if (bytes + size > budget) {
+                resolve({ rows, bytes, full: true });
+                return;
+            }
+
+            rows.push({ key: cursor.key, value: cursor.value });
+            bytes += size;
+            cursor.continue();
+        };
+
+        request.onerror = () => reject(request.error);
+    });
+}
+
+/** Totes les claus d'un dipòsit, sense arribar a llegir-ne cap valor. */
+function readKeys(handle, storeName) {
+    return new Promise((resolve, reject) => {
+        const keys = [];
+        let request;
+
+        try {
+            request = handle.transaction(storeName, 'readonly').objectStore(storeName).openKeyCursor();
+        } catch (err) {
+            reject(err);
+            return;
+        }
+
+        request.onsuccess = () => {
+            const cursor = request.result;
+            if (!cursor) {
+                resolve(keys);
+                return;
+            }
+            keys.push(cursor.key);
             cursor.continue();
         };
         request.onerror = () => reject(request.error);
@@ -577,6 +681,33 @@ function plan(local) {
     }
 
     return actions;
+}
+
+/**
+ * Marca com a «ja al dia» el que existeix però no s'ha pogut llegir.
+ *
+ * Sense això, un valor que s'ha deixat fora pel sostre de mida es
+ * veuria com un desat esborrat del dispositiu i s'hi deixaria una
+ * tomba al compte, que l'esborraria a tots els altres dispositius.
+ * Es deixa com estava: ni es puja ni es baixa.
+ *
+ * @param {Set<string>} skipped  ids no llegits d'aquesta ronda
+ * @param {Map<string, object>} local  el que sí que s'ha llegit
+ */
+function settleSkipped(skipped, local) {
+    let touched = false;
+
+    for (const id of skipped) {
+        if (local.has(id)) continue;
+
+        const saida = remote.get(id);
+        if (!saida) continue;
+
+        entries.set(id, { hash: null, updatedAt: saida.updatedAt ?? null, localAt: Date.now() });
+        touched = true;
+    }
+
+    if (touched) saveMeta();
 }
 
 /* ================================================================
@@ -720,6 +851,12 @@ async function writeDoc(id, entry, value, hash, oldParts) {
     try {
         if (head.deleted) {
             await fapi.setDoc(docRef(id, entry.kind), head);
+
+            // Els fragments de la versió anterior no es poden quedar:
+            // el document ja no els esmenta i ningú no els esborraria.
+            for (let index = 0; index < oldParts; index++) {
+                await fapi.deleteDoc(fapi.doc(chunksRef(id, entry.kind), chunkId(index))).catch(() => {});
+            }
         } else {
             const chunks = chunkText(value);
             head.parts = chunks.length;

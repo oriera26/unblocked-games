@@ -38,8 +38,12 @@ export const UNSYNCED_KEYS = [STORAGE_KEYS.lang, STORAGE_KEYS.performanceMode, S
  *
  * Firebase hi desa la sessió del compte i la memòria cau de Firestore:
  * pujar-les seria filtrar tokens i, a més, xocar amb el propi SDK.
+ *
+ * `UnityCache` tampoc: els jocs de Unity hi guarden la memòria cau
+ * dels fitxers de build (desenes de megabytes), no les partides. Els
+ * desats de debò van per una altra base (IDBFS) o per `localStorage`.
  */
-const IDB_EXCLUDED = /^(firebase|firestore)/i;
+const IDB_EXCLUDED = /^(firebase|firestore|unitycache$)/i;
 
 /** Cert per a les claus d'estat que sincronitzem. */
 export function isSyncedStateKey(key) {
@@ -171,9 +175,80 @@ export function decodeValue(enc) {
     }
 }
 
-/** Els bytes UTF-8 d'un text (per tallar pels bytes, no pels caràcters). */
+/**
+ * Els bytes UTF-8 d'un text (per tallar pels bytes, no pels caràcters).
+ *
+ * Es compta a mà i no amb `TextEncoder` perquè `chunkText` ho crida per
+ * cada caràcter: muntar un codificador nou a cada crida costava segons
+ * per cada valor que es puja.
+ */
 export function utf8Length(str) {
-    return new TextEncoder().encode(str).length;
+    let bytes = 0;
+
+    for (let i = 0; i < str.length; i++) {
+        const code = str.charCodeAt(i);
+
+        if (code < 0x80) bytes += 1;
+        else if (code < 0x800) bytes += 2;
+        else if (code >= 0xd800 && code <= 0xdbff) {
+            // Un parell substitut (un emoji, per exemple) fa 4 bytes junts.
+            const next = str.charCodeAt(i + 1);
+            if (next >= 0xdc00 && next <= 0xdfff) {
+                bytes += 4;
+                i++;
+            } else {
+                // Mig parell: `TextEncoder` el substitueix i fa 3 bytes.
+                bytes += 3;
+            }
+        } else bytes += 3;
+    }
+
+    return bytes;
+}
+
+/**
+ * Una mida aproximada d'un valor d'IndexedDB, sense transformar-lo.
+ *
+ * Serveix per descartar valors grossos (memòries cau dels jocs) abans
+ * de codificar-los i fer-los viatjar: encodar un valor de megabytes és
+ * el que costa, i una mida de referència n'hi ha prou per decidir.
+ *
+ * La profunditat va limitada perquè un valor pot tenir estructures
+ * cícliques (IndexedDB ho permet) i això no s'ha de quedar mai penjat.
+ */
+export function roughBytes(value, depth = 0) {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'string') return value.length;
+    if (typeof value !== 'object') return 8;
+
+    if (value instanceof ArrayBuffer) return value.byteLength;
+    if (ArrayBuffer.isView(value)) return value.byteLength;
+    if (typeof Blob !== 'undefined' && value instanceof Blob) return value.size;
+    if (value instanceof Date || value instanceof RegExp) return 24;
+
+    if (depth >= 8) return 64;
+
+    if (Array.isArray(value)) {
+        let total = 0;
+        for (const item of value) total += roughBytes(item, depth + 1);
+        return total;
+    }
+
+    if (value instanceof Map) {
+        let total = 0;
+        for (const [key, item] of value) total += roughBytes(key, depth + 1) + roughBytes(item, depth + 1);
+        return total;
+    }
+
+    if (value instanceof Set) {
+        let total = 0;
+        for (const item of value) total += roughBytes(item, depth + 1);
+        return total;
+    }
+
+    let total = 0;
+    for (const [key, item] of Object.entries(value)) total += key.length + roughBytes(item, depth + 1);
+    return total;
 }
 
 /**
