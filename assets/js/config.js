@@ -85,6 +85,7 @@ export const CATEGORIES = [
     { id: 'esports', label: 'Esports', key: 'cat.esports', icon: 'trophy' },
     { id: 'retro', label: 'Retro', key: 'cat.retro', icon: 'joystick' },
     { id: 'offline', label: 'Offline', key: 'cat.offline', icon: 'download' },
+    { id: 'ula', label: 'Ula', key: 'cat.ula', icon: 'volleyball' },
     { id: 'altres', label: 'Altres', key: 'cat.altres', icon: 'more-horizontal' }
 ];
 
@@ -94,7 +95,7 @@ export const CATEGORY_ALL = 'tots';
 
 /**
  * Virtualització lleugera: quantes targetes es deixen al DOM com a
- * màxim. El grid mostra 1.865 jocs, però en posar-los tots es fan
+ * màxim. El grid mostra 1.866 jocs, però en posar-los tots es fan
  * pagar de dues maneres: memoria i cost de maquetació en cada scroll.
  */
 export const MAX_DOM_CARDS = 150;

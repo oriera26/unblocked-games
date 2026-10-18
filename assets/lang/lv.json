@@ -140,6 +140,8 @@
   "offline.checking": "Pārbauda...",
   "offline.reloading": "Ielādē vēlreiz...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFA iedvesmota futbola spēle, ko vari spēlēt tieši pārlūkā. Vadīt spēlētājus, gūt vārtus un sacentīties aizraujošās spēlēs bez lejupielādēm. Parādi savu prasmi ar bumbu un kļūsti par laukuma meistaru!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

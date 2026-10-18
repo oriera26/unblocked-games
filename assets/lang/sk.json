@@ -140,6 +140,8 @@
   "offline.checking": "Kontrolujem...",
   "offline.reloading": "Obnovujem...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "Futbalová hra inšpirovaná FIFA, ktorú môžeš hrať priamo v prehliadači. Ovládaj hráčov, strieľaj góly a súťaži v napínavých zápasoch bez sťahovania. Ukáž, čo dokážeš s loptou, a staň sa šampiónom ihriska!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

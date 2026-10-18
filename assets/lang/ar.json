@@ -140,6 +140,8 @@
   "offline.checking": "جارٍ التحقق...",
   "offline.reloading": "جارٍ إعادة التحميل...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "لعبة كرة قدم مستوحاة من FIFA يمكنك لعبها مباشرة من المتصفح. تحكم باللاعبين، سجل الأهداف ونافس في مباريات مثيرة دون أي تنزيل. بيّن مهارتك مع الكرة وكن بطل الملعب!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

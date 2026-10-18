@@ -140,6 +140,8 @@
   "offline.checking": "Inachunguza...",
   "offline.reloading": "Inapakuliwa upya...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "Mchezo wa mpira wa miguu unaotokana na FIFA, unachezwa moja kwa moja kwenye kivinjari. Dhibiti wachezaji, fungua mabao na ushindani kwenye mechi za kusisimua bila kupakua chochote. Onyesha ujuzi wako na mpira na kuwa bingwa wa uwanja!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

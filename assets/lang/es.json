@@ -140,6 +140,8 @@
   "offline.checking": "Comprobando...",
   "offline.reloading": "Recargando...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "Un juego de fútbol inspirado en FIFA que puedes jugar directamente desde el navegador. Controla a los jugadores, marca goles y compite en partidos emocionantes sin necesidad de descargar nada. Demuestra tu habilidad con el balón y ¡conviértete en el campeón del campo!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

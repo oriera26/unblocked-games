@@ -30,7 +30,10 @@ import { GAMES_DIR, OFFLINE_GAMES_DIR } from './config.js';
  */
 export function gameSrc(game) {
     const url = typeof game === 'string' ? game : game.url;
-    const offline = typeof game === 'object' && game !== null && game.type === 'offline';
+    const offline =
+        typeof game === 'object' &&
+        game !== null &&
+        (game.type === 'offline' || game.offline === true);
     const dir = offline ? OFFLINE_GAMES_DIR : GAMES_DIR;
     const hasExtension = /\.[a-z0-9]+$/i.test(url);
     return `${dir}${hasExtension ? url : `${url}.html`}`;

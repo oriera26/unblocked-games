@@ -140,6 +140,8 @@
   "offline.checking": "Comprovant...",
   "offline.reloading": "Recarregant...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "Un joc de futbol inspirat en FIFA que pots jugar directament des del navegador. Controla els jugadors, marca gols i competeix en partits emocionants sense necessitat de descarregar res. Demostra la teva habilitat amb la pilota i converteix-te en el campió del camp!",
   "offline.download": "Descarrega",
   "offline.downloading": "Descarregant...",
   "offline.play": "Juga",

@@ -140,6 +140,8 @@
   "offline.checking": "Текшерилүүдө...",
   "offline.reloading": "Кайра жүктөлүүдө...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFAдан шабыт алган футбол оюну браузерде түздөн-түз ойнолот. Оюнчуларды башкарыңыз, гол киргизиңиз жана эч нерсени жүктөбөй кызыктуу матчтарда мелдешке кириңиз. Топ менен чеберчилигиңизди көрсөтүп, аянттын чемпиону болуңуз!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

@@ -138,8 +138,8 @@ body.dark-theme .skeleton-cat {
    Cada portada passa per tres estats, tots amb JS (`ui.js`,
    `appendCover`):
 
-     .card.card-loading   l'esquelet: fons base + la llum de `::after`
-     .card.card-done      el fundido: l'esquelet es fon a `opacity: 0`
+     :is(.card, .hero-card__cover).card-loading   l'esquelet: fons base + la llum de `::after`
+     :is(.card, .hero-card__cover).card-done      el fundido: l'esquelet es fon a `opacity: 0`
                           mentre la imatge fa `ula-fade-in`; `ui.js`
                           treu la classe quan el fundido s'ha acabat
      .card                estat normal, només la imatge
@@ -150,20 +150,20 @@ body.dark-theme .skeleton-cat {
    per arribar-hi. Mentre l'esquelet és a sobre, la imatge queda
    `visibility: hidden`: el bitmap mai es pinta a trossos. */
 
-.card.card-loading,
-.card.card-done {
+:is(.card, .hero-card__cover).card-loading,
+:is(.card, .hero-card__cover).card-done {
     --skeleton-base: rgba(127, 127, 137, 0.16);
     --skeleton-highlight: rgba(127, 127, 137, 0.30);
 }
 
-body.dark-theme .card.card-loading,
-body.dark-theme .card.card-done {
+body.dark-theme :is(.card, .hero-card__cover).card-loading,
+body.dark-theme :is(.card, .hero-card__cover).card-done {
     --skeleton-base: rgba(255, 255, 255, 0.09);
     --skeleton-highlight: rgba(255, 255, 255, 0.20);
 }
 
-.card.card-loading::before,
-.card.card-done::before {
+:is(.card, .hero-card__cover).card-loading::before,
+:is(.card, .hero-card__cover).card-done::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -173,8 +173,8 @@ body.dark-theme .card.card-done {
 
 /* La llum viu en un `::after` que només es desplaça amb `transform`:
    el compositor no ha de repintar el degradat a cada fotograma. */
-.card.card-loading::after,
-.card.card-done::after {
+:is(.card, .hero-card__cover).card-loading::after,
+:is(.card, .hero-card__cover).card-done::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -187,11 +187,11 @@ body.dark-theme .card.card-done {
     pointer-events: none;
 }
 
-.card.card-loading::after {
+:is(.card, .hero-card__cover).card-loading::after {
     animation: card-sweep 1.6s linear infinite;
 }
 
-.card.card-loading img {
+:is(.card, .hero-card__cover).card-loading img {
     visibility: hidden;
 }
 
@@ -199,13 +199,13 @@ body.dark-theme .card.card-done {
    parat i es fon (transició declarada, sense `animation`) mentre la
    imatge ja descodificada hi apareix a sobre. */
 
-.card.card-done::before,
-.card.card-done::after {
+:is(.card, .hero-card__cover).card-done::before,
+:is(.card, .hero-card__cover).card-done::after {
     opacity: 0;
     transition: opacity 0.4s ease;
 }
 
-.card.card-done img {
+:is(.card, .hero-card__cover).card-done img {
     animation: ula-fade-in 0.4s ease both;
 }
 
@@ -257,9 +257,10 @@ body.dark-theme .logo-img.logo-loading {
     .skeleton-card::before,
     .skeleton-grid-item,
     .skeleton-cat,
-    .card.card-loading::after,
+    :is(.card, .hero-card__cover).card-loading::after,
     .logo-img.logo-loading,
-    .card img {
+    .card img,
+    .hero-card__cover img {
         animation: none;
     }
 }
@@ -270,8 +271,8 @@ body.dark-theme .logo-img.logo-loading {
    quiet, sense cap animació. */
 body.performance-mode .skeleton-card::before,
 body.performance-mode .skeleton-cat,
-body.performance-mode .card.card-loading::after,
-body.performance-mode .card.card-done::after,
+body.performance-mode :is(.card, .hero-card__cover).card-loading::after,
+body.performance-mode :is(.card, .hero-card__cover).card-done::after,
 body.performance-mode .logo-img.logo-loading {
     animation: none;
     background-image: none;

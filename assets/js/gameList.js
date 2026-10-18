@@ -6,16 +6,20 @@
  *   url    nom del fitxer dins d'assets/games/, sense el prefix
  *   image  portada a assets/images/, o "" si el joc encara no en té
  *   type   categoria; ha de coincidir amb un id de config.js
+ *   offline  (opcional) cert per als jocs que es baixen abans de jugar-hi:
+ *            viuen a assets/offline/ i la targeta en porta l'estat
+ *   hero   (opcional) cert per als jocs de la casa: es presenten en una
+ *          card a part, amb portada a l'esquerra i text i botó a la dreta
  *
- * 1865 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
+ * 1866 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
  * només exporta la llista.
  *
  * El camp image l'omple tools/fetch-covers.mjs. Els jocs que no tenen
- * portada mostren la icona de mando que dibuixa ui.js, que és el que es
- * veu ara mateix a 1865 dels 1865 jocs.
+ * portada mostren la icona de mando que dibuixa ui.js.
  */
 
 export const GAMES = [
+   { name: "ulaFootball", url: "ulafootball.html", image: "assets/images/ulafootball.webp", type: "ula", offline: true, hero: true },
    { name: "Crossbar Challenge", url: "crossbarchallenge.html", image: "assets/images/crossbarchallenge.webp", type: "esports" },
    { name: "Penalty Kicks", url: "penaltykicks.html", image: "assets/images/penaltykicks.jpg", type: "esports" },
    { name: "Tony Hawk's Existential Nightmare", url: "tonyhawks.html", image: "assets/images/tonyhawks.jpg", type: "esports" },

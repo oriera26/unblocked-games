@@ -140,6 +140,8 @@
   "offline.checking": "Kontrol ediliyor...",
   "offline.reloading": "Yeniden yükleniyor...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFA'dan esinlenen bir futbol oyunu, tarayıcıda doğrudan oynanır. Oyuncuları yönetin, gol atın ve bir şey indirmeden heyecan verici maçlarda yarışın. Topla becerinizi gösterin ve sahanın şampiyonu olun!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

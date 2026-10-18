@@ -140,6 +140,8 @@
   "offline.checking": "กำลังตรวจสอบ...",
   "offline.reloading": "กำลังโหลดใหม่...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "เกมฟุตบอลที่ได้แรงบันดาลใจจาก FIFA เล่นได้เลยในเบราว์เซอร์ ควบคุมผู้เล่น ทำประตู และแข่งในแมตช์สุดมันโดยไม่ต้องดาวน์โหลดอะไรเลย โชว์ฝีเท้ากับลูกฟุตบอลและกลายเป็นแชมป์ของสนาม!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

@@ -492,6 +492,113 @@ html[dir="rtl"] .lang-menu {
     text-overflow: ellipsis; white-space: nowrap;
 }
 
+/* --- LA CARD DE LA CASA (gameList.js amb `hero: true`) ------------
+   Presentació del joc propi: portada a l'esquerra, i a la dreta el
+   nom, una explicació i el botó de jugar. Ocupa tota l'amplada de la
+   graella però l'alçada d'una targeta normal. No és una `.card`
+   reenganyada: la peça és nova de caps i panses. */
+
+.hero-card {
+    grid-column: 1 / -1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 14px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border-soft);
+    border-radius: clamp(14px, 2vw, 22px);
+    cursor: pointer;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+    transform: translateY(10px);
+
+    /* Mateix tracte que les targetes: fora de la vista no es renderitza
+       i l'estimació fa servir la mida recordada amb 190 px de reserva. */
+    content-visibility: auto;
+    contain-intrinsic-size: 140px auto 190px;
+    contain: layout style;
+}
+.hero-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hero-card__cover {
+    position: relative;      /* l'esquelet viu en els seus pseudo-elements */
+    flex: 0 0 clamp(140px, 26%, 300px);
+    aspect-ratio: 16 / 10;
+    border-radius: clamp(10px, 1.4vw, 16px);
+    overflow: hidden;
+    background: var(--glass-border-soft);
+}
+.hero-card__cover img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+}
+
+.hero-card__body {
+    flex: 1 1 auto;
+    min-width: 0;            /* el nom i el text poden retallar, no desbordar */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 6px;
+}
+
+.hero-card__title {
+    margin: 0;
+    font-size: clamp(16px, 2vw, 20px);
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.hero-card__desc {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    opacity: 0.8;
+    color: var(--text-main);
+}
+
+.hero-card__btn {
+    margin-top: 8px;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease;
+}
+.hero-card__btn:hover { filter: brightness(1.1); }
+.hero-card__btn:active { transform: translateY(1px); }
+.hero-card__btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.hero-card__percent { font-size: 14px; font-weight: 700; letter-spacing: 0.2px; }
+
+/* Mòbil: la portada damunt (al seu format natiu 3:1, sense retall) i
+   el text sota. La card fa poc més d'una pantalla de targeta. */
+@media (max-width: 640px) {
+    .hero-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .hero-card__cover {
+        flex-basis: auto;
+        width: 100%;
+        aspect-ratio: 3 / 1;
+    }
+    .hero-card__btn { align-self: stretch; justify-content: center; }
+}
+
 /* --- ESTADÍSTIQUES --- */
 /* Capçalera i resta de peces que abans eren `style=` inline a index.html:
    tal com estaven, cap media query els hi podia tocar.

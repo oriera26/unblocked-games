@@ -140,6 +140,8 @@
   "offline.checking": "확인 중...",
   "offline.reloading": "다시 불러오는 중...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFA에서 영감을 받은 축구 게임으로, 브라우저에서 바로 플레이할 수 있어요. 선수들을 조작하고, 골을 넣고, 아무것도 다운로드하지 않고도 스릴 넘치는 경기에서 겨뤄 보세요. 공을 다루는 실력을 보여주고 그라운드의 챔피언이 되세요!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

@@ -302,6 +302,83 @@ function buildCard(game) {
 }
 
 /**
+ * La card de presentació dels jocs de la casa (`hero: true`).
+ *
+ * No és una targeta de la graella retocada: és una peça nova, amb la
+ * portada a l'esquerra i el nom, una explicació i el botó de jugar a la
+ * dreta. Ocupa tota l'amplada però l'alçada d'una targeta normal.
+ *
+ * El botó no té comportament propi: la card sencera és clicable (el
+ * delegat del grid decideix entre obrir i baixar) i el botó només
+ * ensenya l'estat de la baixada, com el badge de les targetes.
+ */
+function buildHeroCard(game) {
+    const card = document.createElement('article');
+    card.className = 'hero-card';
+    card.dataset.url = game.url;
+
+    // Mateixa cua i mateix esquelet que qualsevol portada: el que canvia
+    // és la caixa, no com arriba la imatge.
+    const cover = document.createElement('div');
+    cover.className = 'hero-card__cover';
+    appendCover(cover, game);
+
+    const title = document.createElement('h3');
+    title.className = 'hero-card__title';
+    title.textContent = game.name;
+
+    const desc = document.createElement('p');
+    desc.className = 'hero-card__desc';
+    desc.textContent = t('ula.desc');
+
+    const play = document.createElement('button');
+    play.type = 'button';
+    play.className = 'hero-card__btn';
+    paintHeroButton(play, stateOf(game));
+
+    const body = document.createElement('div');
+    body.className = 'hero-card__body';
+    body.append(title, desc, play);
+
+    card.append(cover, body);
+    return card;
+}
+
+/**
+ * L'estat de la baixada al botó de la card de la casa: el mateix
+ * contracte que `paintOfflineBadge`, però amb text llegible al botó.
+ */
+function paintHeroButton(button, info) {
+    button.dataset.offlineState = info.state;
+
+    if (info.state === 'downloading') {
+        button.innerHTML = `<span class="hero-card__percent">${info.percent || 0}%</span>`;
+        button.title = t('offline.downloading');
+        button.setAttribute('aria-label', t('offline.downloading'));
+        return;
+    }
+
+    if (info.state === 'ready') {
+        button.innerHTML =
+            `${iconMarkup('play', { size: 16, fill: 'currentColor' })}<span>${t('offline.play')}</span>`;
+        button.title = t('offline.play');
+        button.setAttribute('aria-label', t('offline.play'));
+        return;
+    }
+
+    if (info.state === 'failed') {
+        button.innerHTML = `${iconMarkup('rotate-cw', { size: 16 })}<span>${t('offline.failed')}</span>`;
+        button.title = t('offline.failed');
+        button.setAttribute('aria-label', t('offline.failed'));
+        return;
+    }
+
+    button.innerHTML = `${iconMarkup('download', { size: 16 })}<span>${t('offline.download')}</span>`;
+    button.title = t('offline.download');
+    button.setAttribute('aria-label', t('offline.download'));
+}
+
+/**
  * El botó de descàrrega/estat d'un joc offline.
  *
  * No rep clics (la targeta sencera ja decideix entre baixar i obrir):
@@ -354,10 +431,16 @@ export function updateOfflineCard(url, info) {
     const grid = $('gameGrid');
     if (!grid) return;
 
-    for (const wrapper of grid.querySelectorAll('.card-wrapper')) {
-        if (wrapper.dataset.url !== url) continue;
-        const badge = wrapper.querySelector('.offline-btn');
-        if (badge) paintOfflineBadge(badge, info);
+    for (const card of grid.querySelectorAll('.card-wrapper, .hero-card')) {
+        if (card.dataset.url !== url) continue;
+
+        if (card.classList.contains('hero-card')) {
+            const button = card.querySelector('.hero-card__btn');
+            if (button) paintHeroButton(button, info);
+        } else {
+            const badge = card.querySelector('.offline-btn');
+            if (badge) paintOfflineBadge(badge, info);
+        }
         return;
     }
 }
@@ -394,6 +477,15 @@ export function retryCovers() {
         const game = visibleGames.find((g) => g.url === wrapper.dataset.url);
         if (game) appendCover(media, game);
     }
+
+    // La card de la casa: la seva portada també es torna a provar.
+    for (const hero of grid.querySelectorAll('.hero-card')) {
+        const cover = hero.querySelector('.hero-card__cover');
+        if (!cover || cover.querySelector('img')) continue;
+
+        const game = visibleGames.find((g) => g.url === hero.dataset.url);
+        if (game) appendCover(cover, game);
+    }
 }
 
 /**
@@ -411,7 +503,7 @@ export function bindGrid({ onLaunch, onFavorite }) {
     if (!grid) return;
 
     grid.addEventListener('click', (event) => {
-        const card = event.target.closest('.card-wrapper');
+        const card = event.target.closest('.card-wrapper, .hero-card');
         if (!card || !grid.contains(card)) return;
 
         if (event.target.closest('[data-action="favorite"]')) {
@@ -446,14 +538,16 @@ export function loadMore() {
     if (batch.length === 0) return;
 
     const fragment = document.createDocumentFragment();
-    for (const game of batch) fragment.appendChild(buildCard(game));
+    for (const game of batch) {
+        fragment.appendChild(game.hero ? buildHeroCard(game) : buildCard(game));
+    }
     grid.appendChild(fragment);
 
     itemsShown += batch.length;
     grid.classList.remove('skeleton-grid');
 
     requestAnimationFrame(() => {
-        const fresh = grid.querySelectorAll('.card-wrapper:not(.visible)');
+        const fresh = grid.querySelectorAll('.card-wrapper:not(.visible), .hero-card:not(.visible)');
         for (let i = 0; i < fresh.length; i++) {
             fresh[i].style.transitionDelay = `${i * REVEAL_STAGGER}ms`;
             fresh[i].classList.add('visible');

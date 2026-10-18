@@ -140,6 +140,8 @@
   "offline.checking": "Ellenőrzés...",
   "offline.reloading": "Újratöltés...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "Egy FIFA-stílusú labdarúgó-játék, amit közvetlenül a böngészőben játszhatsz. Irányítsd a játékosokat, rúgj gólokat és versenyezz izgalmas meccseken letöltés nélkül. Mutasd meg, mit tudsz a labdával, és válj a pálya bajnokává!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

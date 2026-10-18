@@ -140,6 +140,8 @@
   "offline.checking": "Egiaztatzen...",
   "offline.reloading": "Birkargatzen...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFAk inspiratutako futbol-jokoa, nabigatzailean bertan jokatu dezakezu. Jokalariak kontrolatu, golak sartu eta deskarga beharrik gabe lehiatu partidu ikaragarrietan. Erakutsi pilotarekin duzun trebezia eta zelaiko txapeldun bihurtu!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

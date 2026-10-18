@@ -140,6 +140,8 @@
   "offline.checking": "Tarkistetaan...",
   "offline.reloading": "Ladataan uudelleen...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFA:sta inspiroitunut jalkapallopeli, jonka voit pelata suoraan selaimessa. Ohjaa pelaajiasi, tee maaleja ja kilpaa jännittävissä otteluissa ilman latauksia. Näytä taitosi pallon kanssa ja nouse kentän mestariksi!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

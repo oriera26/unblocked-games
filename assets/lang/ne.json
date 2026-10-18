@@ -140,6 +140,8 @@
   "offline.checking": "जाँच गर्दै...",
   "offline.reloading": "पुनः लोड हुँदै...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFA बाट प्रेरित फुटबल खेल, जसलाई तपाईं ब्राउजरमा खेल्न सक्नुहुन्छ। खेलाडीहरूलाई नियन्त्रण गरेर गोल गर्नुहोस् अनि केही पनि डाउनलोड नगरी रोचक खेलहरूमा प्रतिस्पर्धा गर्नुहोस्। बलसँग आफ्नो सीप देखाउनुहोस् र मैदानको चैम्पियन बन्नुहोस्!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

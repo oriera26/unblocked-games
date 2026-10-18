@@ -1,9 +1,10 @@
 /**
  * offline-games.js · l'estat i la baixada dels jocs offline.
  *
- * Els jocs `type: "offline"` viuen a `assets/offline/` i són grossos
- * (entre 20 i 56 MB): no es poden carregar dins l'iframe sense més ni
- * més, perquè només entrar al catàleg no pot costar 50 MB de dades.
+ * Els jocs offline (`type: "offline"` o el flag `offline: true`) viuen a
+ * `assets/offline/` i són grossos (entre 20 i 56 MB): no es poden
+ * carregar dins l'iframe sense més ni més, perquè només entrar al
+ * catàleg no pot costar 50 MB de dades.
  *
  * El flux és:
  *
@@ -62,9 +63,16 @@ export function canGateOffline() {
     return swController();
 }
 
-/** És una entrada de joc offline? */
+/**
+ * És una entrada de joc offline?
+ *
+ * N'hi ha de dos tipus: els que tenen `type: "offline"` (la categoria
+ * dels grossos de sempre) i els jocs propis amb el flag `offline: true`,
+ * que es filtren per la seva pròpia categoria però comparteixen el
+ * mateix flux de baixada i obertura.
+ */
 export function isOfflineGame(game) {
-    return !!game && game.type === 'offline';
+    return !!game && (game.type === 'offline' || game.offline === true);
 }
 
 function srcOf(game) {

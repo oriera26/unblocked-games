@@ -140,6 +140,8 @@
   "offline.checking": "確認中...",
   "offline.reloading": "再読み込み中...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFAからインスピレーションを受けた、ブラウザで直接遊べるサッカーゲーム。選手を動かし、ゴールを決め、何もダウンロードせずに刺激的な試合で勝負しよう。ボールを操る技術を披露して、フィールドのチャンピオンになろう!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

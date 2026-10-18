@@ -140,6 +140,8 @@
   "offline.checking": "მოწმდება...",
   "offline.reloading": "თავიდან იტვირთება...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFA-სგან შთაგონებული ფეხბურთის თამაში, რომელსაც ბრაუზერშივე თამაშობთ. მართეთ მოთამაშეები, გაიტანეთ გოლები და იასპარეზეთ მხიარულ მატჩებში ჩამოტვირთვის გარეშე. აჩვენეთ თქვენი ოსტატობა ბურთთან და მოედნის ჩემპიონად იქცეთ!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",

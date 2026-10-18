@@ -140,6 +140,8 @@
   "offline.checking": "Тексерілуде...",
   "offline.reloading": "Қайта жүктелуде...",
   "cat.offline": "Offline",
+  "cat.ula": "Ula",
+  "ula.desc": "FIFA-дан шабыт алған футбол ойынын браузерде тікелей ойнауға болады. Ойнаушыларды басқарыңыз, гол соғыңыз және еш нәрсені жүктеп алмай қызықты матчтарда жарысыңыз. Допты басқару шеберлігіңізді көрсетіңіз және алаңның чемпионы болыңыз!",
   "offline.download": "Download",
   "offline.downloading": "Downloading...",
   "offline.play": "Play",
