@@ -185,8 +185,14 @@ const GAME_SECURITY_HEADERS = {
    A la web això ho fa el service worker; aquí, que no n'hi ha (ni a
    l'app d'Escripteri ni al servidor local), es posa al vol quan se
    serveix cada joc. El pedaç ha d'anar abans dels scripts del joc, i la
-   seva URL, absoluta, perquè un joc amb `<base href>` no la desviï. */
+   seva URL, absoluta, perquè un joc amb `<base href>` no la desviï.
+
+   Els jocs de `assets/offline/` també són jocs i necessiten les
+   capçaleres de joc (sense elles hi ha `frame-ancestors 'none'` i el
+   navegador es nega a pintar-los dins de l'aplicació), però no porten
+   pedaç: com que són fitxers grossos, es transmeten tal qual. */
 const GAMES_ROOT = join(ROOT, 'assets', 'games') + sep;
+const OFFLINE_GAMES_ROOT = join(ROOT, 'assets', 'offline') + sep;
 const VOLUME_TAG_ID = '__ulaVolumeTag';
 
 function injectVolumeTag(html, tag) {
@@ -308,15 +314,28 @@ export function createStaticServer() {
 
         // Els jocs porten el pedaç de volum; la resta de fitxers van tal
         // com són i es poden transmetre en streaming.
-        if (file.startsWith(GAMES_ROOT) && type === MIME['.html']) {
-            const host = request.headers.host || `127.0.0.1:${DEFAULT_PORT}`;
-            const src = new URL('/assets/js/game-volume.js', `http://${host}`).href;
-            const tag = `<script src="${src}" id="${VOLUME_TAG_ID}"></scr` + 'ipt>';
-            const body = Buffer.from(injectVolumeTag(readFileSync(file, 'utf8'), tag), 'utf8');
+        const isHtmlGame = type === MIME['.html'] && file.startsWith(GAMES_ROOT);
+        const isOfflineGame = type === MIME['.html'] && file.startsWith(OFFLINE_GAMES_ROOT);
+
+        if (isHtmlGame || isOfflineGame) {
+            // Els offline no es llegeixen sencers per pedaçar-los: es
+            // transmeten tal qual.
+            const body = isHtmlGame
+                ? Buffer.from(
+                      injectVolumeTag(
+                          readFileSync(file, 'utf8'),
+                          `<script src="${new URL(
+                              '/assets/js/game-volume.js',
+                              `http://${request.headers.host || `127.0.0.1:${DEFAULT_PORT}`}`
+                          ).href}" id="${VOLUME_TAG_ID}"></scr` + 'ipt>'
+                      ),
+                      'utf8'
+                  )
+                : null;
 
             response.writeHead(200, {
                 'Content-Type': type,
-                'Content-Length': body.length,
+                'Content-Length': body ? body.length : size,
                 'Cache-Control': 'no-cache',
                 ...GAME_SECURITY_HEADERS
             });
@@ -326,7 +345,11 @@ export function createStaticServer() {
                 return;
             }
 
-            response.end(body);
+            if (body) {
+                response.end(body);
+            } else {
+                createReadStream(file).pipe(response);
+            }
             return;
         }
 
