@@ -8,6 +8,7 @@
  */
 
 import { DEFAULT_GAME_VOLUME, DEFAULT_STATS, POINTS_PER_PLAY, STORAGE_KEYS } from './config.js';
+import { NEW_GAME_SECONDS, NEW_GAME_XP, XP_PER_MINUTE } from './league-score.js';
 
 /**
  * Llegeix un valor JSON de localStorage.
@@ -148,10 +149,19 @@ export function recordPlay(name) {
 }
 
 /**
- * Suma temps de joc actiu al total i a l'historial del joc.
+ * Suma temps de joc actiu al total, a l'historial del joc i a l'XP.
  *
  * La crida `playtime.js` a cada estona, amb els segons acumulats des de
  * l'última vegada: no repeteix cap interval.
+ *
+ * A més del temps, els minuts jugats de debò donen XP al perfil amb les
+ * mateixes regles base que la lliga (vegeu `league-score.js`): 1 punt
+ * per minut sencer jugat i el bonus «joc nou» (+40) quan un joc arriba
+ * als 5 minuts acumulats. La lliga, a sobre, hi aplica els
+ * multiplicadors de ratxa i de minuts del dia; el perfil es queda la
+ * base, perquè és progrés de tota la vida i no ha de crear una carrera
+ * paral·lela a la de temporada. Sense això, jugar mitja hora no mou ni
+ * un punt del perfil i l'objectiu d'XP no surt d'enlloc real.
  *
  * @param {string} name  nom del joc, tal com apareix a gameList
  * @param {number} seconds  segons actius acumulats
@@ -160,10 +170,20 @@ export function recordPlaytime(name, seconds) {
     const duration = Math.max(0, Math.floor(seconds));
     if (!name || duration <= 0) return;
 
+    // ⏱️ 1 XP per cada minut sencer que encara no havia comptat.
+    const minutesBefore = Math.floor(stats.timeSeconds / 60);
     stats.timeSeconds += duration;
+    stats.points += (Math.floor(stats.timeSeconds / 60) - minutesBefore) * XP_PER_MINUTE;
 
     const entry = stats.gameHistory[name] ?? { count: 0, timePlayed: 0, lastPlayed: '' };
+
+    // 🆕 +40 la primera vegada que aquest joc arriba als 5 minuts.
+    const timeBefore = entry.timePlayed;
     entry.timePlayed += duration;
+    if (timeBefore < NEW_GAME_SECONDS && entry.timePlayed >= NEW_GAME_SECONDS) {
+        stats.points += NEW_GAME_XP;
+    }
+
     entry.lastPlayed = new Date().toISOString();
     stats.gameHistory[name] = entry;
 

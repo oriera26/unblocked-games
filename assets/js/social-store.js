@@ -129,10 +129,12 @@ export function startSocialStore() {
 
     onAuthChange(handleUser);
 
-    // Els minuts jugats de debò alimenten les lligues (si n'hi ha). El
-    // flush de playtime és el pols natural: cada trenta segons de joc.
+    // Els minuts jugats de debò alimenten les lligues (si n'hi ha) i
+    // també pugen els punts nous al perfil. El flush de `playtime` és
+    // el pols natural: cada trenta segons de joc.
     onPlaytimeFlush((play) => {
         recordLeaguePlay(play).catch(() => { /* el temps del joc va a part */ });
+        pushProfilePoints();
     });
 }
 
@@ -1134,6 +1136,46 @@ export async function recordLeaguePlay({ game, seconds, sessionSeconds }) {
     }
 
     if (changed) emit();
+}
+
+/**
+ * Puja els punts nous del perfil al núvol.
+ *
+ * Els punts (l'XP del perfil: amb el canvi a `state.js`, ara també els
+ * donen els minuts jugats de debò) només s'empenyien a l'iniciar
+ * sessió, així que el perfil quedava vell durant tota la partida. Aquí
+ * es fa amb el pols del flush de `playtime`, i només si el progrés
+ * local va per davant del que ja hi ha: si va per darrere (un altre
+ * dispositiu amb un progrés més nou), no s'esborra mai a la baixa.
+ */
+async function pushProfilePoints() {
+    const user = currentUser();
+    if (!user) return;
+
+    const local = Math.max(0, Math.floor(stats.points ?? 0));
+    if (!(local > (state.me?.points ?? 0))) return;
+
+    const connection = fs();
+    if (!connection) return;
+    const { api, db } = connection;
+
+    try {
+        await api.setDoc(
+            api.doc(db, 'profiles', user.uid),
+            {
+                points: local,
+                lvl: getLevelForPoints(local).lvl,
+                streak: Math.max(0, Number(stats.streak) || 0),
+                at: Date.now()
+            },
+            { merge: true }
+        );
+        // Marca optimista: fins que el snapshot ens torni el document
+        // amb el valor nou, aquest és el darrer que sabem pujat.
+        if (state.me) state.me.points = local;
+    } catch {
+        // Sense xarxa o sense permís: al proper flush hi tornem a ser.
+    }
 }
 
 /* ================================================================
