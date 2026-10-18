@@ -208,9 +208,11 @@ const coverQueue = createQueue({ concurrency: COVER_CONCURRENCY, gap: COVER_GAP_
  *
  * La imatge no es demana a l'instant: passa per la cua compartida
  * (`load-queue.js`), que en serveix poques alhora i amb pausa per no
- * clavar la CPU ni la RAM. Mentrestant, la caixa llueix el shimmer de
- * `.card-loading`: la graella no s'omple a trossos —cada targeta ja és
- * sencera— i la portada hi apareix a sobre quan li arriba el torn.
+ * clavar la CPU ni la RAM. Mentrestant, la caixa és un esquelet
+ * (`.card-loading`, `skeleton.css`): la graella no s'omple a trossos
+ * —cada targeta ja és sencera— i, quan el bitmap arriba sencer, la
+ * portada fa un fundido per sobre de l'esquelet (`card-done`) i la
+ * caixa queda llesta.
  *
  * Una portada que no existeix o que no pot arribar (sense xarxa) es
  * treu del DOM: quedaria un requadre trencat al mig de la targeta, i
@@ -228,6 +230,9 @@ function appendCover(media, game) {
     img.decoding = 'async';
     img.alt = '';
 
+    // Un reintent pot trobar la targeta encara dins del fundido: la
+    // classe de sortida es neta abans de tornar a l'esquelet.
+    media.classList.remove('card-done');
     media.classList.add('card-loading');
     media.prepend(img);
 
@@ -245,8 +250,18 @@ function appendCover(media, game) {
         }
         if (!img.isConnected) return SKIP;
 
+        if (img.naturalWidth === 0) {
+            img.remove();
+            media.classList.remove('card-loading');
+            return;
+        }
+
+        // La imatge ja es pot pintar sencera: l'esquelet es fon
+        // (`card-done`) mentre la portada apareix a sobre. Quan el
+        // fundido s'ha acabat, la classe de sortida marxa.
+        media.classList.add('card-done');
         media.classList.remove('card-loading');
-        if (img.naturalWidth === 0) img.remove();
+        window.setTimeout(() => media.classList.remove('card-done'), 600);
     });
 
     return true;
