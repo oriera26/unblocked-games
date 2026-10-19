@@ -110,7 +110,7 @@
   "stats.th.last": "နောက်ဆုံး ဝင်ရောက်မှု",
   "stats.empty": "သင် ဂိမ်း တစ်ခုမှ မကစားရသေးပါ။ သင့် ခရီးစဉ်ကို စတင်လိုက်ပါ!",
   "stats.never": "တစ်ခါမှ",
-  "stats.durationDHM": "{d}ရက် {h}နာရီ {m}မိနစ်",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "ရလဒ် မရှိပါ",
   "view.empty.reset": "ရှာဖွေမှု ရှင်းလင်းပါ",
   "cat.tots": "အားလုံး",

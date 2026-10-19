@@ -110,7 +110,7 @@
   "stats.th.last": "Caberera sesión",
   "stats.empty": "Inda nun has xugáu a nengún xuegu. ¡Entama la to aventura!",
   "stats.never": "Enxamás",
-  "stats.durationDHM": "{d}d {h}h {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Sin resultaos",
   "view.empty.reset": "Llimpiar la busca",
   "cat.tots": "Toos",

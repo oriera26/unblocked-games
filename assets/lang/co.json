@@ -110,7 +110,7 @@
   "stats.th.last": "Ultima sessione",
   "stats.empty": "Ùn hai micca ancora ghjucatu nisciunu gioco. Incumincia a to avventura!",
   "stats.never": "Mai",
-  "stats.durationDHM": "{d}g {h}h {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Nisunu risultatu",
   "view.empty.reset": "Svuotà a ricerca",
   "cat.tots": "Tutti",

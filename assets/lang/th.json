@@ -110,7 +110,7 @@
   "stats.th.last": "ครั้งล่าสุด",
   "stats.empty": "คุณยังไม่ได้เล่นเกมใดเลย เริ่มการผจญภัยของคุณ!",
   "stats.never": "ไม่เคย",
-  "stats.durationDHM": "{d}วัน {h}ชม. {m}นาที",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "ไม่มีผลลัพธ์",
   "view.empty.reset": "ล้างการค้นหา",
   "cat.tots": "ทั้งหมด",

@@ -110,7 +110,7 @@
   "stats.th.last": "Сессияи охирин",
   "stats.empty": "Шумо то ҳол ягон бозӣ накардаед. Саёҳататонро оғоз кунед!",
   "stats.never": "Ҳеҷ гоҳ",
-  "stats.durationDHM": "{d}р {h}соат {m}дақ",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Натиҷаҳо нест",
   "view.empty.reset": "Тоза кардани ҷустуҷӯ",
   "cat.tots": "Ҳама",

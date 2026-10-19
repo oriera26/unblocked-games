@@ -110,7 +110,7 @@
   "stats.th.last": "Son oturum",
   "stats.empty": "Henüz hiç oyun oynamadın. Macerana başla!",
   "stats.never": "Asla",
-  "stats.durationDHM": "{d}g {h}s {m}dk",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Sonuç yok",
   "view.empty.reset": "Aramayı temizle",
   "cat.tots": "Tümü",

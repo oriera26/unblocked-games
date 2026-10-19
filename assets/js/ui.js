@@ -710,31 +710,41 @@ const dateOptions = {
 };
 
 /**
- * Una durada en dies, hores i minuts.
+ * Una durada que s'adapta al tamany del número.
  *
- * La plantilla `stats.durationDHM` («{d}d {h}h {m}m») porta la unitat i
- * el separador de cada idioma darrere del seu marcador. Els minuts
- * sempre es veuen; les hores, quan hi ha dies o hores; els dies, quan
- * n'hi ha: «2d 3h 15m», «45m», «0m». Així la xifra diu el que pesa cada
- * bloc sense haver de comptar minuts amb la mirada.
+ * La plantilla `stats.duration` («{d}d {h}h {m}m {s}s») porta la unitat
+ * i el separador de cada idioma darrere del seu marcador, però no cal
+ * mostrar-ho sempre tot: cada bloc surt quan aporta informació. Per
+ * sota de l'hora, la unitat petita és viva — segons per a les xifres
+ * petites («12m 30s», «45s») — i a partir d'allà el format s'allarga
+ * cap a «2h 35m» i «2d 3h 15m». Un comptador «0d 0h 5m» no diu res que
+ * el número no digui més bé.
  */
 function formatPlaytime(totalSeconds) {
     const seconds = Math.max(0, Math.floor(totalSeconds));
     const values = {
         d: Math.floor(seconds / 86400),
         h: Math.floor((seconds % 86400) / 3600),
-        m: Math.floor((seconds % 3600) / 60)
+        m: Math.floor((seconds % 3600) / 60),
+        s: seconds % 60
     };
-    const shown = { d: values.d > 0, h: values.d > 0 || values.h > 0, m: true };
+    // Segons només quan no hi hauria cap unitat major; els minuts es
+    // callen quan la xifra és de pocs segons («45s» en lloc de «0m 45s»).
+    const shown = {
+        d: values.d > 0,
+        h: values.d > 0 || values.h > 0,
+        m: !(values.d === 0 && values.h === 0 && values.m === 0),
+        s: values.d === 0 && values.h === 0
+    };
 
-    const template = t('stats.durationDHM');
+    const template = t('stats.duration');
     // Es parteix pels marcadors: darrere de cada un hi ha la seva unitat
     // («d », «時間 », « นาที»…) i el separador cap a la següent.
-    const parts = template.split(/(\{[dhm]\})/);
-    if (parts.length !== 7) return `${values.d}d ${values.h}h ${values.m}m`;
+    const parts = template.split(/(\{[dhms]\})/);
+    if (parts.length !== 9) return `${values.m}m ${values.s}s`;
 
     let out = parts[0];
-    ['d', 'h', 'm'].forEach((unit, index) => {
+    ['d', 'h', 'm', 's'].forEach((unit, index) => {
         if (!shown[unit]) return;
         out += `${values[unit]}${parts[index * 2 + 2]}`;
     });

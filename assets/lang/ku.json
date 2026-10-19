@@ -110,7 +110,7 @@
   "stats.th.last": "Rastiyê dawî",
   "stats.empty": "Heta niha tu lîstikekî nexwistiye. Rêva xwe dest pê bike!",
   "stats.never": "Tu car",
-  "stats.durationDHM": "{d}r {h}s {m}h",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Encam tune",
   "view.empty.reset": "Lêgerînê paqij bike",
   "cat.tots": "Hemû",

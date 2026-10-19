@@ -110,7 +110,7 @@
   "stats.th.last": "Son sessiya",
   "stats.empty": "Siz hələ heç bir oyun oynamamısınız. Səyahətinizə başlayın!",
   "stats.never": "Heç vaxt",
-  "stats.durationDHM": "{d}g {h}s {m}dəq",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Nəticə yoxdur",
   "view.empty.reset": "Axtarışı təmizlə",
   "cat.tots": "Hamısı",

@@ -110,7 +110,7 @@
   "stats.th.last": "Siste økt",
   "stats.empty": "Du har ikke spilt et spill ennå. Start eventyret ditt!",
   "stats.never": "Aldri",
-  "stats.durationDHM": "{d}d {h}t {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Ingen resultater",
   "view.empty.reset": "Tøm søket",
   "cat.tots": "Alle",

@@ -110,7 +110,7 @@
   "stats.th.last": "Ar wech diwezhañ",
   "stats.empty": "N'eo ket bet c'hoariet c'hoari ebet. Amzer da gregiñ gant ho avantur!",
   "stats.never": "Biken",
-  "stats.durationDHM": "{d}d {h}e {m}m",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Netra kavet",
   "view.empty.reset": "Lemel ar klask",
   "cat.tots": "Pep tra",

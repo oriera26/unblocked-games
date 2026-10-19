@@ -110,7 +110,7 @@
   "stats.th.last": "છેલ્લો સેશન",
   "stats.empty": "તમે હજી કોઈ રમત રમી નથી. તમારી સફર શરૂ કરો!",
   "stats.never": "ક્યારેય નહીં",
-  "stats.durationDHM": "{d}દિ {h}ક {m}મિ",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "કોઈ પરિણામ નથી",
   "view.empty.reset": "શોધ સાફ કરો",
   "cat.tots": "બધા",

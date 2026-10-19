@@ -110,7 +110,7 @@
   "stats.th.last": "Viimeisin istunto",
   "stats.empty": "Et ole vielä pelannut yhtään peliä. Aloita seikkailusi!",
   "stats.never": "Ei koskaan",
-  "stats.durationDHM": "{d}pv {h}t {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Ei tuloksia",
   "view.empty.reset": "Tyhjennä haku",
   "cat.tots": "Kaikki",

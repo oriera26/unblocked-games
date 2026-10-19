@@ -110,7 +110,7 @@
   "stats.th.last": "ბოლო სესია",
   "stats.empty": "შენ ჯერ არცერთი თამაში არ გითამაშია. დაიწყე შენი თავგადასავალი!",
   "stats.never": "არასოდეს",
-  "stats.durationDHM": "{d}დღ {h}სთ {m}წთ",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "შედეგები არ არის",
   "view.empty.reset": "ძებნის გასუფთავება",
   "cat.tots": "ყველა",

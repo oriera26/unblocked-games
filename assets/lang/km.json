@@ -110,7 +110,7 @@
   "stats.th.last": "វគ្គចុងក្រោយ",
   "stats.empty": "អ្នកនៅមិនទាន់បានលេងហ្គេមណាមួយនៅឡើយទេ។ ចាប់ផ្តើមការផ្សងព្រេងរបស់អ្នក!",
   "stats.never": "មិនដែល",
-  "stats.durationDHM": "{d}ថ្ងៃ {h}ម៉ោង {m}នាទី",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "មិនមានលទ្ធផល",
   "view.empty.reset": "សម្អាតការស្វែងរក",
   "cat.tots": "ទាំងអស់",

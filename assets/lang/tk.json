@@ -110,7 +110,7 @@
   "stats.th.last": "Soňky sessiýa",
   "stats.empty": "Siz ähiz hiç bir oýun oýnamadyňyz. Gezegişigi başlatyň!",
   "stats.never": "Hiç vakt",
-  "stats.durationDHM": "{d}g {h}sag {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Natijalar ýok",
   "view.empty.reset": "Gözlegi arassaclamak",
   "cat.tots": "Hemmesi",

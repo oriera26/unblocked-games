@@ -110,7 +110,7 @@
   "stats.th.last": "Վերջին նստաշրջան",
   "stats.empty": "Դու դեռ ոչ մի խաղ չես խաղացել։ Սկսիր քո արկածը։",
   "stats.never": "Երբեք",
-  "stats.durationDHM": "{d}օր {h}ժ {m}ր",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Արդյունքներ չկան",
   "view.empty.reset": "Մաքրել որոնումը",
   "cat.tots": "Բոլորը",

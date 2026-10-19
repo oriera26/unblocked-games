@@ -110,7 +110,7 @@
   "stats.th.last": "Kulan-kii Ugu Dambeeyay",
   "stats.empty": "Weli ma ciyaarin ciyaar. Bilow safar-kaaga!",
   "stats.never": "Weli",
-  "stats.durationDHM": "{d}ml {h}saac {m}daq",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Natiijo lama helin",
   "view.empty.reset": "Nadiifi raadinta",
   "cat.tots": "Dhammaan",

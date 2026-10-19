@@ -110,7 +110,7 @@
   "stats.th.last": "Sesi pungkasan",
   "stats.empty": "Kowe durung dolanan game apa-apa. Wiwiti petualanganmu!",
   "stats.never": "Tau",
-  "stats.durationDHM": "{d}d {h}j {m}m",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Ora ana asil",
   "view.empty.reset": "Bersihké telusuran",
   "cat.tots": "Kabeh",

@@ -110,7 +110,7 @@
   "stats.th.last": "Fifindrana Farany",
   "stats.empty": "Tsy mbola nandrahina lalao. Hanombo ny diazanareo!",
   "stats.never": "Tsy misy",
-  "stats.durationDHM": "{d}an {h}ora {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Tsy misy valiny",
   "view.empty.reset": "Mamela ny fikarohana",
   "cat.tots": "Rehetra",

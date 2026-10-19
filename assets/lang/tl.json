@@ -110,7 +110,7 @@
   "stats.th.last": "Huling sesyon",
   "stats.empty": "Wala ka pang nilarong laro. Simulan ang iyong pakikipagsapalaran!",
   "stats.never": "Kailanman",
-  "stats.durationDHM": "{d}a {h}o {m}m",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Walang resulta",
   "view.empty.reset": "I-clear ang paghahanap",
   "cat.tots": "Lahat",

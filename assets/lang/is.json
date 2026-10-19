@@ -110,7 +110,7 @@
   "stats.th.last": "Síðasta lota",
   "stats.empty": "Þú hefur ekki spilað neinn leik ennþá. Byrjaðu ævintýrið!",
   "stats.never": "Aldrei",
-  "stats.durationDHM": "{d}d {h}klst {m}mín",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Engar niðurstöður",
   "view.empty.reset": "Hreinsa leit",
   "cat.tots": "Allir",

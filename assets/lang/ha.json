@@ -110,7 +110,7 @@
   "stats.th.last": "Wasa na ƙarshe",
   "stats.empty": "Ba ka wasa wasa ba. Fara tafiyarka!",
   "stats.never": "Babu",
-  "stats.durationDHM": "{d}r {h}a {m}m",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Babu sakamako",
   "view.empty.reset": "Share bincike",
   "cat.tots": "Duka",

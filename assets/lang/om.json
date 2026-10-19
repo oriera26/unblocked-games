@@ -110,7 +110,7 @@
   "stats.th.last": "Yeroo Dhumaa",
   "stats.empty": "Walumatti malee gari hin ciyaarre. Yaala kee itti fufi!",
   "stats.never": "Walumatti malee",
-  "stats.durationDHM": "{d}g {h}sa {m}dq",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Soba hin jiru",
   "view.empty.reset": "Baarbaadde haqi",
   "cat.tots": "Hunda",

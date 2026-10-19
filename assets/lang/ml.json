@@ -110,7 +110,7 @@
   "stats.th.last": "അവസാന സെഷൻ",
   "stats.empty": "നിങ്ങൾ ഇതുവരെ ഒരു ഗെയിം കളിച്ചിട്ടില്ല. നിങ്ങളുടെ യാത്ര ആരംഭിക്കൂ!",
   "stats.never": "ഒരിക്കലും അല്ല",
-  "stats.durationDHM": "{d}ദി {h}മ {m}മി",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "ഫലങ്ങൾ ഇല്ല",
   "view.empty.reset": "തിരയൽ മായ്ക്കുക",
   "cat.tots": "എല്ലാം",

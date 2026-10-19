@@ -110,7 +110,7 @@
   "stats.th.last": "وروستی ناسته",
   "stats.empty": "تاسو تر اوسه څه لوبه نه لړلې ده. خپله سفر پیل کړئ!",
   "stats.never": "هیڅکله",
-  "stats.durationDHM": "{d}و {h}غ {m}د",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "پایله ونه موندل شوه",
   "view.empty.reset": "لټون پاکول",
   "cat.tots": "ټول",

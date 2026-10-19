@@ -110,7 +110,7 @@
   "stats.th.last": "Kupinda Kwakapfuura",
   "stats.empty": "Handisati ndaiteera mubiko. Tanga nhamburuko yako!",
   "stats.never": "Kamwe",
-  "stats.durationDHM": "{d}zuva {h}awa {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Hakuna Mhedzisiro",
   "view.empty.reset": "Suka kutsvaga",
   "cat.tots": "Zvese",

@@ -110,7 +110,7 @@
   "stats.th.last": "Sesioni i fundit",
   "stats.empty": "Ende nuk ke luajtur asnjë lojë. Fillo aventurën tënde!",
   "stats.never": "Kurrë",
-  "stats.durationDHM": "{d}d {h}o {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Pa rezultate",
   "view.empty.reset": "Pastro kërkimin",
   "cat.tots": "Të gjitha",

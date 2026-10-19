@@ -110,7 +110,7 @@
   "stats.th.last": "الجلسة الأخيرة",
   "stats.empty": "لم تلعب أي لعبة بعد. ابدأ مغامرتك!",
   "stats.never": "أبدًا",
-  "stats.durationDHM": "{d}ي {h}س {m}د",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "لا توجد نتائج",
   "view.empty.reset": "مسح البحث",
   "cat.tots": "الكل",

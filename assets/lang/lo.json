@@ -110,7 +110,7 @@
   "stats.th.last": "ຄັ້ງລ້າສຸດ",
   "stats.empty": "ທ່ານຍັງບໍ່ທັນໄດ້ຫຼິ້ນເກມໃດເລີຍ. ເລີ່ມການຜະຈົນໄພຂອງທ່ານ!",
   "stats.never": "ບໍ່ເຄີຍ",
-  "stats.durationDHM": "{d}ວັນ {h}ຊົ່ວໂມງ {m}ນາທີ",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "ບໍ່ມີຜົນ",
   "view.empty.reset": "ລ້າງການຄົ້ນຫາ",
   "cat.tots": "ທັງໝົດ",

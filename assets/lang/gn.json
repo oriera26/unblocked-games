@@ -110,7 +110,7 @@
   "stats.th.last": "Rembi'apa ujerã",
   "stats.empty": "Aindá ndajupáima juego'ũ. ¡Eñepẽ nde aventura!",
   "stats.never": "Ndaiporuvéima",
-  "stats.durationDHM": "{d}á {h}ara {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Ndatarovíima",
   "view.empty.reset": "Jeheka mbyae",
   "cat.tots": "Opa",

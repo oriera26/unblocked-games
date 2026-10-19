@@ -110,7 +110,7 @@
   "stats.th.last": "마지막 세션",
   "stats.empty": "아직 플레이한 게임이 없습니다. 모험을 시작하세요!",
   "stats.never": "없음",
-  "stats.durationDHM": "{d}일 {h}시간 {m}분",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "결과 없음",
   "view.empty.reset": "검색 지우기",
   "cat.tots": "전체",

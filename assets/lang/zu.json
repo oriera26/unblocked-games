@@ -110,7 +110,7 @@
   "stats.th.last": "Iseshini Yesokugcina",
   "stats.empty": "Awukadlali umdlalo okuthile. Qala uhambo lwakho!",
   "stats.never": "Akaze",
-  "stats.durationDHM": "{d}i {h}am {m}im",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Ayikho imiphumela",
   "view.empty.reset": "Sula isesho",
   "cat.tots": "Konke",

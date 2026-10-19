@@ -110,7 +110,7 @@
   "stats.th.last": "آخرین نشست",
   "stats.empty": "هنوز هیچ بازی‌ای انجام نداده‌اید. ماجراجویی خود را آغاز کنید!",
   "stats.never": "هرگز",
-  "stats.durationDHM": "{d}ر {h}س {m}د",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "نتیجه‌ای یافت نشد",
   "view.empty.reset": "پاک کردن جستجو",
   "cat.tots": "همه",

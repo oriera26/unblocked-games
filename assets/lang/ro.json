@@ -110,7 +110,7 @@
   "stats.th.last": "Ultima sesiune",
   "stats.empty": "Încă nu ai jucat niciun joc. Începe-ți aventura!",
   "stats.never": "Niciodată",
-  "stats.durationDHM": "{d}z {h}h {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Fără rezultate",
   "view.empty.reset": "Curăță căutarea",
   "cat.tots": "Toate",

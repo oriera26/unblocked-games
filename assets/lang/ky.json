@@ -110,7 +110,7 @@
   "stats.th.last": "Акыркы сессия",
   "stats.empty": "Сиз али эч бир оюн ойногон жоксуз. Сапарыңызды баштаңыз!",
   "stats.never": "Эч качан",
-  "stats.durationDHM": "{d}күн {h}саат {m}мүн",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Натыйжалар жок",
   "view.empty.reset": "Издөөнү тазалоо",
   "cat.tots": "Баары",

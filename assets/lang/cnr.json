@@ -110,7 +110,7 @@
   "stats.th.last": "Posljednja sesija",
   "stats.empty": "Još nijedna igra nije odigrana. Započni svoju avanturu!",
   "stats.never": "Nikad",
-  "stats.durationDHM": "{d}d {h}h {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Nema rezultata",
   "view.empty.reset": "Obriši pretragu",
   "cat.tots": "Sve",

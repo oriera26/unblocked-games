@@ -110,7 +110,7 @@
   "stats.th.last": "Sesi terakhir",
   "stats.empty": "Anda belum bermain sebarang permainan. Mulakan pengembaraan anda!",
   "stats.never": "Tidak pernah",
-  "stats.durationDHM": "{d}h {h}j {m}m",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Tiada hasil",
   "view.empty.reset": "Kosongkan carian",
   "cat.tots": "Semua",

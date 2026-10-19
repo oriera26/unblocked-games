@@ -110,7 +110,7 @@
   "stats.th.last": "Laatste sessie",
   "stats.empty": "Je hebt nog geen spel gespeeld. Begin je avontuur!",
   "stats.never": "Nooit",
-  "stats.durationDHM": "{d}d {h}u {m}m",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Geen resultaten",
   "view.empty.reset": "Zoekopdracht wissen",
   "cat.tots": "Alle",

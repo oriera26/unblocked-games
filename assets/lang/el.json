@@ -110,7 +110,7 @@
   "stats.th.last": "Τελευταία συνεδρία",
   "stats.empty": "Δεν έχεις παίξει κανένα παιχνίδι ακόμη. Ξεκίνα την περιπέτειά σου!",
   "stats.never": "Ποτέ",
-  "stats.durationDHM": "{d}ημ {h}ώ {m}λ",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Χωρίς αποτελέσματα",
   "view.empty.reset": "Καθαρισμός αναζήτησης",
   "cat.tots": "Όλα",

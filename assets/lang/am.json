@@ -110,7 +110,7 @@
   "stats.th.last": "የመጨረሻ ክፍለጊዜ",
   "stats.empty": "እስካሁን ምንም ጨዋታ አልጫወቱም። የእርስዎን ጉዞ ይጀምሩ!",
   "stats.never": "ምንም ጊዜ",
-  "stats.durationDHM": "{d}ቀ {h}ሰ {m}ደ",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "ምንም ውጤት የለም",
   "view.empty.reset": "ፍለጋውን አስወግድ",
   "cat.tots": "ሁሉም",

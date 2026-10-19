@@ -110,7 +110,7 @@
   "stats.th.last": "Toj bi",
   "stats.empty": "Amul wiis té lekk. Bila ngir njubbante!",
   "stats.never": "Duma",
-  "stats.durationDHM": "{d}b {h}w {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Amul njariñu",
   "view.empty.reset": "Fàddal seet",
   "cat.tots": "Ay",

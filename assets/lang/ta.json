@@ -110,7 +110,7 @@
   "stats.th.last": "கடைசி அமர்வு",
   "stats.empty": "நீங்கள் இதுவரை எந்த விளையாட்டும் விளையாடவில்லை. உங்கள் பயணத்தைத் தொடங்குங்கள்!",
   "stats.never": "ஒருபோதும் இல்லை",
-  "stats.durationDHM": "{d}நா {h}ம {m}நிமி",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "முடிவுகள் இல்லை",
   "view.empty.reset": "தேடலை அழிக்கவும்",
   "cat.tots": "அனைத்தும்",

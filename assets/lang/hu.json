@@ -110,7 +110,7 @@
   "stats.th.last": "Utolsó munkamenet",
   "stats.empty": "Még nem játszottál egyetlen játékkal sem. Kezdd el a kalandodat!",
   "stats.never": "Soha",
-  "stats.durationDHM": "{d}n {h}ó {m}p",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Nincs találat",
   "view.empty.reset": "Keresés törlése",
   "cat.tots": "Összes",

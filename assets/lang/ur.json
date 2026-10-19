@@ -110,7 +110,7 @@
   "stats.th.last": "آخری سیشن",
   "stats.empty": "آپ نے ابھی کوئی کھیل نہیں کھیلا۔ اپنا سفر شروع کریں!",
   "stats.never": "کبھی نہیں",
-  "stats.durationDHM": "{d}دن {h}گھ {m}من",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "کوئی نتیجہ نہیں",
   "view.empty.reset": "تلاش صاف کریں",
   "cat.tots": "تمام",

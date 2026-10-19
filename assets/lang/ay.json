@@ -110,7 +110,7 @@
   "stats.th.last": "Qhipa pacha",
   "stats.empty": "Kamachi anuchüyäwiti. ¡Apkataya amki aventura!",
   "stats.never": "Janiw",
-  "stats.durationDHM": "{d}uru {h}pacha {m}minti",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Janiw qhitayawi",
   "view.empty.reset": "Qhitayaña ch'utayaña",
   "cat.tots": "Llepna",

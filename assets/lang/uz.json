@@ -110,7 +110,7 @@
   "stats.th.last": "Oxirgi seans",
   "stats.empty": "Siz hali birorta o'yin o'ynamadingiz. Sarguzashtingizni boshlang!",
   "stats.never": "Hech qachon",
-  "stats.durationDHM": "{d}k {h}s {m}daq",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Natijalar yo'q",
   "view.empty.reset": "Qidiruvni tozalash",
   "cat.tots": "Barchasi",

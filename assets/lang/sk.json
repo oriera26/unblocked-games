@@ -110,7 +110,7 @@
   "stats.th.last": "Posledná relácia",
   "stats.empty": "Zatiaľ si nehrál žiadnu hru. Začni svoje dobrodružstvo!",
   "stats.never": "Nikdy",
-  "stats.durationDHM": "{d}d {h}h {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Žiadne výsledky",
   "view.empty.reset": "Vymazať hľadanie",
   "cat.tots": "Všetky",

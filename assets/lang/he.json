@@ -110,7 +110,7 @@
   "stats.th.last": "הפעלה אחרונה",
   "stats.empty": "עדיין לא שיחקת באף משחק. התחל את ההרפתקה שלך!",
   "stats.never": "אף פעם",
-  "stats.durationDHM": "{d}י {h}ש {m}ד",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "אין תוצאות",
   "view.empty.reset": "ניקוי החיפוש",
   "cat.tots": "הכל",

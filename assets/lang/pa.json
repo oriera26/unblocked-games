@@ -110,7 +110,7 @@
   "stats.th.last": "ਆਖਰੀ ਸੈਸ਼ਨ",
   "stats.empty": "ਤੁਸੀਂ ਹਾਲ ਤੱਕ ਕੋਈ ਗੇਮ ਨਹੀਂ ਖੇਡੀ। ਆਪਣਾ ਸਫ਼ਰ ਸ਼ੁਰੂ ਕਰੋ!",
   "stats.never": "ਕਦੇ ਨਹੀਂ",
-  "stats.durationDHM": "{d}ਦਿ {h}ਘੰ {m}ਮਿ",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "ਕੋਈ ਨਤੀਜਾ ਨਹੀਂ",
   "view.empty.reset": "ਖੋਜ ਸਾਫ਼ ਕਰੋ",
   "cat.tots": "ਸਾਰੇ",

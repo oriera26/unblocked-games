@@ -110,7 +110,7 @@
   "stats.th.last": "Ìpàdé Àkẹ́yìn",
   "stats.empty": "Kò tíì ṣeré eré kankan. Bẹ̀rẹ̀ ìrìn rẹ!",
   "stats.never": "Kò sí",
-  "stats.durationDHM": "{d}ọj {h}w {m}ìs",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Kò sí àbájáde",
   "view.empty.reset": "Fọ̀ ìwádìí",
   "cat.tots": "Gbogbo",

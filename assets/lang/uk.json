@@ -110,7 +110,7 @@
   "stats.th.last": "Остання сесія",
   "stats.empty": "Ви ще не грали в жодну гру. Розпочніть свою пригоду!",
   "stats.never": "Ніколи",
-  "stats.durationDHM": "{d}д {h}год {m}хв",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Без результатів",
   "view.empty.reset": "Очистити пошук",
   "cat.tots": "Усі",

@@ -110,7 +110,7 @@
   "stats.th.last": "පසුගිය සැසිය",
   "stats.empty": "ඔබ තවම කිසිදු ක්‍රීඩාවක් කර නැත. ඔබේ ගමන ආරම්භ කරන්න!",
   "stats.never": "කිසිවිටෙකත්",
-  "stats.durationDHM": "{d}දි {h}පැ {m}මි",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "ප්‍රතිඵල නැත",
   "view.empty.reset": "සෙවුම හිස් කරන්න",
   "cat.tots": "සියල්ල",

@@ -110,7 +110,7 @@
   "stats.th.last": "Ultima sessione",
   "stats.empty": "Non hai ancora giocato a nessun gioco. Inizia la tua avventura!",
   "stats.never": "Mai",
-  "stats.durationDHM": "{d}g {h}h {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Nessun risultato",
   "view.empty.reset": "Cancella la ricerca",
   "cat.tots": "Tutti",

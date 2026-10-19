@@ -110,7 +110,7 @@
   "stats.th.last": "সর্বশেষ সেশন",
   "stats.empty": "আপনি এখনো কোনো গেম খেলেননি। আপনার অ্যাডভেঞ্চার শুরু করুন!",
   "stats.never": "কখনো নয়",
-  "stats.durationDHM": "{d}দি {h}ঘ {m}মি",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "কোন ফলাফল নেই",
   "view.empty.reset": "অনুসন্ধান মুছুন",
   "cat.tots": "সব",

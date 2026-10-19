@@ -110,7 +110,7 @@
   "stats.th.last": "Ugboro Ikpeazụ",
   "stats.empty": "O zuru egwuru ọ bụla. Malite njem gị!",
   "stats.never": "O zugbughi",
-  "stats.durationDHM": "{d}ụb {h}elekere {m}nkej",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Enweghị nsonaazụ",
   "view.empty.reset": "Hichapụ nchọpụta",
   "cat.tots": "Ha niile",

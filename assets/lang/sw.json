@@ -110,7 +110,7 @@
   "stats.th.last": "Kipindi cha mwisho",
   "stats.empty": "Bado hujacheza mchezo wowote. Anza safari yako!",
   "stats.never": "Kamwe",
-  "stats.durationDHM": "{d}s {h}sa {m}dk",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Hakuna matokeo",
   "view.empty.reset": "Futa utafutaji",
   "cat.tots": "Zote",

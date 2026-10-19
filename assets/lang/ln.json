@@ -110,7 +110,7 @@
   "stats.th.last": "Kolanda ya mosusu",
   "stats.empty": "Yo okoti bikoro moko. Tambola ndambu na yo!",
   "stats.never": "Te",
-  "stats.durationDHM": "{d}mok {h}ng {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Libongi te",
   "view.empty.reset": "Kosala koluki",
   "cat.tots": "Zonse",

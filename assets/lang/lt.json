@@ -110,7 +110,7 @@
   "stats.th.last": "Paskutinė sesija",
   "stats.empty": "Dar nė vienas žaidimas nebuvo žaistas. Pradėk savo nuotykį!",
   "stats.never": "Niekada",
-  "stats.durationDHM": "{d}d {h}v {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Rezultatų nėra",
   "view.empty.reset": "Išvalyti paiešką",
   "cat.tots": "Visi",

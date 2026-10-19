@@ -110,7 +110,7 @@
   "stats.th.last": "Y sesiwn ddiwethaf",
   "stats.empty": "Nid ydych wedi chwarae gem eto. Dechreuwch eich antur!",
   "stats.never": "Byth",
-  "stats.durationDHM": "{d}d {h}awr {m}mun",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Dim canlyniadau",
   "view.empty.reset": "Clirio'r chwiliad",
   "cat.tots": "Pob un",

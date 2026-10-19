@@ -110,7 +110,7 @@
   "stats.th.last": "Isesho yashize",
   "stats.empty": "Nta myino yakiriwe. Tangira urugendo bwaawe!",
   "stats.never": "Nta kanya",
-  "stats.durationDHM": "{d}um {h}amas {m}imin",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Nta dosiyeyo",
   "view.empty.reset": "Siba ishakisha",
   "cat.tots": "Byose",

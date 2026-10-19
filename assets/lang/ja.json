@@ -110,7 +110,7 @@
   "stats.th.last": "最終セッション",
   "stats.empty": "まだゲームをプレイしていません。冒険を始めましょう！",
   "stats.never": "なし",
-  "stats.durationDHM": "{d}日 {h}時間 {m}分",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "結果がありません",
   "view.empty.reset": "検索をクリア",
   "cat.tots": "すべて",

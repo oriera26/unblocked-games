@@ -110,7 +110,7 @@
   "stats.th.last": "Azken saioa",
   "stats.empty": "Oraindik ez duzu jokorik jokatu. Hasi zure abentura!",
   "stats.never": "Inoiz",
-  "stats.durationDHM": "{d}e {h}o {m}m",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Emaitzarik ez",
   "view.empty.reset": "Garbitu bilaketa",
   "cat.tots": "Denak",

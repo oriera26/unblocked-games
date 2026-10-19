@@ -110,7 +110,7 @@
   "stats.th.last": "Phiên gần nhất",
   "stats.empty": "Bạn chưa chơi trò chơi nào. Hãy bắt đầu cuộc phiêu lưu của bạn!",
   "stats.never": "Chưa bao giờ",
-  "stats.durationDHM": "{d}ng {h}gi {m}ph",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Không có kết quả",
   "view.empty.reset": "Xóa tìm kiếm",
   "cat.tots": "Tất cả",

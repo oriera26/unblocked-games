@@ -110,7 +110,7 @@
   "stats.th.last": "Last time",
   "stats.empty": "You never play any game yet. Start your adventure!",
   "stats.never": "Never",
-  "stats.durationDHM": "{d}d {h}aw {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Nothing dey",
   "view.empty.reset": "Clear di search",
   "cat.tots": "All",

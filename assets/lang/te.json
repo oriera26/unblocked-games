@@ -110,7 +110,7 @@
   "stats.th.last": "చివరి సెషన్",
   "stats.empty": "మీరు ఇంకా ఏ గేమ్ ఆడలేదు. మీ ప్రయాణాన్ని ప్రారంభించండి!",
   "stats.never": "ఎప్పుడూ కాదు",
-  "stats.durationDHM": "{d}రో {h}గం {m}ని",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "ఫలితాలు లేవు",
   "view.empty.reset": "శోధనను క్లియర్ చేయండి",
   "cat.tots": "అన్నీ",

@@ -110,7 +110,7 @@
   "stats.th.last": "Zaguera sesión",
   "stats.empty": "Aún no has chugato a ningún chuego. ¡Comienza ta tu aventura!",
   "stats.never": "Nunca",
-  "stats.durationDHM": "{d}d {h}h {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Sin resultaus",
   "view.empty.reset": "Limpiar a busca",
   "cat.tots": "Tots",

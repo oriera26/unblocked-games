@@ -110,7 +110,7 @@
   "stats.th.last": "L-aħħar sessjoni",
   "stats.empty": "Għadhom ma lagħbtux logħba. Ibda l-avventura tiegħek!",
   "stats.never": "Qatt",
-  "stats.durationDHM": "{d}ġ {h}s {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Ebda riżultati",
   "view.empty.reset": "Ħaddar it-tiftix",
   "cat.tots": "Kollha",

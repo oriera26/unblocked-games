@@ -110,7 +110,7 @@
   "stats.th.last": "An tSeisiún deireanach",
   "stats.empty": "Níor imir tú cluiche ar bith fós. Tosaigh do eachtra!",
   "stats.never": "Riamh",
-  "stats.durationDHM": "{d}l {h}u {m}n",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Gan torthaí",
   "view.empty.reset": "Glan an cuardach",
   "cat.tots": "Uile",

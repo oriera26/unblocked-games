@@ -110,7 +110,7 @@
   "stats.th.last": "Iseshini Egqibelayo",
   "stats.empty": "Akukho mdlalo owudlalileyo. Qala uhambo lwakho!",
   "stats.never": "Angaze",
-  "stats.durationDHM": "{d}ii {h}ii {m}im",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Akukho miphumela",
   "view.empty.reset": "Cima ukukhangela",
   "cat.tots": "Yonke",

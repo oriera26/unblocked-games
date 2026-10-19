@@ -110,7 +110,7 @@
   "stats.th.last": "Последна сесија",
   "stats.empty": "Досега не е одиграна ниту една игра. Започни ја својата авантура!",
   "stats.never": "Никогаш",
-  "stats.durationDHM": "{d}д {h}ч {m}мин",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Нема резултати",
   "view.empty.reset": "Исчисти пребарување",
   "cat.tots": "Сите",

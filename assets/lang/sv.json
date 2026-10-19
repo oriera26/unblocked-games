@@ -110,7 +110,7 @@
   "stats.th.last": "Senaste sessionen",
   "stats.empty": "Du har inte spelat något spel ännu. Starta ditt äventyr!",
   "stats.never": "Aldrig",
-  "stats.durationDHM": "{d}d {h}t {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Inga resultat",
   "view.empty.reset": "Rensa sökningen",
   "cat.tots": "Alla",

@@ -110,7 +110,7 @@
   "stats.th.last": "Darrièra session",
   "stats.empty": "Encara has pas jogat a cap de jòc. Comença la to aventura!",
   "stats.never": "Mai",
-  "stats.durationDHM": "{d}j {h}h {m}min",
+  "stats.duration": "{d}d {h}h {m}m {s}s",
   "view.empty.title": "Sens resultats",
   "view.empty.reset": "Voidar la recèrca",
   "cat.tots": "Totes",
