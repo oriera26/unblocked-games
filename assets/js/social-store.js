@@ -1188,7 +1188,7 @@ export async function recordLeaguePlay({ game, seconds, sessionSeconds }) {
  * local va per davant del que ja hi ha: si va per darrere (un altre
  * dispositiu amb un progrés més nou), no s'esborra mai a la baixa.
  */
-async function pushProfilePoints({ force = false } = {}) {
+async function pushProfilePoints() {
     const user = currentUser();
     if (!user) return { ok: false, reason: 'offline' };
 
@@ -1197,12 +1197,11 @@ async function pushProfilePoints({ force = false } = {}) {
     const localStreak = Math.max(0, Number(stats.streak) || 0);
     const remoteStreak = Math.max(0, Number(state.me?.streak) || 0);
 
-    // No baixem mai els punts: si un altre dispositiu va per davant,
-    // mana el del compte. Amb `force` s'hi torna a empènyer encara que
-    // els punts coincideixin, per posar al dia la ratxa i el nivell.
-    // La ratxa també es queda amb el valor més alt dels dos.
+    // No baixem mai res: si un altre dispositiu va per davant, mana el
+    // del compte. I si punts i ratxa ja coincideixen, no cal escriure
+    // per res (el botó de sincronitzar es pot prémer més d'un cop).
     if (localPoints < remotePoints) return { ok: true, changed: false };
-    if (!force && localPoints === remotePoints && localStreak <= remoteStreak) {
+    if (localPoints === remotePoints && localStreak <= remoteStreak) {
         return { ok: true, changed: false };
     }
     const streak = Math.max(localStreak, remoteStreak);
@@ -1261,7 +1260,7 @@ export async function syncSocialData() {
     if (!connection) return { ok: false, reason: 'offline' };
     const { api, db } = connection;
 
-    const profile = await pushProfilePoints({ force: true });
+    const profile = await pushProfilePoints();
     if (!profile.ok) return profile;
 
     const games = {};
