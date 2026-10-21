@@ -14,6 +14,7 @@ import {
     CHUNK_SIZE,
     COVER_CONCURRENCY,
     COVER_GAP_MS,
+    COVER_TIMEOUT_MS,
     LOGO_DARK,
     LOGO_LIGHT,
     MAX_DOM_CARDS,
@@ -204,6 +205,97 @@ function safeCoverImage(src) {
 const coverQueue = createQueue({ concurrency: COVER_CONCURRENCY, gap: COVER_GAP_MS });
 
 /**
+ * Les portades que ja s'han pintat en aquesta sessió.
+ *
+ * Sense això, cada canvi de filtre tornava a passar totes les portades
+ * per la cua (dues alhora i 60 ms de pausa): la graella ja les tenia a
+ * la memòria cau del navegador, però l'usuari veia esquelets durant
+ * segons. Una portada ja coneguda es demana a l'instant i no espera
+ * torn.
+ */
+const loadedCovers = new Set();
+
+/**
+ * Demana la imatge i espera que es pugui pintar, però amb una sortida
+ * per als casos que abans deixaven la cua encallada:
+ *
+ *   - `cover-cancel`: la targeta s'ha desmuntat (canvi de filtre,
+ *     cerca esborrada, poda). No té sentit esperar més.
+ *   - temps màxim: si `decode()` no resol mai (imatge desmuntada a mig
+ *     camí, xarxa penjada), la cua ha de poder continuar amb la resta.
+ *
+ * @param {HTMLImageElement} img
+ * @returns {Promise<'decode'|'error'|'cancel'|'timeout'>}
+ */
+function waitForCover(img) {
+    return new Promise((resolve) => {
+        let settled = false;
+
+        const finish = (result) => {
+            if (settled) return;
+            settled = true;
+            img.removeEventListener('cover-cancel', onCancel);
+            window.clearTimeout(timer);
+            resolve(result);
+        };
+
+        const onCancel = () => finish('cancel');
+        const timer = window.setTimeout(() => finish('timeout'), COVER_TIMEOUT_MS);
+
+        img.addEventListener('cover-cancel', onCancel);
+        img.decode().then(() => finish('decode'), () => finish('error'));
+    });
+}
+
+/** La imatge ja té píxels: es fon sobre l'esquelet i es dona per carregada. */
+function revealCover(media, img, cover) {
+    // Pot ser que la targeta encara no sigui al DOM: quan es construeix
+    // un bloc, `appendCover` corre abans que el fragment s'enganxi a la
+    // graella. La imatge ja té píxels igualment, i la classe de sortida
+    // la trobarà connectada en el proper fotograma.
+    if (img.naturalWidth === 0) return false;
+
+    loadedCovers.add(cover);
+    media.classList.add('card-done');
+    media.classList.remove('card-loading');
+    window.setTimeout(() => media.classList.remove('card-done'), 600);
+    return true;
+}
+
+/**
+ * Acaba de carregar una portada que ja té `src`.
+ *
+ * @returns {Promise<symbol|undefined>} `SKIP` si no s'ha de fer res més
+ */
+async function finishCover(media, img, cover) {
+    const result = await waitForCover(img);
+
+    if (result === 'cancel') return SKIP;
+
+    if (result === 'timeout' && img.naturalWidth === 0) {
+        // No bloquegem la cua per una imatge que encara pot arribar:
+        // es lleva l'esquelet i, si el navegador l'acaba tenint, es
+        // pinta sola. Si falla, s'elimina com qualsevol portada perduda.
+        media.classList.remove('card-loading');
+        img.addEventListener('load', () => revealCover(media, img, cover), { once: true });
+        img.addEventListener('error', () => img.remove(), { once: true });
+        if (img.complete && img.naturalWidth > 0) revealCover(media, img, cover);
+        return SKIP;
+    }
+
+    if (result === 'error' && img.naturalWidth === 0) {
+        // La portada no ha arribat (sense xarxa, 404...): es treu del
+        // DOM i es reintentarà quan convingui.
+        img.remove();
+        media.classList.remove('card-loading');
+        return SKIP;
+    }
+
+    revealCover(media, img, cover);
+    return undefined;
+}
+
+/**
  * Posa la portada a la caixa de la targeta, si el joc en té.
  *
  * La imatge no es demana a l'instant: passa per la cua compartida
@@ -236,35 +328,45 @@ function appendCover(media, game) {
     media.classList.add('card-loading');
     media.prepend(img);
 
+    // Ja l'hem vista: el navegador la té a la cau, així que no cal fer
+    // esperar la cua. Si encara no és completa, `finishCover` espera el
+    // decode sense ocupar cap torn.
+    if (loadedCovers.has(cover)) {
+        img.src = cover;
+        if (img.complete && img.naturalWidth > 0) revealCover(media, img, cover);
+        else finishCover(media, img, cover);
+        return true;
+    }
+
     coverQueue.add(async () => {
         // La poda o un canvi de filtre poden haver desmuntat la targeta
         // abans que li toqués el torn: no cal anar a la xarxa per res.
         if (!img.isConnected) return SKIP;
 
         img.src = cover;
-        try {
-            await img.decode();
-        } catch {
-            // La portada no ha arribat (sense xarxa, 404...): es treu
-            // del DOM i es reintentarà quan convingui, com abans.
-        }
-        if (!img.isConnected) return SKIP;
 
-        if (img.naturalWidth === 0) {
+        // La cau del navegador pot tenir-la a punt abans que la cua
+        // arribi a esperar cap esdeveniment.
+        if (img.complete) {
+            if (img.naturalWidth > 0) {
+                revealCover(media, img, cover);
+                return undefined;
+            }
             img.remove();
             media.classList.remove('card-loading');
-            return;
+            return SKIP;
         }
 
-        // La imatge ja es pot pintar sencera: l'esquelet es fon
-        // (`card-done`) mentre la portada apareix a sobre. Quan el
-        // fundido s'ha acabat, la classe de sortida marxa.
-        media.classList.add('card-done');
-        media.classList.remove('card-loading');
-        window.setTimeout(() => media.classList.remove('card-done'), 600);
+        return finishCover(media, img, cover);
     });
 
     return true;
+}
+
+/** Atura una portada que ja no interessa i allibera el seu bitmap. */
+function cancelCover(img) {
+    img.dispatchEvent(new Event('cover-cancel'));
+    img.removeAttribute('src');
 }
 
 function buildCard(game) {
@@ -464,9 +566,10 @@ export function resetGrid() {
     if (!grid) return;
 
     grid.classList.remove('skeleton-grid');
-    // Igual que a la poda: sense `src`, els bitmaps de les portades que
-    // es desmunten queden lliures perquè el navegador els reculli.
-    for (const img of grid.querySelectorAll('img')) img.removeAttribute('src');
+    // Igual que a la poda: s'avisa la cua (perquè no es quedi esperant
+    // un `decode()` que ja no acabarà) i, sense `src`, els bitmaps de
+    // les portades que es desmunten queden lliures per al navegador.
+    for (const img of grid.querySelectorAll('img')) cancelCover(img);
     grid.replaceChildren();
     itemsShown = 0;
 }
@@ -602,7 +705,9 @@ function pruneGrid() {
         // Abans de desmuntar-la, es deixa la portada: el navegador ja
         // pot alliberar el seu bitmap (RAM), perquè la targeta no hi
         // tornarà. Si la graella es refés, es reconstruiria sencera.
-        for (const img of block.querySelectorAll('img')) img.removeAttribute('src');
+        // També s'avisa la cua perquè un `decode()` pendent no ocupi
+        // un torn per sempre.
+        for (const img of block.querySelectorAll('img')) cancelCover(img);
         block.remove();
         excess -= count;
     }

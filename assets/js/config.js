@@ -117,6 +117,14 @@ export const REVEAL_STAGGER = 15;
 export const COVER_CONCURRENCY = 2;
 export const COVER_GAP_MS = 60;
 
+/**
+ * Màxim que una portada pot retenir un torn de la cua. Si la xarxa es
+ * queda penjada o `decode()` no resol (una imatge que s'ha desmuntat a
+ * mig camí), la cua ha de poder seguir: la resta de targetes no poden
+ * quedar-se amb l'esquelet per sempre.
+ */
+export const COVER_TIMEOUT_MS = 10000;
+
 /** Punts que suma cada partida. */
 export const POINTS_PER_PLAY = 15;
 
