@@ -14,7 +14,17 @@
  * text escrit i el hub el focus del cercador.
  */
 
-import { state, onSocialChange, startSocialStore, retrySocialStore, claimGift, notify, openChatWith, openLeagueChannel } from './social-store.js';
+import {
+    state,
+    onSocialChange,
+    startSocialStore,
+    retrySocialStore,
+    claimGift,
+    notify,
+    openChatWith,
+    openLeagueChannel,
+    syncSocialData
+} from './social-store.js';
 import { mountHub, destroyHub, invalidate as invalidateHub, refresh as refreshHub } from './social-hub.js';
 import { mountChat, destroyChat, invalidate as invalidateChat, refresh as refreshChat } from './social-chat.js';
 import { openProfile } from './social-modals.js';
@@ -39,6 +49,9 @@ let lastStatus = null;
 
 /** Per no repintar l'avatar del sidebar (i recarregar la foto) sense canvis. */
 let profileSignature = '';
+
+/** Una sincronització manual alhora. */
+let syncing = false;
 
 /* ================================================================
    Entrada
@@ -215,6 +228,16 @@ function renderShell() {
                     </div>
                     <p>${t('social.subtitle')}</p>
                 </div>
+
+                <div class="social-header-actions">
+                    <button type="button" class="soc-btn soc-sync-btn" id="socialSyncBtn"
+                            aria-label="${t('social.sync')}" data-i18n-aria="social.sync">
+                        <span class="soc-ico" data-lucide="refresh-cw" data-size="15"></span>
+                        <span id="socialSyncLabel" data-i18n="social.sync">${t('social.sync')}</span>
+                    </button>
+                    <span class="social-sync-status" id="socialSyncStatus"
+                          role="status" aria-live="polite"></span>
+                </div>
             </header>
 
             <div class="social-layout">
@@ -261,6 +284,7 @@ function renderShell() {
     });
 
     root.querySelector('#sidebarProfileBtn').addEventListener('click', () => openProfile());
+    root.querySelector('#socialSyncBtn')?.addEventListener('click', syncSocial);
 
     // Delegació per als panells d'activitat i regals (vàlida per sempre:
     // els contenidors no es tornen a crear).
@@ -286,6 +310,57 @@ function renderShell() {
 
     mountHub(root.querySelector('#hubRoot'));
     mountChat(root.querySelector('#sidebarChatTab'));
+}
+
+/**
+ * El botó de sincronitzar: porta les estadístiques locals al perfil i a
+ * les lligues. Mentre treballa es desactiva; en acabar, l'estat es diu
+ * al costat del botó (i queda al registre d'avisos).
+ */
+async function syncSocial() {
+    if (syncing || !root) return;
+
+    const button = root.querySelector('#socialSyncBtn');
+    const label = root.querySelector('#socialSyncLabel');
+    const status = root.querySelector('#socialSyncStatus');
+    if (!button || !label || !status) return;
+
+    syncing = true;
+    button.disabled = true;
+    button.classList.add('is-syncing');
+    label.textContent = get('sync.status.syncing');
+    status.textContent = get('sync.status.syncing');
+    status.dataset.state = 'syncing';
+
+    let result;
+    try {
+        result = await syncSocialData();
+    } catch {
+        result = { ok: false };
+    }
+
+    syncing = false;
+
+    if (button.isConnected) {
+        button.disabled = false;
+        button.classList.remove('is-syncing');
+        label.textContent = get('social.sync');
+    }
+
+    if (status.isConnected) {
+        status.textContent = get(result.ok ? 'sync.status.synced' : 'sync.status.error');
+        status.dataset.state = result.ok ? 'synced' : 'error';
+
+        // El missatge no s'ha de quedar per sempre; el botó ja torna a
+        // estar actiu per si cal repetir-ho.
+        window.setTimeout(() => {
+            if (!status.isConnected) return;
+            status.textContent = '';
+            status.dataset.state = '';
+        }, 4000);
+    }
+
+    notify(get(result.ok ? 'sync.status.synced' : 'sync.status.error'));
 }
 
 function selectTab(name) {

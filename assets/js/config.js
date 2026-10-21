@@ -170,7 +170,14 @@ export const STORAGE_KEYS = {
      * Viu al dispositiu mentre no hi hagi un backend social connectat;
      * `social.js` n'és l'únic amo.
      */
-    social: 'ulaSocial'
+    social: 'ulaSocial',
+    /**
+     * El `stats.timeSeconds` amb què va començar cada temporada de lliga
+     * (`{ "leagueId:2": 3600 }`), a partir de la segona. És del
+     * dispositiu i serveix perquè la sincronització manual no torni a
+     * portar a la lliga l'historial de temporades anteriors.
+     */
+    leagueSync: 'ulaLeagueSync'
 };
 
 /** Volum d'un joc de nou (0–1), quan l'usuari encara no n'ha tocat cap. */

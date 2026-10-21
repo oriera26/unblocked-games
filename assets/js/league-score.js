@@ -202,6 +202,90 @@ export function applyPlay(score, update) {
 }
 
 /**
+ * Decideix quants segons de les estadístiques locals falten a una
+ * temporada de lliga.
+ *
+ * La primera temporada no té una base anterior: s'hi pot portar tot el
+ * temps local que la lliga encara no té. A partir de la segona, el que
+ * compta és el temps jugat des que es va veure néixer la temporada
+ * (`baseline`), no l'historial sencer, que ja va comptar abans.
+ *
+ * @param {{ season: number, localSeconds: number, scoreSeconds: number, baseline?: number }} input
+ * @returns {{ delta: number, needsBaseline: boolean }}
+ */
+export function planStatsImport({ season, localSeconds, scoreSeconds, baseline }) {
+    const local = Math.max(0, Math.floor(Number(localSeconds) || 0));
+    const scored = Math.max(0, Math.floor(Number(scoreSeconds) || 0));
+
+    if (Number(season) === 1) {
+        return { delta: Math.max(0, local - scored), needsBaseline: false };
+    }
+
+    if (baseline === undefined || baseline === null) {
+        return { delta: 0, needsBaseline: true };
+    }
+
+    const played = Math.max(0, local - Math.floor(Number(baseline) || 0));
+    return { delta: Math.max(0, played - scored), needsBaseline: false };
+}
+
+/**
+ * Importa un bloc de minuts que ve de fora de la lliga (les
+ * estadístiques locals, quan algú demana de sincronitzar-les).
+ *
+ * No passa pels multiplicadors de dia ni de ratxa perquè no hi ha el
+ * detall de quan es va jugar: només compta els minuts sencers i els
+ * jocs que arriben als cinc minuts per primera vegada. Els dies no es
+ * toquen, així que la sincronització no infla el multiplicador del dia
+ * d'avui.
+ *
+ * @param {object} score  el full del membre
+ * @param {{ seconds?: number, games?: Record<string, number> }} update
+ *   `games` és el temps acumulat per joc de les estadístiques locals.
+ */
+export function importPlaytime(score, update) {
+    const state = normalize(score);
+    const ds = Math.max(0, Math.floor(Number(update?.seconds) || 0));
+
+    let timeXp = 0;
+    if (ds > 0) {
+        const before = Math.floor(state.seconds / 60);
+        state.seconds += ds;
+        timeXp = Math.floor(state.seconds / 60) - before;
+    }
+
+    let newXp = 0;
+    const games = update?.games && typeof update.games === 'object' ? update.games : {};
+    for (const [game, value] of Object.entries(games)) {
+        const played = Math.max(0, Math.floor(Number(value) || 0));
+        if (played < NEW_GAME_SECONDS) continue;
+        if ((state.games[game] ?? 0) >= NEW_GAME_SECONDS) continue;
+
+        state.games[game] = Math.max(state.games[game] ?? 0, played);
+        state.newCount += 1;
+        newXp += NEW_GAME_XP;
+    }
+
+    const total = timeXp + newXp;
+    state.xp += total;
+
+    return {
+        state,
+        gain: {
+            xp: total,
+            base: total,
+            boost: 0,
+            timeXp,
+            newXp,
+            blockXp: 0,
+            blocks: 0,
+            newGame: newXp > 0,
+            mult: 1
+        }
+    };
+}
+
+/**
  * Un full guardat que es torna a llegir (de Firestore o de memòria) ha
  * de quedar amb la forma de `newScore()`: els camps que faltin, amb el
  * valor de fàbrica.

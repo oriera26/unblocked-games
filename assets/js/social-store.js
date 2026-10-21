@@ -36,8 +36,9 @@ import { ensureDb, firestore, describeError, pairId } from './social-db.js';
 import { getLevelForPoints } from './levels.js';
 import { stats } from './state.js';
 import {
-    seasonWindow, dayKey, applyPlay, normalize, GOAL_MIN
+    seasonWindow, dayKey, applyPlay, importPlaytime, planStatsImport, normalize, GOAL_MIN
 } from './league-score.js';
+import { STORAGE_KEYS } from './config.js';
 import { onPlaytimeFlush } from './playtime.js';
 
 /* ================================================================
@@ -717,6 +718,37 @@ function leagueKey(id, n) {
     return `${id}:${n}`;
 }
 
+/* --- Fins on hem portat el temps local a cada lliga ---------------- */
+
+/** `{ "leagueId:2": segons }`: el `stats.timeSeconds` d'inici de temporada. */
+function readLeagueSync() {
+    try {
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEYS.leagueSync) ?? '{}');
+        return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    } catch {
+        return {};
+    }
+}
+
+let leagueSync = readLeagueSync();
+
+/**
+ * Apunta el punt de partida local d'una temporada (a partir de la
+ * segona). No es toca després: si es mogués, la sincronització manual
+ * perdria el compte del que s'ha jugat des de l'inici de temporada.
+ */
+function markLeagueSync(key, seconds) {
+    const value = Math.max(0, Math.floor(Number(seconds) || 0));
+    if (leagueSync[key] === value) return;
+
+    leagueSync[key] = value;
+    try {
+        localStorage.setItem(STORAGE_KEYS.leagueSync, JSON.stringify(leagueSync));
+    } catch {
+        // Sense espai, la propera sincronització tornarà a calcular-ho.
+    }
+}
+
 function watchLeagues(user) {
     const connection = fs();
     if (!connection) return;
@@ -772,6 +804,14 @@ function watchLeagueSeasons(list) {
         const n = league.season.n;
         const key = leagueKey(league.id, n);
         if (leagueSeasonSubs[key]) continue;
+
+        // Les temporades que ja no són la primera no hereten el temps
+        // d'abans: es comença a comptar des d'on som ara. La primera
+        // temporada sí que pot importar l'historial amb el botó de
+        // sincronitzar.
+        if (n > 1 && leagueSync[key] === undefined) {
+            markLeagueSync(key, stats.timeSeconds);
+        }
 
         leagueSeasonSubs[key] = api.onSnapshot(
             api.doc(db, 'leagues', league.id, 'seasons', String(n)),
@@ -1148,34 +1188,160 @@ export async function recordLeaguePlay({ game, seconds, sessionSeconds }) {
  * local va per davant del que ja hi ha: si va per darrere (un altre
  * dispositiu amb un progrés més nou), no s'esborra mai a la baixa.
  */
-async function pushProfilePoints() {
+async function pushProfilePoints({ force = false } = {}) {
     const user = currentUser();
-    if (!user) return;
+    if (!user) return { ok: false, reason: 'offline' };
 
-    const local = Math.max(0, Math.floor(stats.points ?? 0));
-    if (!(local > (state.me?.points ?? 0))) return;
+    const localPoints = Math.max(0, Math.floor(stats.points ?? 0));
+    const remotePoints = Math.max(0, Math.floor(state.me?.points ?? 0));
+    const localStreak = Math.max(0, Number(stats.streak) || 0);
+    const remoteStreak = Math.max(0, Number(state.me?.streak) || 0);
+
+    // No baixem mai els punts: si un altre dispositiu va per davant,
+    // mana el del compte. Amb `force` s'hi torna a empènyer encara que
+    // els punts coincideixin, per posar al dia la ratxa i el nivell.
+    // La ratxa també es queda amb el valor més alt dels dos.
+    if (localPoints < remotePoints) return { ok: true, changed: false };
+    if (!force && localPoints === remotePoints && localStreak <= remoteStreak) {
+        return { ok: true, changed: false };
+    }
+    const streak = Math.max(localStreak, remoteStreak);
 
     const connection = fs();
-    if (!connection) return;
+    if (!connection) return { ok: false, reason: 'offline' };
     const { api, db } = connection;
 
     try {
         await api.setDoc(
             api.doc(db, 'profiles', user.uid),
             {
-                points: local,
-                lvl: getLevelForPoints(local).lvl,
-                streak: Math.max(0, Number(stats.streak) || 0),
+                points: localPoints,
+                lvl: getLevelForPoints(localPoints).lvl,
+                streak,
                 at: Date.now()
             },
             { merge: true }
         );
         // Marca optimista: fins que el snapshot ens torni el document
         // amb el valor nou, aquest és el darrer que sabem pujat.
-        if (state.me) state.me.points = local;
-    } catch {
+        if (state.me) {
+            state.me.points = localPoints;
+            state.me.lvl = getLevelForPoints(localPoints).lvl;
+            state.me.streak = streak;
+        }
+        return { ok: true, changed: true };
+    } catch (error) {
         // Sense xarxa o sense permís: al proper flush hi tornem a ser.
+        return { ok: false, reason: describeError(error) };
     }
+}
+
+/**
+ * Sincronitza manualment les estadístiques locals amb el Social.
+ *
+ * Fa dues coses, sempre sense rebaixar res:
+ *
+ *   1. Puja els punts, el nivell i la ratxa del perfil.
+ *   2. Porta a cada lliga el temps jugat que encara no hi consta. A la
+ *      primera temporada s'hi pot portar tot l'historial; a les
+ *      següents, només el que s'ha jugat des que es va veure néixer la
+ *      temporada. Repetir el botó no duplica minuts, i també compta els
+ *      jocs que arriben per primera vegada als cinc minuts.
+ *
+ * Els minuts importats no passen pels multiplicadors de dia ni de
+ * ratxa perquè no hi ha el detall de quan es van jugar: són XP base.
+ *
+ * @returns {Promise<{ok: boolean, reason?: string, changed?: boolean, seconds?: number}>}
+ */
+export async function syncSocialData() {
+    const user = currentUser();
+    if (!user) return { ok: false, reason: 'offline' };
+
+    const connection = fs();
+    if (!connection) return { ok: false, reason: 'offline' };
+    const { api, db } = connection;
+
+    const profile = await pushProfilePoints({ force: true });
+    if (!profile.ok) return profile;
+
+    const games = {};
+    for (const [game, entry] of Object.entries(stats.gameHistory ?? {})) {
+        games[game] = Math.max(0, Math.floor(Number(entry?.timePlayed) || 0));
+    }
+
+    const local = Math.max(0, Math.floor(stats.timeSeconds || 0));
+    let seconds = 0;
+    let changed = profile.changed === true;
+
+    for (const league of state.leagues) {
+        const n = league.season?.n;
+        if (!n) continue;
+
+        const key = leagueKey(league.id, n);
+
+        // Si la temporada encara no ha arribat per `onSnapshot`, es
+        // llegeix ara: sense això es podria escriure una puntuació més
+        // baixa que la que ja hi ha al compte.
+        if (leagueScores[key] === undefined) {
+            try {
+                const snap = await api.getDoc(
+                    api.doc(db, 'leagues', league.id, 'seasons', String(n))
+                );
+                leagueScores[key] = snap.exists() ? (snap.data().scores ?? {}) : {};
+                league.scores = leagueScores[key];
+            } catch (error) {
+                return { ok: false, reason: describeError(error) };
+            }
+        }
+
+        const before = normalize(leagueScores[key][user.uid] ?? null);
+
+        const plan = planStatsImport({
+            season: n,
+            localSeconds: local,
+            scoreSeconds: before.seconds,
+            baseline: leagueSync[key]
+        });
+        if (plan.needsBaseline) markLeagueSync(key, local);
+        const delta = plan.delta;
+
+        // Els jocs nous només s'importen de l'historial a la primera
+        // temporada; en les següents, el bonus de joc nou el dona el
+        // joc de debò, no el currículum.
+        const { state: next } = importPlaytime(before, {
+            seconds: delta,
+            games: n === 1 ? games : {}
+        });
+
+        const didChange = next.xp !== before.xp
+            || next.seconds !== before.seconds
+            || next.newCount !== before.newCount;
+
+        if (!didChange) continue;
+
+        // Actualització optimista; si la xarxa falla es desfà per no
+        // deixar la lliga pintada amb dades que no s'han desat.
+        const previous = leagueScores[key];
+        leagueScores[key] = { ...(previous ?? {}), [user.uid]: next };
+        league.scores = leagueScores[key];
+
+        try {
+            await api.setDoc(
+                api.doc(db, 'leagues', league.id, 'seasons', String(n)),
+                { scores: { [user.uid]: next }, at: Date.now() },
+                { merge: true }
+            );
+            seconds += delta;
+            changed = true;
+        } catch (error) {
+            leagueScores[key] = previous ?? {};
+            league.scores = leagueScores[key];
+            return { ok: false, reason: describeError(error) };
+        }
+    }
+
+    if (changed) emit();
+    return { ok: true, changed, seconds };
 }
 
 /* ================================================================

@@ -31,7 +31,13 @@ export const CHUNK_BYTES = 500 * 1024;
 export const SYNCED_STATE_KEYS = [STORAGE_KEYS.favorites, STORAGE_KEYS.stats, STORAGE_KEYS.gameVolumes];
 
 /** Claus pròpies que no viatgen mai. */
-export const UNSYNCED_KEYS = [STORAGE_KEYS.lang, STORAGE_KEYS.performanceMode, STORAGE_KEYS.appBannerDismissed, STORAGE_KEYS.syncMeta];
+export const UNSYNCED_KEYS = [
+    STORAGE_KEYS.lang,
+    STORAGE_KEYS.performanceMode,
+    STORAGE_KEYS.appBannerDismissed,
+    STORAGE_KEYS.syncMeta,
+    STORAGE_KEYS.leagueSync
+];
 
 /**
  * Bases d'IndexedDB que no són de cap joc.
