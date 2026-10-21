@@ -306,7 +306,8 @@ function buildCard(game) {
  *
  * No és una targeta de la graella retocada: és una peça nova, amb la
  * portada a l'esquerra i el nom, una explicació i el botó de jugar a la
- * dreta. Ocupa tota l'amplada però l'alçada d'una targeta normal.
+ * dreta. Les cards de la casa van dins d'un `.hero-row` que les
+ * reparteix en dues columnes.
  *
  * El botó no té comportament propi: la card sencera és clicable (el
  * delegat del grid decideix entre obrir i baixar) i el botó només
@@ -322,6 +323,15 @@ function buildHeroCard(game) {
     const cover = document.createElement('div');
     cover.className = 'hero-card__cover';
     appendCover(cover, game);
+
+    // Crèdit damunt de la portada (l'autor de la captura o del joc),
+    // si l'entrada en declara un.
+    if (game.credit) {
+        const credit = document.createElement('span');
+        credit.className = 'hero-card__credit';
+        credit.textContent = game.credit;
+        cover.appendChild(credit);
+    }
 
     const title = document.createElement('h3');
     title.className = 'hero-card__title';
@@ -541,8 +551,22 @@ export function loadMore() {
     if (batch.length === 0) return;
 
     const fragment = document.createDocumentFragment();
+    // Les cards de la casa comparteixen una fila pròpia: el contenidor
+    // les reparteix en dues columnes i, si només n'hi ha una, la deixa
+    // ocupar tota l'amplada.
+    let heroRow = null;
     for (const game of batch) {
-        fragment.appendChild(game.hero ? buildHeroCard(game) : buildCard(game));
+        if (game.hero) {
+            if (!heroRow) {
+                heroRow = document.createElement('div');
+                heroRow.className = 'hero-row';
+                fragment.appendChild(heroRow);
+            }
+            heroRow.appendChild(buildHeroCard(game));
+        } else {
+            heroRow = null;
+            fragment.appendChild(buildCard(game));
+        }
     }
     grid.appendChild(fragment);
 
@@ -565,14 +589,22 @@ function pruneGrid() {
     const grid = $('gameGrid');
     if (!grid) return;
 
-    const excess = grid.children.length - MAX_DOM_CARDS;
-    for (let i = 0; i < excess; i++) {
+    // Un `.hero-row` pot dur més d'una card: es compten les peces, no
+    // els fills, perquè la fila dels jocs de la casa no desquadri el
+    // límit de la virtualització.
+    let excess = grid.querySelectorAll('.card-wrapper, .hero-card').length - MAX_DOM_CARDS;
+    while (excess > 0 && grid.firstElementChild) {
+        const block = grid.firstElementChild;
+        const count = block.classList.contains('hero-row')
+            ? block.querySelectorAll('.hero-card').length
+            : 1;
+
         // Abans de desmuntar-la, es deixa la portada: el navegador ja
         // pot alliberar el seu bitmap (RAM), perquè la targeta no hi
         // tornarà. Si la graella es refés, es reconstruiria sencera.
-        const card = grid.firstElementChild;
-        card.querySelector('img')?.removeAttribute('src');
-        card.remove();
+        for (const img of block.querySelectorAll('img')) img.removeAttribute('src');
+        block.remove();
+        excess -= count;
     }
 }
 

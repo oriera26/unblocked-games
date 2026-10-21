@@ -494,12 +494,23 @@ html[dir="rtl"] .lang-menu {
 
 /* --- LA CARD DE LA CASA (gameList.js amb `hero: true`) ------------
    Presentació del joc propi: portada a l'esquerra, i a la dreta el
-   nom, una explicació i el botó de jugar. Ocupa tota l'amplada de la
-   graella però l'alçada d'una targeta normal. No és una `.card`
-   reenganyada: la peça és nova de caps i panses. */
+   nom, una explicació i el botó de jugar. Totes les cards de la casa
+   viuen dins d'un `.hero-row` que ocupa tota l'amplada de la graella i
+   les reparteix en dues columnes. No és una `.card` reenganyada: la
+   peça és nova de caps i panses. */
+
+.hero-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+/* Si un filtre només deixa una card de la casa, no ha de quedar-se
+   amb mitja fila buida. */
+.hero-row > :only-child { grid-column: 1 / -1; }
 
 .hero-card {
-    grid-column: 1 / -1;
     position: relative;
     display: flex;
     align-items: center;
@@ -537,6 +548,27 @@ html[dir="rtl"] .lang-menu {
     object-fit: cover; display: block;
 }
 
+/* Crèdit de la portada: una pastilla discreta a la cantonada, que no
+   intercepta el clic (la card sencera obre el joc). */
+.hero-card__credit {
+    position: absolute;
+    inset-block-end: 8px;
+    inset-inline-end: 8px;
+    z-index: 1;
+    padding: 3px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+}
+
 .hero-card__body {
     flex: 1 1 auto;
     min-width: 0;            /* el nom i el text poden retallar, no desbordar */
@@ -559,6 +591,15 @@ html[dir="rtl"] .lang-menu {
     line-height: 1.45;
     opacity: 0.8;
     color: var(--text-main);
+
+    /* Dues línies i prou: el que no hi cap acaba amb punts suspensius
+       (`-webkit-line-clamp` és el que implementen tots els navegadors
+       actuals; `line-clamp` queda com a nom estàndard). */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
 }
 
 .hero-card__btn {
@@ -583,9 +624,16 @@ html[dir="rtl"] .lang-menu {
 .hero-card__btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 .hero-card__percent { font-size: 14px; font-weight: 700; letter-spacing: 0.2px; }
 
-/* Mòbil: la portada damunt (al seu format natiu 3:1, sense retall) i
-   el text sota. La card fa poc més d'una pantalla de targeta. */
+/* Amb menys de 900 px les dues columnes ja no deixen espai per a la
+   portada al costat del text: les cards de la casa passen a una fila. */
+@media (max-width: 900px) {
+    .hero-row { grid-template-columns: 1fr; }
+}
+
+/* Mòbil: la portada damunt (en format apaïsat 3:1) i el text sota. La
+   card fa poc més d'una pantalla de targeta. */
 @media (max-width: 640px) {
+    .hero-row { gap: 14px; }
     .hero-card {
         flex-direction: column;
         align-items: stretch;
