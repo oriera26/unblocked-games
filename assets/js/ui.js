@@ -329,12 +329,12 @@ function buildHeroCard(game) {
 
     const desc = document.createElement('p');
     desc.className = 'hero-card__desc';
-    desc.textContent = t('ula.desc');
+    desc.textContent = t(game.descKey ?? 'ula.desc');
 
     const play = document.createElement('button');
     play.type = 'button';
     play.className = 'hero-card__btn';
-    paintHeroButton(play, stateOf(game));
+    paintHeroButton(play, stateOf(game), isOfflineGame(game));
 
     const body = document.createElement('div');
     body.className = 'hero-card__body';
@@ -348,17 +348,20 @@ function buildHeroCard(game) {
  * L'estat de la baixada al botó de la card de la casa: el mateix
  * contracte que `paintOfflineBadge`, però amb text llegible al botó.
  */
-function paintHeroButton(button, info) {
-    button.dataset.offlineState = info.state;
+function paintHeroButton(button, info, offline) {
+    // Els jocs de la casa que no es baixen (Neon Arena) no passen per la
+    // cua de descàrrega: per al botó és com si ja estiguessin a punt.
+    const state = offline ? info.state : 'ready';
+    button.dataset.offlineState = state;
 
-    if (info.state === 'downloading') {
+    if (state === 'downloading') {
         button.innerHTML = `<span class="hero-card__percent">${info.percent || 0}%</span>`;
         button.title = t('offline.downloading');
         button.setAttribute('aria-label', t('offline.downloading'));
         return;
     }
 
-    if (info.state === 'ready') {
+    if (state === 'ready') {
         button.innerHTML =
             `${iconMarkup('play', { size: 16, fill: 'currentColor' })}<span>${t('offline.play')}</span>`;
         button.title = t('offline.play');
@@ -366,7 +369,7 @@ function paintHeroButton(button, info) {
         return;
     }
 
-    if (info.state === 'failed') {
+    if (state === 'failed') {
         button.innerHTML = `${iconMarkup('rotate-cw', { size: 16 })}<span>${t('offline.failed')}</span>`;
         button.title = t('offline.failed');
         button.setAttribute('aria-label', t('offline.failed'));
