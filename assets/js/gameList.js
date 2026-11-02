@@ -25,6 +25,7 @@
 export const GAMES = [
    { name: "ulaFootball", url: "ulafootball.html", image: "assets/images/ulafootball.webp", type: "ula", offline: true, hero: true },
    { name: "Neon Arena", url: "arenagame/index.html", image: "assets/images/neonarena.webp", type: "ula", hero: true, descKey: "neon.desc", credit: "A. Barrera" },
+   { name: "Escape Road 3", url: "clescaperoad3.html", image: "assets/images/clescaperoad3.webp", type: "accio" },
    { name: "Crossbar Challenge", url: "crossbarchallenge.html", image: "assets/images/crossbarchallenge.webp", type: "esports" },
    { name: "Penalty Kicks", url: "penaltykicks.html", image: "assets/images/penaltykicks.jpg", type: "esports" },
    { name: "Tony Hawk's Existential Nightmare", url: "tonyhawks.html", image: "assets/images/tonyhawks.jpg", type: "esports" },
