@@ -1,0 +1,132 @@
+/* ============================================================
+   lqip.css · 3-Layer Loading System
+   1. Blurred LQIP (base, always visible)
+   2. Skeleton Loader with LQIP background + shimmer
+   3. Full image with zoom
+   ============================================================ */
+
+/* Skeleton shimmer tokens */
+.img-wrap {
+    --skeleton-base: rgba(127, 127, 137, 0.16);
+    --skeleton-highlight: rgba(127, 127, 137, 0.30);
+    --skeleton-sweep: linear-gradient(
+        100deg,
+        transparent 20%,
+        var(--skeleton-highlight) 50%,
+        transparent 80%
+    );
+}
+
+body.dark-theme .img-wrap {
+    --skeleton-base: rgba(255, 255, 255, 0.09);
+    --skeleton-highlight: rgba(255, 255, 255, 0.20);
+}
+
+.img-wrap {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    contain-intrinsic-size: 400px 400px;
+}
+
+/* ============================================================
+   LAYER 1: Blurred LQIP (base, always visible)
+   ============================================================ */
+.img-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--lqip);
+    background-size: cover;
+    background-position: center;
+    filter: blur(12px);
+    transform: scale(1.1);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ============================================================
+   LAYER 2: Skeleton Loader with LQIP background + shimmer
+   ============================================================ */
+.img-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--lqip);
+    background-size: cover;
+    background-position: center;
+    filter: blur(12px);
+    transform: scale(1.1);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Shimmer overlay on skeleton - visible during loading */
+.img-wrap.loading::after {
+    background-image: 
+        var(--lqip),
+        var(--skeleton-sweep);
+    background-size: cover, 250% 100%;
+    background-position: center;
+    background-repeat: no-repeat, no-repeat;
+    background-blend-mode: overlay;
+    animation: skeleton-shimmer 1.6s linear infinite;
+    opacity: 1;
+    transition: opacity 400ms ease;
+}
+
+/* ============================================================
+   LAYER 3: Full image with zoom (on top)
+   ============================================================ */
+.img-wrap img {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.15);
+    opacity: 0;
+    transition: opacity 500ms ease, transform 500ms ease;
+}
+
+/* Crossfade: skeleton fades out, image fades in */
+.img-wrap.loaded::after {
+    opacity: 0;
+    transition: opacity 500ms ease;
+}
+
+.img-wrap img.loaded {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+/* Error state: show LQIP base */
+.img-wrap img.error { opacity: 0; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .img-wrap::after,
+    .img-wrap img {
+        animation: none;
+        transition: none;
+    }
+    .img-wrap img.loaded { opacity: 1; }
+    .img-wrap.loaded::after { opacity: 0; }
+}
+
+/* Skeleton shimmer keyframes */
+@keyframes skeleton-shimmer {
+    from { background-position: 150% 0; }
+    to { background-position: -150% 0; }
+}
+
+/* Hero variant */
+.img-wrap.hero-cover {
+    aspect-ratio: 16 / 10;
+    contain-intrinsic-size: 400px 250px;
+}
+
+.img-wrap.hero-cover img,
+.img-wrap.hero-cover img.loaded {
+    transform: scale(1.15);
+}

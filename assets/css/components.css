@@ -333,7 +333,7 @@ html[dir="rtl"] .lang-menu {
 
     /* ⚡ OPT #5: només renderitzar quan és a prop del viewport */
     content-visibility: auto;
-    contain-intrinsic-size: 140px 180px;
+    contain-intrinsic-size: auto 140px auto 180px;
 
     /* ⚡ OPT #6: aïllament de layout/style */
     contain: layout style;
@@ -524,10 +524,6 @@ html[dir="rtl"] .lang-menu {
     opacity: 0;
     transform: translateY(10px);
 
-    /* Mateix tracte que les targetes: fora de la vista no es renderitza
-       i l'estimació fa servir la mida recordada amb 190 px de reserva. */
-    content-visibility: auto;
-    contain-intrinsic-size: 140px auto 190px;
     contain: layout style;
 }
 .hero-card.visible {

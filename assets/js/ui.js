@@ -29,6 +29,9 @@ import { isOfflineGame, stateOf } from './offline-games.js';
 
 export const $ = (id) => document.getElementById(id);
 
+// LQIP helpers from lqip.js (loaded via defer before this module)
+const { getImageUrls, attachImageListeners, HERO_SIZES } = window;
+
 /* ================================================================
    Categories
    ================================================================ */
@@ -365,11 +368,13 @@ function appendCover(media, game) {
 
 /** Atura una portada que ja no interessa i allibera el seu bitmap. */
 function cancelCover(img) {
-    img.dispatchEvent(new Event('cover-cancel'));
+    img.dataset.cancelled = '1';
     img.removeAttribute('src');
+    img.removeAttribute('srcset');
+    img.dispatchEvent(new CustomEvent('cover-cancel'));
 }
 
-function buildCard(game) {
+function buildCard(game, globalIndex = Infinity) {
     const favorite = isFavorite(game.url);
 
     const wrapper = document.createElement('div');
@@ -388,9 +393,43 @@ function buildCard(game) {
     const media = document.createElement('div');
     media.className = 'card';
 
-    if (!appendCover(media, game)) {
-        // Sense portada: la icona de mando. Ha de quedar ben centrada.
-        media.innerHTML = iconMarkup('gamepad-2', { size: 40, className: 'game-icon' });
+    const urls = getImageUrls(game.image);
+    if (urls) {
+        const fig = document.createElement('figure');
+        fig.className = 'img-wrap';
+        fig.style.setProperty('--lqip', `url('${urls.lqip}')`);
+
+        const img = document.createElement('img');
+        img.src = urls.full;  // Only load full image, LQIP shows via CSS
+        img.width = 400;
+        img.height = 400;
+        img.decoding = 'async';
+        img.alt = game.name;
+        img.dataset.fallbackStep = '0';
+        img.dataset.originalSrc = game.image;
+        img.dataset.full = urls.full;
+
+        if (globalIndex === 0) {
+            img.setAttribute('fetchpriority', 'high');
+            img.loading = 'eager';
+        } else if (globalIndex < 6) {
+            img.loading = 'eager';
+        } else {
+            img.loading = 'lazy';
+        }
+
+        fig.appendChild(img);
+        media.appendChild(fig);
+        attachImageListeners(img);
+    } else {
+        const img = document.createElement('img');
+        img.src = game.image;
+        img.width = 400;
+        img.height = 400;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.alt = game.name;
+        media.appendChild(img);
     }
 
     if (isOfflineGame(game)) media.appendChild(offlineBadge(game));
@@ -415,19 +454,49 @@ function buildCard(game) {
  * delegat del grid decideix entre obrir i baixar) i el botó només
  * ensenya l'estat de la baixada, com el badge de les targetes.
  */
-function buildHeroCard(game) {
+function buildHeroCard(game, globalIndex = Infinity) {
     const card = document.createElement('article');
     card.className = 'hero-card';
     card.dataset.url = game.url;
 
-    // Mateixa cua i mateix esquelet que qualsevol portada: el que canvia
-    // és la caixa, no com arriba la imatge.
     const cover = document.createElement('div');
     cover.className = 'hero-card__cover';
-    appendCover(cover, game);
 
-    // Crèdit damunt de la portada (l'autor de la captura o del joc),
-    // si l'entrada en declara un.
+    const urls = getImageUrls(game.image);
+    if (urls) {
+        const fig = document.createElement('figure');
+        fig.className = 'img-wrap hero-cover';
+        fig.style.setProperty('--lqip', `url('${urls.lqip}')`);
+
+        const img = document.createElement('img');
+        img.src = urls.full;  // Only load full image
+        img.width = 400;
+        img.height = 250;
+        img.decoding = 'async';
+        img.alt = game.name;
+        img.dataset.fallbackStep = '0';
+        img.dataset.originalSrc = game.image;
+        img.dataset.full = urls.full;
+        img.loading = 'eager';
+
+        if (globalIndex === 0) {
+            img.setAttribute('fetchpriority', 'high');
+        }
+
+        fig.appendChild(img);
+        cover.appendChild(fig);
+        attachImageListeners(img);
+    } else {
+        const img = document.createElement('img');
+        img.src = game.image;
+        img.width = 400;
+        img.height = 250;
+        img.loading = 'eager';
+        img.decoding = 'async';
+        img.alt = game.name;
+        cover.appendChild(img);
+    }
+
     if (game.credit) {
         const credit = document.createElement('span');
         credit.className = 'hero-card__credit';
@@ -575,33 +644,50 @@ export function resetGrid() {
 }
 
 /**
- * Torna a provar les portades que no van poder arribar.
+ * Torna a provar les portades que han fallat explicitament.
  *
- * El cas típic és un tall de connexió mentre es navega pel catàleg:
- * `main.js` la crida quan la xarxa torna o quan es pitja el botó de
- * l'avís. Només mira les targetes que són al DOM i a qui falta la
- * imatge; les que el joc no en té, es queden com estan.
+ * Només reintenta imatges amb classe `.error` (fallida confirmada),
+ * no les que encara estan carregant. Màxim 3 intents per imatge.
  */
 export function retryCovers() {
     const grid = $('gameGrid');
     if (!grid) return;
 
-    for (const wrapper of grid.querySelectorAll('.card-wrapper')) {
-        const media = wrapper.querySelector('.card');
-        if (!media || media.querySelector('img')) continue;
+    for (const fig of grid.querySelectorAll('.img-wrap')) {
+        const img = fig.querySelector('img');
+        if (!img || !img.classList.contains('error')) continue;
 
-        const game = visibleGames.find((g) => g.url === wrapper.dataset.url);
-        if (game) appendCover(media, game);
+        const wrapper = fig.closest('.card-wrapper, .hero-card');
+        if (!wrapper) continue;
+
+        const game = visibleGames.find(g => g.url === wrapper.dataset.url);
+        if (game) rebuildImage(fig, game);
     }
+}
 
-    // La card de la casa: la seva portada també es torna a provar.
-    for (const hero of grid.querySelectorAll('.hero-card')) {
-        const cover = hero.querySelector('.hero-card__cover');
-        if (!cover || cover.querySelector('img')) continue;
+function rebuildImage(fig, game) {
+    const oldImg = fig.querySelector('img');
+    const retryCount = parseInt(oldImg.dataset.retryCount || '0', 10);
+    if (retryCount >= 3) return;
 
-        const game = visibleGames.find((g) => g.url === hero.dataset.url);
-        if (game) appendCover(cover, game);
-    }
+    const urls = getImageUrls(game.image);
+    if (!urls) return;
+
+    const isHero = fig.classList.contains('hero-cover');
+    const newImg = document.createElement('img');
+    newImg.src = urls.full;  // Only load full image
+    newImg.width = 400;
+    newImg.height = isHero ? 250 : 400;
+    newImg.decoding = 'async';
+    newImg.alt = game.name;
+    newImg.dataset.fallbackStep = '0';
+    newImg.dataset.originalSrc = game.image;
+    newImg.dataset.full = urls.full;
+    newImg.loading = 'lazy';
+    newImg.dataset.retryCount = String(retryCount + 1);
+
+    oldImg.replaceWith(newImg);
+    attachImageListeners(newImg);
 }
 
 /**
@@ -658,17 +744,19 @@ export function loadMore() {
     // les reparteix en dues columnes i, si només n'hi ha una, la deixa
     // ocupar tota l'amplada.
     let heroRow = null;
-    for (const game of batch) {
+    for (let i = 0; i < batch.length; i++) {
+        const game = batch[i];
+        const globalIndex = itemsShown + i;
         if (game.hero) {
             if (!heroRow) {
                 heroRow = document.createElement('div');
                 heroRow.className = 'hero-row';
                 fragment.appendChild(heroRow);
             }
-            heroRow.appendChild(buildHeroCard(game));
+            heroRow.appendChild(buildHeroCard(game, globalIndex));
         } else {
             heroRow = null;
-            fragment.appendChild(buildCard(game));
+            fragment.appendChild(buildCard(game, globalIndex));
         }
     }
     grid.appendChild(fragment);

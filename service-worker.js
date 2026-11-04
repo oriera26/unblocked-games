@@ -2,7 +2,7 @@
    SERVICE WORKER · ulaGames
    ============================================================ */
 
-const CACHE_VERSION = 'ula-v1.15.0';
+const CACHE_VERSION = 'ula-v1.16.0';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const GAMES_CACHE = CACHE_VERSION + '-games';
 const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
@@ -16,6 +16,10 @@ const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
  * importar-lo).
  */
 const OFFLINE_CACHE = 'ula-offline-games';
+
+/* Cache per a LQIP (low-quality image placeholders).
+   Cache-first sense expiració, poblada a demanda (1862 entrades = massa per precachejar). */
+const LQIP_CACHE = 'lqip-v1';
 
 /* Sostres de les caches. `cache.put()` no té límit i, sense podar-les,
    les caches de jocs i d'assets creixien indefinidament a cada visita.
@@ -142,7 +146,8 @@ self.addEventListener('activate', (event) => {
                                 key !== STATIC_CACHE &&
                                 key !== GAMES_CACHE &&
                                 key !== RUNTIME_CACHE &&
-                                key !== OFFLINE_CACHE
+                                key !== OFFLINE_CACHE &&
+                                key !== LQIP_CACHE
                         )
                         .map((key) => caches.delete(key))
                 );
@@ -432,6 +437,27 @@ function dateOf(response) {
     return Date.parse(response.headers.get('date') || '') || 0;
 }
 
+/**
+ * Serveix LQIP amb cache-first permanent.
+ * No hi ha expiració: els LQIP són petits i no canvien.
+ */
+async function serveLQIP(request) {
+    console.log('[SW] LQIP request:', request.url);
+    const cache = await caches.open(LQIP_CACHE);
+    const cached = await cache.match(request);
+    if (cached) {
+        console.log('[SW] LQIP cache hit:', request.url);
+        return cached;
+    }
+
+    const response = await fetch(request);
+    if (response && response.ok) {
+        console.log('[SW] LQIP caching:', request.url);
+        cache.put(request, response.clone());
+    }
+    return response;
+}
+
 /* ============================================================
    FETCH · Estratègies per tipus de recurs
    ============================================================ */
@@ -444,6 +470,12 @@ self.addEventListener('fetch', (event) => {
     /* Ignora peticions a altres orígens (analytics, CDN externs, etc.) */
     const url = new URL(request.url);
     if (url.origin !== self.location.origin) return;
+
+    /* LQIP: cache-first permanent, sense expiració */
+    if (url.pathname.includes('/lqip/') && url.pathname.endsWith('.webp')) {
+        event.respondWith(serveLQIP(request));
+        return;
+    }
 
     /* Jocs offline: només des de la cau pròpia, sense pedaç de volum. */
     if (url.pathname.startsWith(OFFLINE_GAMES_PATH)) {
