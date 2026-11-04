@@ -16,3 +16,6 @@
 # Tools de desenvolupament: només al disc local (per a la verificació),
 # no es versionen ni es puden mai al repositori.
 /tools/
+
+# Generated thumbnails (cropped 1:1 variants)
+assets/images/*-140.webp

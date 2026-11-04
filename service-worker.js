@@ -2,24 +2,8 @@
    SERVICE WORKER · ulaGames
    ============================================================ */
 
-const CACHE_VERSION = 'ula-v1.16.0';
-const STATIC_CACHE = CACHE_VERSION + '-static';
-const GAMES_CACHE = CACHE_VERSION + '-games';
-const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
-
-/**
- * Cau dels jocs offline. Nom fix (no porta la versió del SW): un joc de
- * 50 MB no s'ha de tornar a baixar cada cop que canvia una línia del
- * codi. Si es vol esborrar, hi ha la neteja de memòria cau.
- *
- * Ha de coincidir amb `OFFLINE_CACHE_NAME` de config.js (el SW no pot
- * importar-lo).
- */
-const OFFLINE_CACHE = 'ula-offline-games';
-
-/* Cache per a LQIP (low-quality image placeholders).
-   Cache-first sense expiració, poblada a demanda (1862 entrades = massa per precachejar). */
 const LQIP_CACHE = 'lqip-v1';
+const OFFLINE_CACHE = 'ula-offline-games';
 
 /* Sostres de les caches. `cache.put()` no té límit i, sense podar-les,
    les caches de jocs i d'assets creixien indefinidament a cada visita.
@@ -92,6 +76,8 @@ const PRECACHE_URLS = [
     './assets/css/skeleton.css',
     './assets/css/responsive.css',
     './assets/css/social.css',
+    './assets/css/lqip.css',
+    './assets/css/fonts.css',
     './assets/js/gameList.js',
     './assets/js/game-volume.js',
     './assets/js/offline.js',
@@ -104,29 +90,85 @@ const PRECACHE_URLS = [
     './assets/icons/icon-large-light.png'
 ];
 
+/**
+ * Llegeix la versió des de version.json (comú amb l'app).
+ * S'executa una sola vegada a l'instal·lació.
+ */
+let CACHE_VERSION = null;
+
+async function loadCacheVersion() {
+    if (CACHE_VERSION) return CACHE_VERSION;
+    try {
+        const resp = await fetch(rel('./version.json'), { cache: 'no-store' });
+        const data = await resp.json();
+        CACHE_VERSION = data.version || 'ula-v1.0.0';
+    } catch (e) {
+        console.warn('[SW] No s\'ha pogut llegir version.json, usant fallback', e);
+        CACHE_VERSION = 'ula-v1.0.0';
+    }
+    return CACHE_VERSION;
+}
+
+/**
+ * Obté els noms de cache actualitzats amb la versió actual.
+ */
+async function getCacheNames() {
+    const version = await loadCacheVersion();
+    return {
+        static: version + '-static',
+        games: version + '-games',
+        runtime: version + '-runtime'
+    };
+}
+
+/**
+ * Precacha els recursos essencials.
+ */
+async function precacheResources() {
+    const { static: staticCache } = await getCacheNames();
+    const cache = await caches.open(staticCache);
+    const failures = [];
+    await Promise.all(
+        PRECACHE_URLS.map((url) =>
+            cache.add(url).catch((err) => {
+                failures.push(url);
+                console.warn('[SW] No s\'ha pogut precachejar:', url, err);
+            })
+        )
+    );
+    if (failures.length) {
+        console.warn(`[SW] precache incomplet (${failures.length}):`, failures.join(', '));
+    }
+}
+
+/**
+ * Neteja caches antigues (només les que no són les actuals).
+ */
+async function cleanupOldCaches() {
+    const { static: staticCache, games: gamesCache, runtime: runtimeCache } = await getCacheNames();
+    const keys = await caches.keys();
+    await Promise.all(
+        keys
+            .filter(
+                (key) =>
+                    key.startsWith('ula-') &&
+                    key !== staticCache &&
+                    key !== gamesCache &&
+                    key !== runtimeCache &&
+                    key !== OFFLINE_CACHE &&
+                    key !== LQIP_CACHE
+            )
+            .map((key) => caches.delete(key))
+    );
+    await self.clients.claim();
+}
+
 /* ============================================================
    INSTALL · Precache
    ============================================================ */
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(STATIC_CACHE)
-            .then((cache) => {
-                const failures = [];
-                return Promise.all(
-                    PRECACHE_URLS.map((url) =>
-                        cache.add(url).catch((err) => {
-                            failures.push(url);
-                            console.warn('[SW] No s\'ha pogut precachejar:', url, err);
-                        })
-                    )
-                ).then(() => {
-                    // Un sol avís agregat: si alguna cosa no s'ha pogut
-                    // precachejar, ha de quedar clar quina.
-                    if (failures.length) {
-                        console.warn(`[SW] precache incomplet (${failures.length}):`, failures.join(', '));
-                    }
-                });
-            })
+        precacheResources()
             .then(() => self.skipWaiting())
     );
 });
@@ -135,30 +177,8 @@ self.addEventListener('install', (event) => {
    ACTIVATE · Neteja caches antigues
    ============================================================ */
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys()
-            .then((keys) => {
-                return Promise.all(
-                    keys
-                        .filter(
-                            (key) =>
-                                key.startsWith('ula-') &&
-                                key !== STATIC_CACHE &&
-                                key !== GAMES_CACHE &&
-                                key !== RUNTIME_CACHE &&
-                                key !== OFFLINE_CACHE &&
-                                key !== LQIP_CACHE
-                        )
-                        .map((key) => caches.delete(key))
-                );
-            })
-            .then(() => self.clients.claim())
-    );
+    event.waitUntil(cleanupOldCaches());
 });
-
-/* ============================================================
-   VOLUM · el pedaç que cada joc carrega abans dels seus scripts
-   ============================================================ */
 
 /**
  * Posició just després de l'etiqueta d'obertura del `<head>`.
@@ -192,6 +212,191 @@ function headEndIndex(html) {
  * @param {Request} request
  * @param {URL} url
  */
+async function serveGame(request, url, event) {
+    const { games: gamesCache } = await getCacheNames();
+    const cache = await caches.open(gamesCache);
+    let response = await cache.match(request);
+
+    if (!response) {
+        response = await fetch(request);
+        if (response.ok) {
+            event.waitUntil(storeGame(cache, request, response.clone()));
+        }
+    }
+
+    return withVolumeTag(response, url);
+}
+
+async function withVolumeTag(response, url) {
+    try {
+        if (!response || !response.ok) return response;
+
+        const type = response.headers.get('content-type') || '';
+        const isHtml = /\.(html?|xhtml)$/i.test(url.pathname) || type.includes('text/html');
+        if (!isHtml) return response;
+
+        const html = await response.text();
+        const at = headEndIndex(html);
+        const tag = `<script src="${VOLUME_SRC}" id="${VOLUME_TAG_ID}"></scr` + 'ipt>';
+
+        const patched = at >= 0 && !html.includes(VOLUME_TAG_ID)
+            ? html.slice(0, at) + tag + html.slice(at)
+            : html;
+
+        const headers = new Headers(response.headers);
+        headers.delete('content-length');
+        headers.delete('content-encoding');
+
+        return new Response(patched, {
+            status: response.status,
+            statusText: response.statusText,
+            headers
+        });
+    } catch (err) {
+        console.warn('[SW] No s\'ha pogut insertar el pedaç de volum:', err);
+        return response;
+    }
+}
+
+/* ============================================================
+   OFFLINE · jocs grossos que només es baixen a petició
+   ============================================================ */
+
+/**
+ * Serveix un joc offline des de la seva cau, si hi és.
+ *
+ * Si no hi és, es deixa passar la xarxa sense desar-lo: aquests jocs
+ * només s'incorporen a la cau amb `DOWNLOAD_OFFLINE`, quan l'usuari ho
+ * demana. Així navegar pel catàleg no baixa 50 MB.
+ *
+ * Sense pedaç de volum a propòsit: inserir-ho obligaria a llegir el
+ * fitxer sencer com a text. `game-volume.js` ja sap injectar-se des de
+ * la pàgina mare quan el SW no l'hi ha posat.
+ */
+async function serveOffline(request) {
+    const cache = await caches.open(OFFLINE_CACHE);
+    const hit = await cache.match(request);
+    if (hit) return hit;
+    return fetch(request);
+}
+
+/** Envia un missatge al client que ha demanat la baixada. */
+function postToClient(client, data) {
+    try {
+        if (client && client.postMessage) client.postMessage(data);
+    } catch {
+        /* el client pot haver-se tancat */
+    }
+}
+
+/**
+ * Baixa un joc offline amb avenç i el desa a la cau.
+ *
+ * El cos es compta mentre passa i s'entrega a la cau tal qual, sense
+ * retenir-lo sencer a memòria. Abans s'acumulaven tots els trossos en un
+ * array i al final es feia un Blob: per un joc de 50 MB aixñó volia dir
+ * uns 50 MB a RAM (o més, si el Blob copiava). Els avisos de progrés es
+ * limiten per temps perquè un fitxer gran no generi milers de missatges.
+ */
+async function downloadOffline(absUrl, client) {
+    try {
+        const cache = await caches.open(OFFLINE_CACHE);
+        const response = await fetch(absUrl, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const type = response.headers.get('content-type') || 'text/html';
+        const total = Number(response.headers.get('content-length')) || 0;
+
+        let bytes = 0;
+        let lastTick = 0;
+        let body = response.body;
+
+        if (body && typeof TransformStream === 'function') {
+            const counter = new TransformStream({
+                transform(chunk, controller) {
+                    bytes += chunk.byteLength;
+
+                    const now = Date.now();
+                    if (now - lastTick > 150) {
+                        lastTick = now;
+                        postToClient(client, { type: 'OFFLINE_PROGRESS', url: absUrl, received: bytes, total });
+                    }
+
+                    controller.enqueue(chunk);
+                }
+            });
+            body = body.pipeThrough(counter);
+        }
+
+        let storable;
+        if (body) {
+            storable = new Response(body, { status: 200, headers: { 'Content-Type': type } });
+        } else {
+            const blob = await response.blob();
+            bytes = blob.size;
+            storable = new Response(blob, { status: 200, headers: { 'Content-Type': type } });
+        }
+
+        await cache.put(absUrl, storable);
+        postToClient(client, { type: 'OFFLINE_DONE', url: absUrl, bytes: total || bytes });
+    } catch (err) {
+        console.warn('[SW] baixada offline fallida:', absUrl, err);
+        postToClient(client, { type: 'OFFLINE_ERROR', url: absUrl });
+    }
+}
+
+/**
+ * Serveix una imatge des de la cau d'assets.
+ *
+ * Dins de la finestra de frescor no es toca la xarxa: el catàleg sencer
+ * es pot recórrer amb una sola descàrrega per portada. Passada la
+ * finestra, es lliura la còpia de seguida i s'actualitza de fons (el
+ * mateix tracte que la resta d'assets, però sense la petició a cada
+ * vista). Si encara no hi ha còpia, es baixa i es desa.
+ *
+ * Quan la xarxa falla es mira a les altres caches: el logotip i l'orba
+ * surten del precache d'INSTALL i han de seguir sortint sense xarxa.
+ */
+async function serveImage(request) {
+    const { runtime: runtimeCache } = await getCacheNames();
+    const cache = await caches.open(runtimeCache);
+    const cached = await cache.match(request);
+
+    if (cached && Date.now() - dateOf(cached) < IMAGE_REVALIDATE_MS) return cached;
+
+    const network = fetch(request)
+        .then((response) => {
+            if (response && response.ok) {
+                cache.put(request, response.clone()).then(() => trimCache(runtimeCache, RUNTIME_CACHE_MAX));
+            }
+            return response;
+        })
+        .catch(() => cached || caches.match(request).then((r) => r || Response.error()));
+
+    return cached || network;
+}
+
+/**
+ * Serveix LQIP amb cache-first permanent.
+ * No hi ha expiració: els LQIP són petits i no canvien.
+ */
+async function serveLQIP(request) {
+    const cache = await caches.open(LQIP_CACHE);
+    const cached = await cache.match(request);
+    if (cached) return cached;
+
+    const response = await fetch(request);
+    if (response && response.ok) {
+        cache.put(request, response.clone());
+    }
+    return response;
+}
+
+/** Quan es va rebre una resposta (0 si la capçalera no ho diu). */
+function dateOf(response) {
+    return Date.parse(response.headers.get('date') || '') || 0;
+}
+
 /**
  * Poda una cau si passa del màxim, traient les entrades més antigues.
  *
@@ -262,202 +467,6 @@ function storeGame(cache, request, response) {
         });
 }
 
-async function serveGame(request, url, event) {
-    const cache = await caches.open(GAMES_CACHE);
-    let response = await cache.match(request);
-
-    if (!response) {
-        response = await fetch(request);
-        if (response.ok) {
-            // No s'espera: el joc ha d'arribar de seguida. El
-            // `waitUntil` manté el service worker viu fins que la cau
-            // confirma l'entrada (o la descarta, si el joc és gros).
-            event.waitUntil(storeGame(cache, request, response.clone()));
-        }
-    }
-
-    return withVolumeTag(response, url);
-}
-
-async function withVolumeTag(response, url) {
-    try {
-        if (!response || !response.ok) return response;
-
-        const type = response.headers.get('content-type') || '';
-        const isHtml = /\.(html?|xhtml)$/i.test(url.pathname) || type.includes('text/html');
-        if (!isHtml) return response;
-
-        const html = await response.text();
-        const at = headEndIndex(html);
-        const tag = `<script src="${VOLUME_SRC}" id="${VOLUME_TAG_ID}"></scr` + 'ipt>';
-
-        // Sempre es reconstrueix: un cop llegit el cos, la resposta
-        // original ja no serveix. Si el pedaç hi és o no hi ha on
-        // encabir-lo, es torna el mateix HTML sense tocar-lo.
-        const patched = at >= 0 && !html.includes(VOLUME_TAG_ID)
-            ? html.slice(0, at) + tag + html.slice(at)
-            : html;
-
-        const headers = new Headers(response.headers);
-        // El cos ja no és el que deia l'origen: mida i compressió
-        // deixen de correspondre-hi i el navegador no el sabria obrir.
-        headers.delete('content-length');
-        headers.delete('content-encoding');
-
-        return new Response(patched, {
-            status: response.status,
-            statusText: response.statusText,
-            headers
-        });
-    } catch (err) {
-        console.warn('[SW] No s\'ha pogut insertar el pedaç de volum:', err);
-        return response;
-    }
-}
-
-/* ============================================================
-   OFFLINE · jocs grossos que només es baixen a petició
-   ============================================================ */
-
-/**
- * Serveix un joc offline des de la seva cau, si hi és.
- *
- * Si no hi és, es deixa passar la xarxa sense desar-lo: aquests jocs
- * només s'incorporen a la cau amb `DOWNLOAD_OFFLINE`, quan l'usuari ho
- * demana. Així navegar pel catàleg no baixa 50 MB.
- *
- * Sense pedaç de volum a propòsit: inserir-lo obligaria a llegir el
- * fitxer sencer com a text. `game-volume.js` ja sap injectar-se des de
- * la pàgina mare quan el SW no l'hi ha posat.
- */
-async function serveOffline(request) {
-    const cache = await caches.open(OFFLINE_CACHE);
-    const hit = await cache.match(request);
-    if (hit) return hit;
-    return fetch(request);
-}
-
-/** Envia un missatge al client que ha demanat la baixada. */
-function postToClient(client, data) {
-    try {
-        if (client && client.postMessage) client.postMessage(data);
-    } catch {
-        /* el client pot haver-se tancat */
-    }
-}
-
-/**
- * Baixa un joc offline amb avenç i el desa a la cau.
- *
- * El cos es compta mentre passa i s'entrega a la cau tal qual, sense
- * retenir-lo sencer a memòria. Abans s'acumulaven tots els trossos en un
- * array i al final es feia un Blob: per un joc de 50 MB això volia dir
- * uns 50 MB a RAM (o més, si el Blob copiava). Els avisos de progrés es
- * limiten per temps perquè un fitxer gran no generi milers de missatges.
- */
-async function downloadOffline(absUrl, client) {
-    try {
-        const cache = await caches.open(OFFLINE_CACHE);
-        const response = await fetch(absUrl, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const type = response.headers.get('content-type') || 'text/html';
-        const total = Number(response.headers.get('content-length')) || 0;
-
-        let bytes = 0;
-        let lastTick = 0;
-        let body = response.body;
-
-        if (body && typeof TransformStream === 'function') {
-            const counter = new TransformStream({
-                transform(chunk, controller) {
-                    bytes += chunk.byteLength;
-
-                    const now = Date.now();
-                    if (now - lastTick > 150) {
-                        lastTick = now;
-                        postToClient(client, { type: 'OFFLINE_PROGRESS', url: absUrl, received: bytes, total });
-                    }
-
-                    controller.enqueue(chunk);
-                }
-            });
-            body = body.pipeThrough(counter);
-        }
-
-        let storable;
-        if (body) {
-            storable = new Response(body, { status: 200, headers: { 'Content-Type': type } });
-        } else {
-            const blob = await response.blob();
-            bytes = blob.size;
-            storable = new Response(blob, { status: 200, headers: { 'Content-Type': type } });
-        }
-
-        await cache.put(absUrl, storable);
-        postToClient(client, { type: 'OFFLINE_DONE', url: absUrl, bytes: total || bytes });
-    } catch (err) {
-        console.warn('[SW] baixada offline fallida:', absUrl, err);
-        postToClient(client, { type: 'OFFLINE_ERROR', url: absUrl });
-    }
-}
-
-/**
- * Serveix una imatge des de la cau d'assets.
- *
- * Dins de la finestra de frescor no es toca la xarxa: el catàleg sencer
- * es pot recórrer amb una sola descàrrega per portada. Passada la
- * finestra, es lliura la còpia de seguida i s'actualitza de fons (el
- * mateix tracte que la resta d'assets, però sense la petició a cada
- * vista). Si encara no hi ha còpia, es baixa i es desa.
- *
- * Quan la xarxa falla es mira a les altres caches: el logotip i l'orba
- * surten del precache d'INSTALL i han de seguir sortint sense xarxa.
- */
-async function serveImage(request) {
-    const cache = await caches.open(RUNTIME_CACHE);
-    const cached = await cache.match(request);
-
-    if (cached && Date.now() - dateOf(cached) < IMAGE_REVALIDATE_MS) return cached;
-
-    const network = fetch(request)
-        .then((response) => {
-            if (response && response.ok) {
-                cache.put(request, response.clone()).then(() => trimCache(RUNTIME_CACHE, RUNTIME_CACHE_MAX));
-            }
-            return response;
-        })
-        .catch(() => cached || caches.match(request).then((r) => r || Response.error()));
-
-    return cached || network;
-}
-
-/** Quan es va rebre una resposta (0 si la capçalera no ho diu). */
-function dateOf(response) {
-    return Date.parse(response.headers.get('date') || '') || 0;
-}
-
-/**
- * Serveix LQIP amb cache-first permanent.
- * No hi ha expiració: els LQIP són petits i no canvien.
- */
-async function serveLQIP(request) {
-    console.log('[SW] LQIP request:', request.url);
-    const cache = await caches.open(LQIP_CACHE);
-    const cached = await cache.match(request);
-    if (cached) {
-        console.log('[SW] LQIP cache hit:', request.url);
-        return cached;
-    }
-
-    const response = await fetch(request);
-    if (response && response.ok) {
-        console.log('[SW] LQIP caching:', request.url);
-        cache.put(request, response.clone());
-    }
-    return response;
-}
-
 /* ============================================================
    FETCH · Estratègies per tipus de recurs
    ============================================================ */
@@ -493,24 +502,21 @@ self.addEventListener('fetch', (event) => {
     /* HTML / navegació: network-first amb fallback offline.html */
     if (request.mode === 'navigate' || request.destination === 'document') {
         event.respondWith(
-            fetch(request)
-                .then((response) => {
-                    const copy = response.clone();
-                    caches
-                        .open(RUNTIME_CACHE)
-                        .then((cache) => cache.put(request, copy).then(() => trimCache(RUNTIME_CACHE, RUNTIME_CACHE_MAX)));
-                    return response;
-                })
-                .catch(() => {
-                    // Fallback robust: provem d'obrir offline.html des del STATIC_CACHE
-                    // (on es va precachejar a l'install). Si no hi és, tornem l'error.
-                    const offlineUrl = new URL('./offline.html', self.location.href).href;
-                    return caches.open(STATIC_CACHE).then((cache) => {
-                        return cache.match(offlineUrl).then((offlineResponse) => {
-                            return offlineResponse || Response.error();
-                        });
+            getCacheNames().then((names) => {
+                return fetch(request)
+                    .then((response) => {
+                        const copy = response.clone();
+                        return caches.open(names.runtime)
+                            .then((cache) => cache.put(request, copy)
+                                .then(() => trimCache(names.runtime, RUNTIME_CACHE_MAX)));
+                    })
+                    .catch(() => {
+                        const offlineUrl = new URL('./offline.html', self.location.href).href;
+                        return caches.open(names.static)
+                            .then((cache) => cache.match(offlineUrl))
+                            .then((offlineResponse) => offlineResponse || Response.error());
                     });
-                })
+            })
         );
         return;
     }
@@ -523,17 +529,20 @@ self.addEventListener('fetch', (event) => {
 
     /* Assets estàtics: cache-first amb revalidació */
     event.respondWith(
-        caches.open(RUNTIME_CACHE).then((cache) => {
-            return cache.match(request).then((cached) => {
-                const fetchPromise = fetch(request)
-                    .then((response) => {
-                        if (response && response.ok) {
-                            cache.put(request, response.clone()).then(() => trimCache(RUNTIME_CACHE, RUNTIME_CACHE_MAX));
-                        }
-                        return response;
-                    })
-                    .catch(() => cached);
-                return cached || fetchPromise;
+        getCacheNames().then((names) => {
+            return caches.open(names.runtime).then((cache) => {
+                return cache.match(request).then((cached) => {
+                    const fetchPromise = fetch(request)
+                        .then((response) => {
+                            if (response && response.ok) {
+                                cache.put(request, response.clone())
+                                    .then(() => trimCache(names.runtime, RUNTIME_CACHE_MAX));
+                            }
+                            return response;
+                        })
+                        .catch(() => cached);
+                    return cached || fetchPromise;
+                });
             });
         })
     );
@@ -600,9 +609,6 @@ self.addEventListener('message', (event) => {
         event.waitUntil(
             caches.keys()
                 .then((keys) =>
-                    // Només les caches d'aquesta aplicació: `caches.keys()`
-                    // les retorna totes les de l'origen i esborrar-les totes
-                    // mataria les d'altres apps que hi visquin.
                     Promise.all(keys.filter((k) => k.startsWith('ula-')).map((k) => caches.delete(k)))
                 )
                 .then(() => {
@@ -625,5 +631,11 @@ self.addEventListener('message', (event) => {
     if (event.data.type === 'DELETE_OFFLINE') {
         if (!isOfflineGameUrl(event.data.url)) return;
         event.waitUntil(caches.open(OFFLINE_CACHE).then((cache) => cache.delete(event.data.url)));
+    }
+
+    if (event.data.type === 'GET_VERSION') {
+        loadCacheVersion().then((version) => {
+            event.source?.postMessage({ type: 'VERSION', version });
+        });
     }
 });

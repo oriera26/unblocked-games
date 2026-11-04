@@ -33,7 +33,7 @@ import { initOffline, onOfflineChange } from './offline-games.js';
 import { currentView, go, startRouter } from './router.js';
 import { close, initGate, isGameOpen, launch } from './player.js';
 import { checkStreak, filters, resetProgress, toggleFavorite } from './state.js';
-import { initCacheControl, initLangSelect, initProgressReset, initSettings, registerServiceWorker } from './settings.js';
+import { initCacheControl, initSyncCacheControl, initLangSelect, initProgressReset, initSettings, registerServiceWorker } from './settings.js';
 import { startDetection } from './detection.js';
 import { initI18n, onLangChange, t } from './i18n.js';
 import { initPlayerMenu } from './volume.js';
@@ -594,6 +594,7 @@ async function start() {
 
     initSettings();
     initCacheControl();
+    initSyncCacheControl();
     initProgressReset('resetProgressBtn', () => {
         resetProgress();
         // Si les estadístiques són a la pantalla, han de reflectir-ho

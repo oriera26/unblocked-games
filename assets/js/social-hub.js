@@ -71,7 +71,6 @@ export function mountHub(container) {
 
                 <div class="soc-subtabs" id="hubSubtabs" role="tablist"></div>
                 <div class="soc-friends-body" id="hubFriendsBody"></div>
-                <div id="hubSuggestions"></div>
             </section>
 
             <section class="social-card">
@@ -166,7 +165,6 @@ export function refresh() {
     refreshHeader();
     refreshSubtabs();
     refreshFriendsBody();
-    refreshSuggestions();
     refreshLeague();
     refreshNotifications();
 
@@ -367,28 +365,6 @@ function renderSearchResults() {
     }).join('');
 
     return `<div class="soc-list">${html}</div>`;
-}
-
-/* ================================================================
-   Suggeriments
-   ================================================================ */
-
-function refreshSuggestions() {
-    const box = root.querySelector('#hubSuggestions');
-
-    if (searchTerm.length > 0 || !state.suggestions.length) {
-        paint(box, '', 'suggestions');
-        return;
-    }
-
-    const rows = state.suggestions.slice(0, 4).map((person) => personRow(person, `
-        <button type="button" class="soc-btn soc-btn-primary" data-act="add" data-uid="${esc(person.uid)}" data-name="${esc(person.name ?? '')}">${t('social.add')}</button>
-    `)).join('');
-
-    paint(box, `
-        <div class="soc-section-label">${t('social.suggested')}</div>
-        <div class="soc-list">${rows}</div>
-    `, 'suggestions');
 }
 
 /* ================================================================

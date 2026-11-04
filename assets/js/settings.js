@@ -249,6 +249,30 @@ async function clearServiceWorkerCache() {
 }
 
 /**
+ * Demana la versió actual del SW i actualitza si cal.
+ */
+async function syncServiceWorkerVersion() {
+    if (!('serviceWorker' in navigator)) return { updated: false };
+
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        if (!registration.active) return { updated: false };
+
+        const version = await new Promise((resolve) => {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = (e) => resolve(e.data.version);
+            registration.active.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
+            setTimeout(() => resolve(null), 2000);
+        });
+
+        return { updated: false, version };
+    } catch (err) {
+        console.warn('[ula] no s\'ha pogut comprovar la versió del SW', err);
+        return { updated: false };
+    }
+}
+
+/**
  * Esborra només les dades d'aquesta aplicació.
  *
  * Abans era `localStorage.clear()`, que matava TOTES les claus de
@@ -303,6 +327,62 @@ export function initCacheControl(buttonId = 'clearCacheBtn', message = null) {
         clearUlaStorage();
 
         window.location.reload();
+    });
+}
+
+/**
+ * Inicialitza el botó de sincronització de versió del SW.
+ */
+export function initSyncCacheControl(buttonId = 'syncCacheBtn') {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        button.innerHTML = `
+            <svg class="settings-item-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><path d="M23 4v6"/><path d="M1 20v-6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36"/></svg>
+            <span class="settings-item-text">
+                <span class="settings-item-label">${t('settings.sync.checking')}</span>
+            </span>
+        `;
+
+        try {
+            const result = await syncServiceWorkerVersion();
+            if (result.version) {
+                button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span class="settings-item-text">
+                        <span class="settings-item-label">${t('settings.sync.current')}: ${result.version}</span>
+                    </div>
+                `;
+            } else {
+                button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span class="settings-item-text">
+                        <span class="settings-item-label">${t('settings.sync.error')}</span>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            console.warn('[ula] error sincronitzant versió', err);
+            button.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span class="settings-item-text">
+                    <span class="settings-item-label">${t('settings.sync.error')}</span>
+                </div>
+            `;
+        } finally {
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6"/><path d="M1 20v-6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36"/></svg>
+                    <div class="settings-item-text">
+                        <span class="settings-item-label" data-i18n="settings.sync.label">Sincronitza versió</span>
+                        <span class="settings-item-desc" data-i18n="settings.sync.desc">Comprova i actualitza la versió de la memòria cau</span>
+                    </div>
+                `;
+            }, 3000);
+        }
     });
 }
 
