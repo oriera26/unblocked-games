@@ -38,6 +38,7 @@
           "offline.html",
           "manifest.json",
           "service-worker.js",
+          "version.json",
           "server.js",
           ".nojekyll",
           "googlea299b6218e33ce08.html",

@@ -3,6 +3,55 @@
 Registre de canvis i d'errors trobats, pensat per fer servir com a cos del
 commit. Tot és **local**; encara no s'ha fet `push`.
 
+## Correcció: el lloc no s'obria (ERR_FAILED + version.json 404)
+
+Símptomes: `Failed to convert value to 'Response'`, `The FetchEvent for
+"…/unblocked-games/" resulted in a network error response`, l'avís
+`version.json: Unexpected token '<'` i, al final, `ERR_FAILED`.
+
+### Causes
+
+1. **La navegació responia `undefined`.** Al gestor de `fetch`, la branca
+   `request.mode === 'navigate'` feia `fetch(request).then((response) => {
+   … return cache.put(...) })`. `cache.put` resol a `undefined`, així que
+   `respondWith` rebia `undefined` i el navegador tombava la navegació amb
+   ERR_FAILED. Passava a *totes* les càrregues de pàgina un cop el service
+   worker agafava el control, i per això el lloc sencer semblava caigut.
+2. **La branca d'assets podia resoldre `undefined`.** `return cached ||
+   fetchPromise`, amb `fetchPromise.catch(() => cached)` quan no hi ha
+   còpia, també donava un `undefined` a `respondWith` (mateix TypeError).
+3. **`version.json` no es publicava.** El workflow `pages.yml` copiava a
+   `_site` un llistat fix de fitxers i no hi havia `version.json`; GitHub
+   Pages responia 404 amb la pàgina d'error en HTML i `resp.json()` petava
+   amb `Unexpected token '<'`. Passava el mateix a l'app d'escriptori
+   (`extraResources` de `package.json`).
+4. **`storeGame` podava una cau inexistent.** Cridava `trimCache(GAMES_CACHE,
+   …)` i `GAMES_CACHE` no està definit enlloc: la poda sempre fallava.
+
+### Què s'ha canviat
+
+- `service-worker.js`
+  - `serveNavigation()` i `serveAsset()` noves: **totes** les branques
+    resolen un `Response`. Si la xarxa falla, es mira la cau i, si no hi
+    ha res, es retorna una pàgina pròpia «Sense connexió» (503) en comptes
+    de `Response.error()` o `undefined`.
+  - `keepAlive(event, work)`: marca la feina de fons amb `waitUntil` sense
+    que un rebuig puga tombar la resposta.
+  - `loadCacheVersion()` comprova `resp.ok` i que el cos comence per `{`
+    abans de fer `JSON.parse`; el fallback ja no escup l'error de sintaxi.
+  - `serveGame`, `serveImage`, `serveLQIP` i `serveOffline` tenen fallback
+    a la cau i mai no retornen `undefined`.
+  - `storeGame(cache, cacheName, …)` rep el nom real de la cau i la poda
+    funciona.
+  - `GET_VERSION` respon pel `MessagePort` que envia la pàgina (abans
+    responia pel `client` i la comprovació de versió sempre caducava).
+- `.github/workflows/pages.yml` i `package.json`: `version.json` passa a
+  formar part del lloc publicat i de l'app d'escriptori.
+- `assets/js/settings.js`: el registre del SW usa `updateViaCache: 'none'`,
+  fa `registration.update()` i envia `SKIP_WAITING` a la versió en espera;
+  arreglats els `</div>` que tancaven un `<span>` al botó de sincronitzar.
+- `version.json`: pujada a `ula-v1.18.0` per forçar la rotació de caches.
+
 ## Secció Social (navbar → hub → xat → lligues)
 
 Petició: una secció **Social** al costat de *Jocs* i *Estadístiques*, amb

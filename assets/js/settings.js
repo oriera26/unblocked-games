@@ -260,9 +260,17 @@ async function syncServiceWorkerVersion() {
 
         const version = await new Promise((resolve) => {
             const channel = new MessageChannel();
-            channel.port1.onmessage = (e) => resolve(e.data.version);
+            const finish = (value) => {
+                try {
+                    channel.port1.close();
+                } catch {
+                    /* ja tancat */
+                }
+                resolve(value);
+            };
+            channel.port1.onmessage = (e) => finish(e?.data?.version ?? null);
             registration.active.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
-            setTimeout(() => resolve(null), 2000);
+            setTimeout(() => finish(null), 2000);
         });
 
         return { updated: false, version };
@@ -353,14 +361,14 @@ export function initSyncCacheControl(buttonId = 'syncCacheBtn') {
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     <span class="settings-item-text">
                         <span class="settings-item-label">${t('settings.sync.current')}: ${result.version}</span>
-                    </div>
+                    </span>
                 `;
             } else {
                 button.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     <span class="settings-item-text">
                         <span class="settings-item-label">${t('settings.sync.error')}</span>
-                    </div>
+                    </span>
                 `;
             }
         } catch (err) {
@@ -369,7 +377,7 @@ export function initSyncCacheControl(buttonId = 'syncCacheBtn') {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <span class="settings-item-text">
                     <span class="settings-item-label">${t('settings.sync.error')}</span>
-                </div>
+                </span>
             `;
         } finally {
             setTimeout(() => {
@@ -430,9 +438,16 @@ export function registerServiceWorker(isDesktop) {
 
     const register = () => {
         navigator.serviceWorker
-            .register(SERVICE_WORKER_URL)
+            // `updateViaCache: 'none'` fa que el navegador no es crega la
+            // còpia HTTP de service-worker.js: GitHub Pages el cacheja
+            // deu minuts i, sense això, una correcció del SW podia trigar
+            // a arribar justament quan més falta feia.
+            .register(SERVICE_WORKER_URL, { updateViaCache: 'none' })
             .then((registration) => {
                 console.info('[ula] service worker registrat a', registration.scope);
+                // Si hi ha una versió nova esperant, que prenga el relleu.
+                registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+                registration.update().catch(() => {});
             })
             .catch((err) => {
                 // Sense service worker l'aplicació continua fent

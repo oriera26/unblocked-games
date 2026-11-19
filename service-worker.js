@@ -90,9 +90,17 @@ const PRECACHE_URLS = [
     './assets/icons/icon-large-light.png'
 ];
 
+/** Versió que s'usa si version.json no es pot llegir. */
+const FALLBACK_VERSION = 'ula-v1.0.0';
+
 /**
  * Llegeix la versió des de version.json (comú amb l'app).
  * S'executa una sola vegada a l'instal·lació.
+ *
+ * Cal comprovar `resp.ok` i que el cos siga JSON de debò: quan el fitxer
+ * no existeix, GitHub Pages respon 404 amb la pàgina d'error en HTML i
+ * `resp.json()` petava amb «Unexpected token '<'». Amb `resp.ok` es
+ * detecta abans i el fallback queda net.
  */
 let CACHE_VERSION = null;
 
@@ -100,13 +108,33 @@ async function loadCacheVersion() {
     if (CACHE_VERSION) return CACHE_VERSION;
     try {
         const resp = await fetch(rel('./version.json'), { cache: 'no-store' });
-        const data = await resp.json();
-        CACHE_VERSION = data.version || 'ula-v1.0.0';
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const text = await resp.text();
+        if (!text.trimStart().startsWith('{')) throw new Error('la resposta no és JSON');
+        const data = JSON.parse(text);
+        CACHE_VERSION = data.version || FALLBACK_VERSION;
     } catch (e) {
         console.warn('[SW] No s\'ha pogut llegir version.json, usant fallback', e);
-        CACHE_VERSION = 'ula-v1.0.0';
+        CACHE_VERSION = FALLBACK_VERSION;
     }
     return CACHE_VERSION;
+}
+
+/**
+ * Marca una promesa com a feina de fons de l'esdeveniment sense que un
+ * rebuig puga tombar la resposta que es lliura al navegador.
+ *
+ * `waitUntil` només pot allargar la vida de l'esdeveniment mentre aquest
+ * encara és viu; si ja no ho és, la feina de fons es deixa córrer igual.
+ */
+function keepAlive(event, work) {
+    const safe = Promise.resolve(work).catch(() => {});
+    try {
+        event.waitUntil(safe);
+    } catch {
+        /* l'esdeveniment ja no és extensible: no hi ha res a fer */
+    }
+    return safe;
 }
 
 /**
@@ -218,18 +246,25 @@ async function serveGame(request, url, event) {
     let response = await cache.match(request);
 
     if (!response) {
-        response = await fetch(request);
-        if (response.ok) {
-            event.waitUntil(storeGame(cache, request, response.clone()));
+        try {
+            response = await fetch(request);
+        } catch (err) {
+            // Sense xarxa: si hi ha una còpia (encara que siga d'un altre
+            // query) es lliura; si no, un error de debò.
+            return (await caches.match(request)) || Response.error();
+        }
+        if (response && response.ok) {
+            keepAlive(event, storeGame(cache, gamesCache, request, response.clone()));
         }
     }
 
-    return withVolumeTag(response, url);
+    return (await withVolumeTag(response, url)) || Response.error();
 }
 
 async function withVolumeTag(response, url) {
     try {
-        if (!response || !response.ok) return response;
+        if (!response) return Response.error();
+        if (!response.ok) return response;
 
         const type = response.headers.get('content-type') || '';
         const isHtml = /\.(html?|xhtml)$/i.test(url.pathname) || type.includes('text/html');
@@ -277,7 +312,11 @@ async function serveOffline(request) {
     const cache = await caches.open(OFFLINE_CACHE);
     const hit = await cache.match(request);
     if (hit) return hit;
-    return fetch(request);
+    try {
+        return await fetch(request);
+    } catch {
+        return (await caches.match(request)) || Response.error();
+    }
 }
 
 /** Envia un missatge al client que ha demanat la baixada. */
@@ -357,39 +396,56 @@ async function downloadOffline(absUrl, client) {
  * Quan la xarxa falla es mira a les altres caches: el logotip i l'orba
  * surten del precache d'INSTALL i han de seguir sortint sense xarxa.
  */
-async function serveImage(request) {
+async function serveImage(request, event) {
     const { runtime: runtimeCache } = await getCacheNames();
     const cache = await caches.open(runtimeCache);
     const cached = await cache.match(request);
 
     if (cached && Date.now() - dateOf(cached) < IMAGE_REVALIDATE_MS) return cached;
 
-    const network = fetch(request)
-        .then((response) => {
-            if (response && response.ok) {
-                cache.put(request, response.clone()).then(() => trimCache(runtimeCache, RUNTIME_CACHE_MAX));
-            }
-            return response;
-        })
-        .catch(() => cached || caches.match(request).then((r) => r || Response.error()));
+    const network = fetch(request).then((response) => {
+        if (response && response.ok) {
+            keepAlive(
+                event,
+                cache
+                    .put(request, response.clone())
+                    .then(() => trimCache(runtimeCache, RUNTIME_CACHE_MAX))
+            );
+        }
+        return response;
+    });
 
-    return cached || network;
+    if (cached) {
+        // Es lliura la còpia i s'actualitza de fons.
+        keepAlive(event, network);
+        return cached;
+    }
+
+    try {
+        return await network;
+    } catch {
+        return (await caches.match(request)) || Response.error();
+    }
 }
 
 /**
  * Serveix LQIP amb cache-first permanent.
  * No hi ha expiració: els LQIP són petits i no canvien.
  */
-async function serveLQIP(request) {
+async function serveLQIP(request, event) {
     const cache = await caches.open(LQIP_CACHE);
     const cached = await cache.match(request);
     if (cached) return cached;
 
-    const response = await fetch(request);
-    if (response && response.ok) {
-        cache.put(request, response.clone());
+    try {
+        const response = await fetch(request);
+        if (response && response.ok) {
+            keepAlive(event, cache.put(request, response.clone()));
+        }
+        return response;
+    } catch {
+        return (await caches.match(request)) || Response.error();
     }
-    return response;
 }
 
 /** Quan es va rebre una resposta (0 si la capçalera no ho diu). */
@@ -423,14 +479,16 @@ async function trimCache(cacheName, max) {
  * l'entrada fins que el cos acaba sencer). L'usuari no en pateix res:
  * el joc li arriba per l'altra branca del `clone`, que va a part.
  */
-function storeGame(cache, request, response) {
+function storeGame(cache, cacheName, request, response) {
     const body = response.body;
+    const done = () => trimCache(cacheName, GAMES_CACHE_MAX);
 
     // Sense cos o sense TransformStream (navegadors vells) es desa tal
     // com es feia abans; hi ha marge de sobres a la cau.
     if (!body || typeof TransformStream !== 'function') {
-        return cache.put(request, response)
-            .then(() => trimCache(GAMES_CACHE, GAMES_CACHE_MAX))
+        return cache
+            .put(request, response)
+            .then(done)
             .catch(() => {});
     }
 
@@ -460,8 +518,9 @@ function storeGame(cache, request, response) {
         headers
     });
 
-    return cache.put(request, storable)
-        .then(() => trimCache(GAMES_CACHE, GAMES_CACHE_MAX))
+    return cache
+        .put(request, storable)
+        .then(done)
         .catch(() => {
             /* passat del sostre: no es desa, i prou */
         });
@@ -470,6 +529,105 @@ function storeGame(cache, request, response) {
 /* ============================================================
    FETCH · Estratègies per tipus de recurs
    ============================================================ */
+
+/**
+ * Resposta de navegació d'últim recurs.
+ *
+ * `Response.error()` seria vàlida, però el navegador la converteix en la
+ * seua pantalla d'error genèrica. Una pàgina pròpia, encara que siga
+ * mínima, deixa clar què ha passat i permet reintentar.
+ */
+function offlineFallbackResponse() {
+    const html = '<!DOCTYPE html><html lang="ca"><head><meta charset="utf-8">' +
+        '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+        '<title>Sense connexió</title></head>' +
+        '<body style="margin:0;min-height:100vh;display:flex;flex-direction:column;' +
+        'align-items:center;justify-content:center;gap:.75rem;padding:1.5rem;' +
+        'background:#05060a;color:#e6e9ef;font:16px/1.5 system-ui,sans-serif;text-align:center">' +
+        '<h1 style="margin:0;font-size:1.5rem">Sense connexió</h1>' +
+        '<p style="margin:0;color:#9aa3b2">No s\'ha pogut carregar la pàgina. ' +
+        'Comprova la connexió i torna-ho a provar.</p>' +
+        '<button onclick="location.reload()" style="margin-top:.5rem;padding:.6rem 1.2rem;' +
+        'border:0;border-radius:.6rem;background:#007AFF;color:#fff;font:inherit;cursor:pointer">' +
+        'Torna-ho a provar</button></body></html>';
+
+    return new Response(html, {
+        status: 503,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    });
+}
+
+/**
+ * Navegació: xarxa primer, després la còpia més recent i, finalment, la
+ * pàgina sense connexió.
+ *
+ * Totes les branques han de resoldre's amb un `Response`. Si la promesa
+ * de `respondWith` es resol amb `undefined` (el que passava abans, perquè
+ * el `.then` retornava el resultat de `cache.put`), el navegador tomba la
+ * navegació amb ERR_FAILED i el lloc sencer sembla caigut.
+ */
+async function serveNavigation(request, event) {
+    const names = await getCacheNames();
+
+    try {
+        const response = await fetch(request);
+
+        if (response && response.ok) {
+            const copy = response.clone();
+            keepAlive(
+                event,
+                caches
+                    .open(names.runtime)
+                    .then((cache) => cache.put(request, copy))
+                    .then(() => trimCache(names.runtime, RUNTIME_CACHE_MAX))
+            );
+        }
+
+        return response;
+    } catch (err) {
+        const cached = await caches.match(request, { ignoreVary: true });
+        if (cached) return cached;
+
+        const offline = await caches.match(rel('./offline.html'), { ignoreVary: true });
+        return offline || offlineFallbackResponse();
+    }
+}
+
+/**
+ * Assets estàtics: cau primer amb revalidació de fons.
+ *
+ * Igual que la navegació, mai no pot resoldre's amb `undefined`: quan la
+ * xarxa falla i no hi ha còpia, es retorna un `Response` d'error.
+ */
+async function serveAsset(request, event) {
+    const names = await getCacheNames();
+    const cache = await caches.open(names.runtime);
+    const cached = await cache.match(request);
+
+    const network = fetch(request).then((response) => {
+        if (response && response.ok) {
+            keepAlive(
+                event,
+                cache
+                    .put(request, response.clone())
+                    .then(() => trimCache(names.runtime, RUNTIME_CACHE_MAX))
+            );
+        }
+        return response;
+    });
+
+    if (cached) {
+        keepAlive(event, network);
+        return cached;
+    }
+
+    try {
+        return await network;
+    } catch {
+        return (await caches.match(request)) || Response.error();
+    }
+}
+
 self.addEventListener('fetch', (event) => {
     const request = event.request;
 
@@ -482,70 +640,37 @@ self.addEventListener('fetch', (event) => {
 
     /* LQIP: cache-first permanent, sense expiració */
     if (url.pathname.includes('/lqip/') && url.pathname.endsWith('.webp')) {
-        event.respondWith(serveLQIP(request));
+        event.respondWith(serveLQIP(request, event).catch(() => Response.error()));
         return;
     }
 
     /* Jocs offline: només des de la cau pròpia, sense pedaç de volum. */
     if (url.pathname.startsWith(OFFLINE_GAMES_PATH)) {
-        event.respondWith(serveOffline(request));
+        event.respondWith(serveOffline(request).catch(() => Response.error()));
         return;
     }
 
     /* Jocs: cache-first amb fallback a xarxa, i amb el pedaç de volum
        insertat a l'HTML abans de lliurar-lo. */
     if (url.pathname.startsWith(GAMES_PATH)) {
-        event.respondWith(serveGame(request, url, event));
+        event.respondWith(serveGame(request, url, event).catch(() => Response.error()));
         return;
     }
 
     /* HTML / navegació: network-first amb fallback offline.html */
     if (request.mode === 'navigate' || request.destination === 'document') {
-        event.respondWith(
-            getCacheNames().then((names) => {
-                return fetch(request)
-                    .then((response) => {
-                        const copy = response.clone();
-                        return caches.open(names.runtime)
-                            .then((cache) => cache.put(request, copy)
-                                .then(() => trimCache(names.runtime, RUNTIME_CACHE_MAX)));
-                    })
-                    .catch(() => {
-                        const offlineUrl = new URL('./offline.html', self.location.href).href;
-                        return caches.open(names.static)
-                            .then((cache) => cache.match(offlineUrl))
-                            .then((offlineResponse) => offlineResponse || Response.error());
-                    });
-            })
-        );
+        event.respondWith(serveNavigation(request, event).catch(() => offlineFallbackResponse()));
         return;
     }
 
     /* Imatges del catàleg: cau amb revalidació diària */
     if (request.destination === 'image') {
-        event.respondWith(serveImage(request));
+        event.respondWith(serveImage(request, event).catch(() => Response.error()));
         return;
     }
 
     /* Assets estàtics: cache-first amb revalidació */
-    event.respondWith(
-        getCacheNames().then((names) => {
-            return caches.open(names.runtime).then((cache) => {
-                return cache.match(request).then((cached) => {
-                    const fetchPromise = fetch(request)
-                        .then((response) => {
-                            if (response && response.ok) {
-                                cache.put(request, response.clone())
-                                    .then(() => trimCache(names.runtime, RUNTIME_CACHE_MAX));
-                            }
-                            return response;
-                        })
-                        .catch(() => cached);
-                    return cached || fetchPromise;
-                });
-            });
-        })
-    );
+    event.respondWith(serveAsset(request, event).catch(() => Response.error()));
 });
 
 /* ============================================================
@@ -635,7 +760,11 @@ self.addEventListener('message', (event) => {
 
     if (event.data.type === 'GET_VERSION') {
         loadCacheVersion().then((version) => {
-            event.source?.postMessage({ type: 'VERSION', version });
+            const payload = { type: 'VERSION', version };
+            // La pàgina pregunta amb un MessageChannel; si no n'hi ha,
+            // es respon pel client que ha enviat el missatge.
+            if (event.ports && event.ports[0]) event.ports[0].postMessage(payload);
+            else if (event.source && event.source.postMessage) event.source.postMessage(payload);
         });
     }
 });
