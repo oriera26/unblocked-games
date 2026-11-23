@@ -32,6 +32,20 @@ export const $ = (id) => document.getElementById(id);
 // LQIP helpers from lqip.js (loaded via defer before this module)
 const { getImageUrls, attachImageListeners, HERO_SIZES } = window;
 
+/** Logger centralitzat per observabilitat de càrrega d'imatges. */
+const ImageLog = {
+    enabled: true,
+    _prefix: '[ula:img]',
+    info(...args) { if (this.enabled) console.log(this._prefix, ...args); },
+    warn(...args) { if (this.enabled) console.warn(this._prefix, ...args); },
+    error(...args) { if (this.enabled) console.error(this._prefix, ...args); },
+    debug(...args) { if (this.enabled) console.debug(this._prefix, ...args); }
+};
+
+/** Generació d'ID únic per rastrejar càrregues. */
+let coverRequestId = 0;
+function nextRequestId() { return ++coverRequestId; }
+
 /* ================================================================
    Categories
    ================================================================ */
@@ -158,6 +172,12 @@ let itemsShown = 0;
 /** Els jocs que apliquen els filtres actius, en ordre. */
 let visibleGames = [];
 
+/** Protecció contra race conditions: evita càrregues simultànies de loadMore. */
+let isLoadingMore = false;
+
+/** Protecció contra race conditions a resetGrid/applyFilters. */
+let isResetting = false;
+
 export function setVisibleGames(games) {
     visibleGames = games;
 }
@@ -199,9 +219,16 @@ export function showSkeleton(count = CHUNK_SIZE) {
  */
 function safeCoverImage(src) {
     if (typeof src !== 'string') return null;
-    if (!src.startsWith('assets/images/')) return null;
-    if (src.includes('..')) return null;
-    return /\.(webp|jpe?g|png|gif|avif)$/i.test(src) ? src : null;
+    // Accepta paths relatius a assets/images/ i també paths absoluts al mateix origen
+    const normalized = src.replace(/\\/g, '/');
+    if (!normalized.startsWith('assets/images/') && !normalized.startsWith('/assets/images/')) return null;
+    if (normalized.includes('..')) return null;
+    const extOk = /\.(webp|jpe?g|png|gif|avif)$/i.test(normalized);
+    if (!extOk) {
+        ImageLog.warn('Rejected cover (bad extension):', src);
+        return null;
+    }
+    return normalized.startsWith('/') ? normalized : normalized;
 }
 
 /** La cua compartida que reparteix les portades de tot el grid. */
@@ -231,6 +258,7 @@ const loadedCovers = new Set();
  * @returns {Promise<'decode'|'error'|'cancel'|'timeout'>}
  */
 function waitForCover(img) {
+    const requestId = img.dataset.coverRequestId || 'unknown';
     return new Promise((resolve) => {
         let settled = false;
 
@@ -239,6 +267,7 @@ function waitForCover(img) {
             settled = true;
             img.removeEventListener('cover-cancel', onCancel);
             window.clearTimeout(timer);
+            ImageLog.debug(`Cover ${requestId} finished:`, result);
             resolve(result);
         };
 
@@ -246,7 +275,10 @@ function waitForCover(img) {
         const timer = window.setTimeout(() => finish('timeout'), COVER_TIMEOUT_MS);
 
         img.addEventListener('cover-cancel', onCancel);
-        img.decode().then(() => finish('decode'), () => finish('error'));
+        img.decode().then(() => finish('decode'), (err) => {
+            ImageLog.warn(`Cover ${requestId} decode error:`, err);
+            finish('error');
+        });
     });
 }
 
@@ -271,9 +303,33 @@ function revealCover(media, img, cover) {
  * @returns {Promise<symbol|undefined>} `SKIP` si no s'ha de fer res més
  */
 async function finishCover(media, img, cover) {
+    const requestId = img.dataset.coverRequestId || 'unknown';
     const result = await waitForCover(img);
 
     if (result === 'cancel') return SKIP;
+
+    // Reintent automàtic per timeouts i errors de xarxa (màxim 2 reintents)
+    const retryCount = parseInt(img.dataset.coverRetryCount || '0', 10);
+    const maxRetries = 2;
+
+    if ((result === 'timeout' || result === 'error') && img.naturalWidth === 0 && retryCount < maxRetries) {
+        ImageLog.warn(`Cover ${requestId} ${result}, scheduling retry ${retryCount + 1}/${maxRetries}`);
+        
+        // Backoff exponencial: 1s, 2s
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+        img.dataset.coverRetryCount = String(retryCount + 1);
+        
+        // Marquem com a carregant per evitar que retryCovers() la toqui
+        media.classList.add('card-loading');
+        media.classList.remove('card-done');
+        
+        await new Promise(r => setTimeout(r, delay));
+        
+        if (!img.isConnected) return SKIP; // Targeta desmuntada
+        
+        // Reintentem la càrrega
+        return finishCover(media, img, cover);
+    }
 
     if (result === 'timeout' && img.naturalWidth === 0) {
         // No bloquegem la cua per una imatge que encara pot arribar:
@@ -281,7 +337,10 @@ async function finishCover(media, img, cover) {
         // pinta sola. Si falla, s'elimina com qualsevol portada perduda.
         media.classList.remove('card-loading');
         img.addEventListener('load', () => revealCover(media, img, cover), { once: true });
-        img.addEventListener('error', () => img.remove(), { once: true });
+        img.addEventListener('error', () => {
+            img.classList.add('error'); // Per a retryCovers()
+            img.remove();
+        }, { once: true });
         if (img.complete && img.naturalWidth > 0) revealCover(media, img, cover);
         return SKIP;
     }
@@ -289,6 +348,7 @@ async function finishCover(media, img, cover) {
     if (result === 'error' && img.naturalWidth === 0) {
         // La portada no ha arribat (sense xarxa, 404...): es treu del
         // DOM i es reintentarà quan convingui.
+        img.classList.add('error'); // Per a retryCovers()
         img.remove();
         media.classList.remove('card-loading');
         return SKIP;
@@ -324,6 +384,9 @@ function appendCover(media, game) {
     const img = document.createElement('img');
     img.decoding = 'async';
     img.alt = '';
+    // ID únic per rastrejar aquesta càrrega als logs
+    img.dataset.coverRequestId = String(nextRequestId());
+    img.dataset.coverRetryCount = '0';
 
     // Un reintent pot trobar la targeta encara dins del fundido: la
     // classe de sortida es neta abans de tornar a l'esquelet.
@@ -347,6 +410,7 @@ function appendCover(media, game) {
         if (!img.isConnected) return SKIP;
 
         img.src = cover;
+        ImageLog.debug(`Cover ${img.dataset.coverRequestId} queued for:`, cover);
 
         // La cau del navegador pot tenir-la a punt abans que la cua
         // arribi a esperar cap esdeveniment.
@@ -368,10 +432,27 @@ function appendCover(media, game) {
 
 /** Atura una portada que ja no interessa i allibera el seu bitmap. */
 function cancelCover(img) {
+    if (!img) return;
+    const requestId = img.dataset.coverRequestId || 'unknown';
+    
+    // Revoca object URLs si n'hi ha (per alliberar memòria)
+    if (img.src && img.src.startsWith('blob:')) {
+        try { URL.revokeObjectURL(img.src); } catch {}
+    }
+    if (img.srcset) {
+        img.srcset.split(',').forEach(s => {
+            const url = s.trim().split(' ')[0];
+            if (url.startsWith('blob:')) {
+                try { URL.revokeObjectURL(url); } catch {}
+            }
+        });
+    }
+    
     img.dataset.cancelled = '1';
     img.removeAttribute('src');
     img.removeAttribute('srcset');
     img.dispatchEvent(new CustomEvent('cover-cancel'));
+    ImageLog.debug(`Cover ${requestId} cancelled`);
 }
 
 function buildCard(game, globalIndex = Infinity) {
@@ -393,35 +474,20 @@ function buildCard(game, globalIndex = Infinity) {
     const media = document.createElement('div');
     media.className = 'card';
 
+    // Crear estructura per LQIP i imatge
     const urls = getImageUrls(game.image);
     if (urls) {
         const fig = document.createElement('figure');
         fig.className = 'img-wrap';
         fig.style.setProperty('--lqip', `url('${urls.lqip}')`);
-
-        const img = document.createElement('img');
-        img.src = urls.full;  // Only load full image, LQIP shows via CSS
-        img.width = 400;
-        img.height = 400;
-        img.decoding = 'async';
-        img.alt = game.name;
-        img.dataset.fallbackStep = '0';
-        img.dataset.originalSrc = game.image;
-        img.dataset.full = urls.full;
-
-        if (globalIndex === 0) {
-            img.setAttribute('fetchpriority', 'high');
-            img.loading = 'eager';
-        } else if (globalIndex < 6) {
-            img.loading = 'eager';
-        } else {
-            img.loading = 'lazy';
-        }
-
-        fig.appendChild(img);
+        
+        // Placeholder per la imatge - appendCover crearà la imatge real
         media.appendChild(fig);
-        attachImageListeners(img);
-    } else {
+        // Assegurar que appendCover s'executi després que el media estigui al DOM
+        // ho fem diferent perquè appendCover necessita el media element
+        setTimeout(() => appendCover(media, game), 0);
+    } else if (game.image) {
+        // Fallback per imatges sense LQIP
         const img = document.createElement('img');
         img.src = game.image;
         img.width = 400;
@@ -467,26 +533,11 @@ function buildHeroCard(game, globalIndex = Infinity) {
         const fig = document.createElement('figure');
         fig.className = 'img-wrap hero-cover';
         fig.style.setProperty('--lqip', `url('${urls.lqip}')`);
-
-        const img = document.createElement('img');
-        img.src = urls.full;  // Only load full image
-        img.width = 400;
-        img.height = 250;
-        img.decoding = 'async';
-        img.alt = game.name;
-        img.dataset.fallbackStep = '0';
-        img.dataset.originalSrc = game.image;
-        img.dataset.full = urls.full;
-        img.loading = 'eager';
-
-        if (globalIndex === 0) {
-            img.setAttribute('fetchpriority', 'high');
-        }
-
-        fig.appendChild(img);
+        
         cover.appendChild(fig);
-        attachImageListeners(img);
-    } else {
+        // Usar appendCoverHero per a hero cards (mateixa cua, mateix control)
+        setTimeout(() => appendCoverHero(cover, game), 0);
+    } else if (game.image) {
         const img = document.createElement('img');
         img.src = game.image;
         img.width = 400;
@@ -523,6 +574,110 @@ function buildHeroCard(game, globalIndex = Infinity) {
 
     card.append(cover, body);
     return card;
+}
+
+/**
+ * Versió d'appendCover per a hero cards (contenidor .hero-card__cover).
+ * Comparteix la mateixa cua i cache loadedCovers.
+ */
+function appendCoverHero(cover, game) {
+    const imgUrl = game.image ? safeCoverImage(game.image) : null;
+    if (!imgUrl) return false;
+
+    // El cover conte un .img-wrap (fig) on posarem la imatge
+    const fig = cover.querySelector('.img-wrap');
+    if (!fig) return false;
+
+    const img = document.createElement('img');
+    img.decoding = 'async';
+    img.alt = '';
+    img.dataset.coverRequestId = String(nextRequestId());
+    img.dataset.coverRetryCount = '0';
+
+    cover.classList.remove('card-done');
+    cover.classList.add('card-loading');
+    fig.appendChild(img);
+
+    if (loadedCovers.has(imgUrl)) {
+        img.src = imgUrl;
+        if (img.complete && img.naturalWidth > 0) revealCoverHero(cover, img, imgUrl);
+        else finishCoverHero(cover, img, imgUrl);
+        return true;
+    }
+
+    coverQueue.add(async () => {
+        if (!img.isConnected) return SKIP;
+
+        img.src = imgUrl;
+        ImageLog.debug(`Hero cover ${img.dataset.coverRequestId} queued for:`, imgUrl);
+
+        if (img.complete) {
+            if (img.naturalWidth > 0) {
+                revealCoverHero(cover, img, imgUrl);
+                return undefined;
+            }
+            img.remove();
+            cover.classList.remove('card-loading');
+            return SKIP;
+        }
+
+        return finishCoverHero(cover, img, imgUrl);
+    });
+
+    return true;
+}
+
+/** revealCover adaptat per hero cards (contenidor .hero-card__cover) */
+function revealCoverHero(cover, img, coverUrl) {
+    if (img.naturalWidth === 0) return false;
+    loadedCovers.add(coverUrl);
+    cover.classList.add('card-done');
+    cover.classList.remove('card-loading');
+    window.setTimeout(() => cover.classList.remove('card-done'), 600);
+    return true;
+}
+
+/** finishCover adaptat per hero cards */
+async function finishCoverHero(cover, img, coverUrl) {
+    const requestId = img.dataset.coverRequestId || 'unknown';
+    const result = await waitForCover(img);
+
+    if (result === 'cancel') return SKIP;
+
+    const retryCount = parseInt(img.dataset.coverRetryCount || '0', 10);
+    const maxRetries = 2;
+
+    if ((result === 'timeout' || result === 'error') && img.naturalWidth === 0 && retryCount < maxRetries) {
+        ImageLog.warn(`Hero cover ${requestId} ${result}, scheduling retry ${retryCount + 1}/${maxRetries}`);
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+        img.dataset.coverRetryCount = String(retryCount + 1);
+        cover.classList.add('card-loading');
+        cover.classList.remove('card-done');
+        await new Promise(r => setTimeout(r, delay));
+        if (!img.isConnected) return SKIP;
+        return finishCoverHero(cover, img, coverUrl);
+    }
+
+    if (result === 'timeout' && img.naturalWidth === 0) {
+        cover.classList.remove('card-loading');
+        img.addEventListener('load', () => revealCoverHero(cover, img, coverUrl), { once: true });
+        img.addEventListener('error', () => {
+            img.classList.add('error');
+            img.remove();
+        }, { once: true });
+        if (img.complete && img.naturalWidth > 0) revealCoverHero(cover, img, coverUrl);
+        return SKIP;
+    }
+
+    if (result === 'error' && img.naturalWidth === 0) {
+        img.classList.add('error');
+        img.remove();
+        cover.classList.remove('card-loading');
+        return SKIP;
+    }
+
+    revealCoverHero(cover, img, coverUrl);
+    return undefined;
 }
 
 /**
@@ -633,14 +788,26 @@ export function updateOfflineCard(url, info) {
 export function resetGrid() {
     const grid = $('gameGrid');
     if (!grid) return;
+    
+    // Protecció contra race conditions
+    if (isResetting) {
+        ImageLog.debug('resetGrid skipped: already resetting');
+        return;
+    }
+    isResetting = true;
 
-    grid.classList.remove('skeleton-grid');
-    // Igual que a la poda: s'avisa la cua (perquè no es quedi esperant
-    // un `decode()` que ja no acabarà) i, sense `src`, els bitmaps de
-    // les portades que es desmunten queden lliures per al navegador.
-    for (const img of grid.querySelectorAll('img')) cancelCover(img);
-    grid.replaceChildren();
-    itemsShown = 0;
+    try {
+        grid.classList.remove('skeleton-grid');
+        // Igual que a la poda: s'avisa la cua (perquè no es quedi esperant
+        // un `decode()` que ja no acabarà) i, sense `src`, els bitmaps de
+        // les portades que es desmunten queden lliures per al navegador.
+        for (const img of grid.querySelectorAll('img')) cancelCover(img);
+        grid.replaceChildren();
+        itemsShown = 0;
+        ImageLog.debug('Grid reset complete');
+    } finally {
+        isResetting = false;
+    }
 }
 
 /**
@@ -648,6 +815,7 @@ export function resetGrid() {
  *
  * Només reintenta imatges amb classe `.error` (fallida confirmada),
  * no les que encara estan carregant. Màxim 3 intents per imatge.
+ * Els reintents passen per la cua per respectar la concurrència.
  */
 export function retryCovers() {
     const grid = $('gameGrid');
@@ -674,20 +842,56 @@ function rebuildImage(fig, game) {
     if (!urls) return;
 
     const isHero = fig.classList.contains('hero-cover');
+    const coverUrl = game.image ? safeCoverImage(game.image) : null;
+    if (!coverUrl) return;
+
+    // Neteja la imatge vella
+    cancelCover(oldImg);
+    oldImg.remove();
+
+    // Crear nova imatge amb recompte de reintent
     const newImg = document.createElement('img');
-    newImg.src = urls.full;  // Only load full image
-    newImg.width = 400;
-    newImg.height = isHero ? 250 : 400;
     newImg.decoding = 'async';
     newImg.alt = game.name;
-    newImg.dataset.fallbackStep = '0';
+    newImg.dataset.coverRequestId = String(nextRequestId());
+    newImg.dataset.coverRetryCount = String(retryCount + 1);
     newImg.dataset.originalSrc = game.image;
     newImg.dataset.full = urls.full;
     newImg.loading = 'lazy';
-    newImg.dataset.retryCount = String(retryCount + 1);
 
-    oldImg.replaceWith(newImg);
-    attachImageListeners(newImg);
+    const isHeroCover = fig.classList.contains('hero-cover');
+    if (isHeroCover) {
+        newImg.width = 400;
+        newImg.height = 250;
+    } else {
+        newImg.width = 400;
+        newImg.height = 400;
+    }
+
+    fig.appendChild(newImg);
+
+    // Passar per la cua per respectar concurrència
+    coverQueue.add(async () => {
+        if (!newImg.isConnected) return SKIP;
+        
+        newImg.src = coverUrl;
+        ImageLog.debug(`Retry cover ${newImg.dataset.coverRequestId} (attempt ${retryCount + 1}) for:`, coverUrl);
+
+        if (newImg.complete) {
+            if (newImg.naturalWidth > 0) {
+                if (isHeroCover) revealCoverHero(fig.closest('.hero-card__cover'), newImg, coverUrl);
+                else revealCover(fig.closest('.card'), newImg, coverUrl);
+                return undefined;
+            }
+            newImg.remove();
+            if (isHeroCover) fig.closest('.hero-card__cover').classList.remove('card-loading');
+            else fig.closest('.card').classList.remove('card-loading');
+            return SKIP;
+        }
+
+        if (isHeroCover) return finishCoverHero(fig.closest('.hero-card__cover'), newImg, coverUrl);
+        return finishCover(fig.closest('.card'), newImg, coverUrl);
+    });
 }
 
 /**
@@ -735,44 +939,53 @@ export function bindGrid({ onLaunch, onFavorite }) {
 export function loadMore() {
     const grid = $('gameGrid');
     if (!grid) return;
-
-    const batch = visibleGames.slice(itemsShown, itemsShown + CHUNK_SIZE);
-    if (batch.length === 0) return;
-
-    const fragment = document.createDocumentFragment();
-    // Les cards de la casa comparteixen una fila pròpia: el contenidor
-    // les reparteix en dues columnes i, si només n'hi ha una, la deixa
-    // ocupar tota l'amplada.
-    let heroRow = null;
-    for (let i = 0; i < batch.length; i++) {
-        const game = batch[i];
-        const globalIndex = itemsShown + i;
-        if (game.hero) {
-            if (!heroRow) {
-                heroRow = document.createElement('div');
-                heroRow.className = 'hero-row';
-                fragment.appendChild(heroRow);
-            }
-            heroRow.appendChild(buildHeroCard(game, globalIndex));
-        } else {
-            heroRow = null;
-            fragment.appendChild(buildCard(game, globalIndex));
-        }
+    
+    // Protecció contra race conditions: evita càrregues simultànies
+    if (isLoadingMore) {
+        ImageLog.debug('loadMore skipped: already loading');
+        return;
     }
-    grid.appendChild(fragment);
+    isLoadingMore = true;
 
-    itemsShown += batch.length;
-    grid.classList.remove('skeleton-grid');
+    try {
+        const batch = visibleGames.slice(itemsShown, itemsShown + CHUNK_SIZE);
+        if (batch.length === 0) return;
 
-    requestAnimationFrame(() => {
-        const fresh = grid.querySelectorAll('.card-wrapper:not(.visible), .hero-card:not(.visible)');
-        for (let i = 0; i < fresh.length; i++) {
-            fresh[i].style.transitionDelay = `${i * REVEAL_STAGGER}ms`;
-            fresh[i].classList.add('visible');
+        const fragment = document.createDocumentFragment();
+        // Les cards de la casa comparteixen una fila pròpia: el contenidor
+        // les reparteix en dues columnes i, si només n'hi ha una, la deixa
+        // ocupar tota l'amplada.
+        let heroRow = null;
+        for (let i = 0; i < batch.length; i++) {
+            const game = batch[i];
+            const globalIndex = itemsShown + i;
+            if (game.hero) {
+                if (!heroRow) {
+                    heroRow = document.createElement('div');
+                    heroRow.className = 'hero-row';
+                    fragment.appendChild(heroRow);
+                }
+                heroRow.appendChild(buildHeroCard(game, globalIndex));
+            } else {
+                heroRow = null;
+                fragment.appendChild(buildCard(game, globalIndex));
+            }
         }
-    });
+        grid.appendChild(fragment);
 
-    pruneGrid();
+        itemsShown += batch.length;
+        grid.classList.remove('skeleton-grid');
+
+        requestAnimationFrame(() => {
+            const fresh = grid.querySelectorAll('.card-wrapper:not(.visible), .hero-card:not(.visible)');
+            for (let i = 0; i < fresh.length; i++) {
+                fresh[i].style.transitionDelay = `${i * REVEAL_STAGGER}ms`;
+                fresh[i].classList.add('visible');
+            }
+        });
+    } finally {
+        isLoadingMore = false;
+    }
 }
 
 /** Que al DOM no hi hagi més de MAX_DOM_CARDS targetes. */

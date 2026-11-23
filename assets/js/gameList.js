@@ -1891,5 +1891,5 @@ export const GAMES = [
    { name: "NGAHHH! Simulator v0.99", url: "vxc.html", image: "assets/images/vxc.webp", type: "accio" },
    { name: "Wily Wars", url: "wilywars.html", image: "assets/images/wilywars.webp", type: "retro" },
    { name: "Unmatched Ego 2", url: "clunmatchedego2.html", image: "assets/images/clunmatchedego2.webp", type: "esports" },
-   { name: "GTA 5", url: "clgta5.html", image: "", type: "accio" }
+   { name: "GTA 5", url: "clgta5.html", image: "assets/images/clgta5.webp", type: "accio" }
 ];

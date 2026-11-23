@@ -57,23 +57,36 @@ function byId(id) {
  * el mouríem a l'arcade sota el dit. Així que la llista es calcula
  * sempre, però la vista només canvia si ja érem a l'arcade o al 404.
  */
+/** Flag per evitar applyFilters concurrents (per ex. cerca + canvi idioma simultani). */
+let isApplyingFilters = false;
+
 function applyFilters() {
-    const visible = filterGames(GAMES);
-    setVisibleGames(visible);
-
-    const here = currentView();
-    const inArcade = here === 'arcade' || here === '404';
-
-    if (visible.length === 0) {
-        if (inArcade) go('404', { animate: false });
+    if (isApplyingFilters) {
+        console.debug('[ula] applyFilters skipped: already applying');
         return;
     }
+    isApplyingFilters = true;
 
-    if (!inArcade) return; // les dades queden llestes per quan torni
+    try {
+        const visible = filterGames(GAMES);
+        setVisibleGames(visible);
 
-    go('arcade', { animate: false });
-    resetGrid();
-    loadMore();
+        const here = currentView();
+        const inArcade = here === 'arcade' || here === '404';
+
+        if (visible.length === 0) {
+            if (inArcade) go('404', { animate: false });
+            return;
+        }
+
+        if (!inArcade) return; // les dades queden llestes per quan torni
+
+        go('arcade', { animate: false });
+        resetGrid();
+        loadMore();
+    } finally {
+        isApplyingFilters = false;
+    }
 }
 
 function resetFilters() {
