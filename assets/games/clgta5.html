@@ -1,42 +1,51 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>GTA 5</title>
     <style>
-        /* Estils lleugers de l'envoltadora (des del port de playgta5.com, reduïts).
-           Aquests fitxers lleugers sí viuen al repositori. */
-        html, body { margin: 0; height: 100%; background: #000; color: #ccc; font: 12px monospace; overflow: hidden; }
-        #frame { width: 100%; height: 100%; border: none; display: block; background: #000; }
-        #fallback { display: none; height: 100%; width: 100%; color: #fff; font-family: system-ui, -apple-system, sans-serif; align-items: center; justify-content: center; text-align: center; padding: 2rem; box-sizing: border-box; }
-        #fallback a { color: #7cc576; text-decoration: underline; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        #fallback {
+            display: none;
+            height: 100%;
+            width: 100%;
+            color: #fff;
+            font-family: system-ui, -apple-system, sans-serif;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        #fallback a {
+            color: #7cc576;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <!--
-    ============================================================================
-    GTA 5 — port al navegador (playgta5.com)
+    GTA 5 — carrega directe des del servidor original de playgta5.com.
 
-    Fitxers lleugers d'aquesta envoltadora: aquest HTML i el CSS de més amunt (al
-    repositori, assets/games/clgta5.html).
-
-    FITXER GRAU (no es descarrega al repositori):
-      El motor web assembly del joc (game.wasm, de centanars de MB fins a GB) no
-      es pot desar al repositori ni carregar des d'altre orígem, perquè
-      playgta5.com envia la capçalera Cross-Origin-Resource-Policy: same-origin,
-      que bloqueja la descàrrega del .wasm des d'un altre domini.
-
-      Per tant el .wasm es carrega directament del servidor que l'allotja,
-      dins de l'iframe a continuació (la URL exacta que el loader utilitza és
-      https://playgta5.com/game.wasm, resolta des de https://playgta5.com/).
-
-      Si algun dia es vol.self-hostar el .wasm, caldria baixar-lo de:
-          https://playgta5.com/game.wasm
-      i fer servir CORS + COEP adequats; fins llavors es manté l'enllaç extern.
-    ============================================================================
+    El motor (game.wasm, ~63 MB) i els assets del joc (.rpf, mapa, vehicles, peds, etc.)
+    es descarreguen de https://playgta5.com/ perquè el servidor envia les capçaleres
+    Cross-Origin-Resource-Policy: same-origin i no permet que un altre domini els carregui.
+    Per això el joc s'executa en un iframe apuntant directament a playgta5.com.
     -->
-    <iframe id="frame" src="https://playgta5.com/" allowfullscreen allow="autoplay"></iframe>
+    <iframe src="https://playgta5.com/" allowfullscreen allow="autoplay"></iframe>
 
     <div id="fallback">
         <p>El joc no s'ha pogut carregar en iframe.</p>
@@ -45,9 +54,7 @@
     </div>
 
     <script>
-        // Si l'iframe no carrega en uns segons (per exemple, si el servidor d'origen
-        // ho bloqueja), es mostra l'enllaç de fallback per obrir el joc en una
-        // pestanya nova i que pugui jugar igual.
+        // Si l'iframe no carrega en uns segons, es mostra l'enllaç de fallback per obrir el joc en una pestanya nova.
         const iframe = document.getElementById('frame');
         const fallback = document.getElementById('fallback');
         let timedOut = false;
