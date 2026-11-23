@@ -549,20 +549,9 @@ function onLanguageChange() {
 function onViewArrive(id) {
     if (id !== 'arcade' && isGameOpen()) close();
     if (id === 'stats') renderStats();
-    if (id === 'social') openSocial();
 }
 
-/**
- * El Social només es carrega quan s'hi arriba: són uns quants mòduls i
- * unes quantes escoltes de Firestore que qui no hi entra no ha de pagar
- * —ni a l'arrencada ni de fons—. El primer cop es demana el mòdul; els
- * vinents ja el tenen a la memòria.
- */
-let socialLoad = null;
-function openSocial() {
-    if (!socialLoad) socialLoad = import('./social.js');
-    return socialLoad.then((mod) => mod.initSocial());
-}
+
 
 async function start() {
     // L'aplicació ja corre: el marge de `boot-watch.js` es pot plegar
@@ -647,13 +636,11 @@ async function start() {
 
     applyFilters();
 
-    // Si l'URL demanava les estadístiques o el social i no hi ha jocs
+    // Si l'URL demanava les estadístiques i no hi ha jocs
     // visibles, `applyFilters` no hi arriba, així que hi anem igualment.
     if (initial === 'stats') {
         go('stats', { animate: false });
         renderStats();
-    } else if (initial === 'social') {
-        go('social', { animate: false });
     }
 
     // Un cop maquetat, la píldora activa té mides reals i es pot col·locar.

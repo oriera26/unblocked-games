@@ -9,7 +9,7 @@
 
 import { VIEW_TRANSITION_MS } from './config.js';
 
-export const VIEWS = ['arcade', 'stats', 'social'];
+export const VIEWS = ['arcade', 'stats'];
 
 /** La vista que hi ha visible ara mateix. */
 let current = 'arcade';
