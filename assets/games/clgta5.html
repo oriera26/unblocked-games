@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>GTA 5</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        #fallback {
+            display: none;
+            height: 100%;
+            width: 100%;
+            color: #fff;
+            font-family: system-ui, -apple-system, sans-serif;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <iframe src="https://playgta5.com/" allowfullscreen allow="autoplay"></iframe>
+
+    <div id="fallback">
+        <p>El joc no s'ha pogut carregar en iframe.</p>
+        <p>Obre-la directament: <a href="https://playgta5.com/" target="_blank" rel="noopener">playgta5.com</a></p>
+    </div>
+
+    <script>
+        // Si l'iframe no carrega (capçaleres de seguretat del servidor d'origen),
+        // es mostra un enllaç per obrir el joc en una pestanya nova.
+        const iframe = document.querySelector('iframe');
+        const fallback = document.getElementById('fallback');
+        let timedOut = false;
+        setTimeout(() => { timedOut = true; check(); }, 5000);
+        iframe.addEventListener('load', () => { timedOut = false; check(); });
+        function check() {
+            if (timedOut) fallback.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

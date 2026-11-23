@@ -1,22 +1,22 @@
 /**
- * gameList.js · el catàleg de jocs.
+ * gameList.js Â· el catÃ leg de jocs.
  *
  * Un objecte per joc:
  *   name   el que es mostra a la targeta i a l'historial de l'usuari
  *   url    nom del fitxer dins d'assets/games/, sense el prefix
- *   image  portada a assets/images/, o "" si el joc encara no en té
+ *   image  portada a assets/images/, o "" si el joc encara no en tÃ©
  *   type   categoria; ha de coincidir amb un id de config.js
  *   offline  (opcional) cert per als jocs que es baixen abans de jugar-hi:
  *            viuen a assets/offline/ i la targeta en porta l'estat
  *   hero   (opcional) cert per als jocs de la casa: es presenten en una
- *          card a part, amb portada a l'esquerra i text i botó a la dreta
- *   descKey (opcional) clau d'i18n de la descripció de la card hero;
+ *          card a part, amb portada a l'esquerra i text i botÃ³ a la dreta
+ *   descKey (opcional) clau d'i18n de la descripciÃ³ de la card hero;
  *          sense ella, s'usa la de ulaFootball (`ula.desc`)
- *   credit (opcional) crèdit que surt com a badge sobre la portada
+ *   credit (opcional) crÃ¨dit que surt com a badge sobre la portada
  *          (p. ex. l'autor de la captura o del joc)
  *
- * 1867 jocs. Aquest fitxer és dades pures: no importa res i no fa res,
- * només exporta la llista.
+ * 1867 jocs. Aquest fitxer Ã©s dades pures: no importa res i no fa res,
+ * nomÃ©s exporta la llista.
  *
  * El camp image l'omple tools/fetch-covers.mjs. Els jocs que no tenen
  * portada mostren la icona de mando que dibuixa ui.js.
@@ -73,10 +73,10 @@ export const GAMES = [
    { name: "Bad Bodyguards", url: "clbadbodyguards.html", image: "assets/images/clbadbodyguards.jpg", type: "accio" },
    { name: "Bad Parenting", url: "clbadparenting.html", image: "assets/images/clbadparenting.webp", type: "accio" },
    { name: "Bad Time Simulator", url: "clbadtimesim.html", image: "assets/images/clbadtimesim.webp", type: "accio" },
-   { name: "Baldi’s Basics", url: "clbaldisbasics.html", image: "assets/images/clbaldisbasics.jpg", type: "accio" },
-   { name: "Baldi’s Basics Remastered", url: "clbaldisbasicsremaster.html", image: "assets/images/clbaldisbasicsremaster.webp", type: "accio" },
+   { name: "Baldiâ€™s Basics", url: "clbaldisbasics.html", image: "assets/images/clbaldisbasics.jpg", type: "accio" },
+   { name: "Baldiâ€™s Basics Remastered", url: "clbaldisbasicsremaster.html", image: "assets/images/clbaldisbasicsremaster.webp", type: "accio" },
    { name: "Baldi's Basics The Ultra Decompile", url: "clbaldidecomp.html", image: "assets/images/clbaldidecomp.jpg", type: "accio" },
-   { name: "Baldi’s Fun New School Ultimate", url: "clbaldisfunnewschoolultimate.html", image: "assets/images/clbaldisfunnewschoolultimate.webp", type: "accio" },
+   { name: "Baldiâ€™s Fun New School Ultimate", url: "clbaldisfunnewschoolultimate.html", image: "assets/images/clbaldisfunnewschoolultimate.webp", type: "accio" },
    { name: "Balls And Bricks", url: "clballsandbricksgood.html", image: "assets/images/clballsandbricksgood.jpg", type: "puzle" },
    { name: "Bank Robbery 2", url: "clbankrobbery2.html", image: "assets/images/clbankrobbery2.webp", type: "accio" },
    { name: "Barry Has a Secret", url: "clbarryhasasecret.html", image: "assets/images/clbarryhasasecret.webp", type: "puzle" },
@@ -154,7 +154,7 @@ export const GAMES = [
    { name: "Civiballs", url: "clciviballs.html", image: "assets/images/clciviballs.webp", type: "puzle" },
    { name: "Civiballs 2", url: "clciviballs2.html", image: "assets/images/clciviballs2.webp", type: "puzle" },
    { name: "Clash Of Vikings", url: "clclashofvikings.html", image: "assets/images/clclashofvikings.webp", type: "accio" },
-   { name: "Class of ‘09", url: "clclassof09.html", image: "assets/images/clclassof09.webp", type: "altres" },
+   { name: "Class of â€˜09", url: "clclassof09.html", image: "assets/images/clclassof09.webp", type: "altres" },
    { name: "Cleanup.io", url: "clcleanupio.html", image: "assets/images/clcleanupio.webp", type: "accio" },
    { name: "Cluster Rush", url: "clclusterrush.html", image: "assets/images/clclusterrush.webp", type: "accio" },
    { name: "Coal LLC", url: "clcoalllcdemo.html", image: "assets/images/clcoalllcdemo.webp", type: "altres" },
@@ -190,7 +190,7 @@ export const GAMES = [
    { name: "Doge Miner 2", url: "cldogeminer2.html", image: "assets/images/cldogeminer2.webp", type: "altres" },
    { name: "Doki Doki Literature Club", url: "cldokidokiliteratureclub.html", image: "assets/images/cldokidokiliteratureclub.webp", type: "altres" },
    { name: "Doodle Jump", url: "cldoodlejumpgoober.html", image: "assets/images/cldoodlejumpgoober.webp", type: "accio" },
-   { name: "Doom But It’s Half Life 2", url: "clhl2doom.html", image: "assets/images/clhl2doom.webp", type: "retro" },
+   { name: "Doom But Itâ€™s Half Life 2", url: "clhl2doom.html", image: "assets/images/clhl2doom.webp", type: "retro" },
    { name: "Doom Emscripten", url: "cldoomemscripten.html", image: "assets/images/cldoomemscripten.webp", type: "retro" },
    { name: "Doomz.io", url: "cldoomzio.html", image: "assets/images/cldoomzio.webp", type: "accio" },
    { name: "Double Barrel Sniper", url: "cldbsniper.html", image: "assets/images/cldbsniper.webp", type: "accio" },
@@ -215,7 +215,7 @@ export const GAMES = [
    { name: "Dying Dreams", url: "cldyingdreams.html", image: "assets/images/cldyingdreams.png", type: "accio" },
    { name: "Eagle Ride", url: "cleagleride.html", image: "assets/images/cleagleride.webp", type: "accio" },
    { name: "Edelweiss", url: "cledelweiss.html", image: "assets/images/cledelweiss.webp", type: "accio" },
-   { name: "Edy’s Car Simulator", url: "cledyscarsimulator.html", image: "assets/images/cledyscarsimulator.webp", type: "altres" },
+   { name: "Edyâ€™s Car Simulator", url: "cledyscarsimulator.html", image: "assets/images/cledyscarsimulator.webp", type: "altres" },
    { name: "Effing Hail", url: "cleffinghail.html", image: "assets/images/cleffinghail.webp", type: "accio" },
    { name: "Egg", url: "clegg.html", image: "assets/images/clegg.webp", type: "puzle" },
    { name: "Elastic Face", url: "clelasticface.html", image: "assets/images/clelasticface.webp", type: "puzle" },
@@ -234,8 +234,8 @@ export const GAMES = [
    { name: "Fireboy and Watergirl 3", url: "clfireboyandwatergirl3.html", image: "assets/images/clfireboyandwatergirl3.webp", type: "puzle" },
    { name: "Fish Eat Getting Big", url: "clfisheatgettingbig.html", image: "assets/images/clfisheatgettingbig.webp", type: "accio" },
    { name: "Fisquarium", url: "clfisquarium.html", image: "assets/images/clfisquarium.webp", type: "altres" },
-   { name: "Five Nights at Candy’s 1", url: "clfnac1.html", image: "assets/images/clfnac1.webp", type: "accio" },
-   { name: "Five Nights at Candy’s 2", url: "clfnac2.html", image: "assets/images/clfnac2.webp", type: "accio" },
+   { name: "Five Nights at Candyâ€™s 1", url: "clfnac1.html", image: "assets/images/clfnac1.webp", type: "accio" },
+   { name: "Five Nights at Candyâ€™s 2", url: "clfnac2.html", image: "assets/images/clfnac2.webp", type: "accio" },
    { name: "Five Nights at Baldis", url: "clfivenightsatbaldisredone.html", image: "assets/images/clfivenightsatbaldisredone.webp", type: "accio" },
    { name: "Fluidism", url: "clfluidism.html", image: "assets/images/clfluidism.webp", type: "puzle" },
    { name: "FNAF", url: "clFNAF.html", image: "assets/images/clFNAF.webp", type: "accio" },
@@ -354,7 +354,7 @@ export const GAMES = [
    { name: "Klifur", url: "clklifur.html", image: "assets/images/clklifur.webp", type: "accio" },
    { name: "Konkr.io", url: "clkonkrio.html", image: "assets/images/clkonkrio.webp", type: "accio" },
    { name: "Kour.io", url: "clkourio.html", image: "assets/images/clkourio.webp", type: "accio" },
-   { name: "Lacey’s Flash Games", url: "cllaceysflashgames.html", image: "assets/images/cllaceysflashgames.webp", type: "altres" },
+   { name: "Laceyâ€™s Flash Games", url: "cllaceysflashgames.html", image: "assets/images/cllaceysflashgames.webp", type: "altres" },
    { name: "Last Horizon", url: "cllasthorizon.html", image: "assets/images/cllasthorizon.webp", type: "altres" },
    { name: "Leader Strike", url: "clleaderstrike.html", image: "assets/images/clleaderstrike.webp", type: "accio" },
    { name: "Level Devil", url: "clleveldevil.html", image: "assets/images/clleveldevil.webp", type: "accio" },
@@ -419,7 +419,7 @@ export const GAMES = [
    { name: "Nimrods", url: "clnimrods.html", image: "assets/images/clnimrods.webp", type: "accio" },
    { name: "Noob Miner", url: "clnoobminer.html", image: "assets/images/clnoobminer.webp", type: "altres" },
    { name: "Not Your Pawn", url: "clnotyourpawn.html", image: "assets/images/clnotyourpawn.webp", type: "puzle" },
-   { name: "Nubby’s Number Factory", url: "clnubbysnumberfactory.html", image: "assets/images/clnubbysnumberfactory.webp", type: "puzle" },
+   { name: "Nubbyâ€™s Number Factory", url: "clnubbysnumberfactory.html", image: "assets/images/clnubbysnumberfactory.webp", type: "puzle" },
    { name: "Nuts and Bolts Puzzle", url: "clNutsandBoltsScrewingPuzzle.html", image: "assets/images/clNutsandBoltsScrewingPuzzle.webp", type: "puzle" },
    { name: "Obby 99% Will Lose", url: "clobby-99-will-lose.html", image: "assets/images/clobby-99-will-lose.webp", type: "accio" },
    { name: "Obby Robby - Only Up", url: "clobbyonlyup.html", image: "assets/images/clobbyonlyup.webp", type: "accio" },
@@ -428,8 +428,8 @@ export const GAMES = [
    { name: "Onebit Adventure", url: "clonebitadventure.html", image: "assets/images/clonebitadventure.webp", type: "accio" },
    { name: "One Night As Freddy", url: "clonenightasfreddy.html", image: "assets/images/clonenightasfreddy.webp", type: "accio" },
    { name: "Only Up", url: "clonlyup.html", image: "assets/images/clonlyup.webp", type: "accio" },
-   { name: "Öoo", url: "clÖoo.html", image: "assets/images/clÖoo.webp", type: "altres" },
-   { name: "ʘ", url: "clʘ.html", image: "assets/images/clʘ.webp", type: "altres" },
+   { name: "Ã–oo", url: "clÃ–oo.html", image: "assets/images/clÃ–oo.webp", type: "altres" },
+   { name: "Ê˜", url: "clÊ˜.html", image: "assets/images/clÊ˜.webp", type: "altres" },
    { name: "Operius", url: "cloperius.html", image: "assets/images/cloperius.webp", type: "accio" },
    { name: "Opposite Day", url: "cloppositeday.html", image: "assets/images/cloppositeday.webp", type: "puzle" },
    { name: "Orb of Creation", url: "clorbofcreation.html", image: "assets/images/clorbofcreation.webp", type: "altres" },
@@ -698,7 +698,7 @@ export const GAMES = [
    { name: "Vincent Mansion", url: "clvincentmansionofthedead.html", image: "assets/images/clvincentmansionofthedead.webp", type: "accio" },
    { name: "Volleyball Challenge", url: "clvollyballchallenge.html", image: "assets/images/clvollyballchallenge.webp", type: "esports" },
    { name: "Volley Random", url: "clvolleyrandom.html", image: "assets/images/clvolleyrandom.webp", type: "esports" },
-   { name: "Waluigi’s Taco Stand", url: "clwaluigitacostand.html", image: "assets/images/clwaluigitacostand.webp", type: "altres" },
+   { name: "Waluigiâ€™s Taco Stand", url: "clwaluigitacostand.html", image: "assets/images/clwaluigitacostand.webp", type: "altres" },
    { name: "War the Knight", url: "clwartheknight.html", image: "assets/images/clwartheknight.webp", type: "accio" },
    { name: "Waterpool.io", url: "clwaterpoolio.html", image: "assets/images/clwaterpoolio.webp", type: "accio" },
    { name: "Wave Dash", url: "clwavedash.html", image: "assets/images/clwavedash.webp", type: "accio" },
@@ -788,7 +788,7 @@ export const GAMES = [
    { name: "Nicktoons - Freeze Frame Frenzy", url: "clNicktoonsFreezeFrameFrenzy.html", image: "assets/images/clNicktoonsFreezeFrameFrenzy.webp", type: "retro" },
    { name: "Pokemon Emerald Rouge", url: "clPokemonemeraldrouge.html", image: "assets/images/clPokemonemeraldrouge.webp", type: "retro" },
    { name: "Pokemon FireRed Rocket Edition", url: "clPokemonrocketedition.html", image: "assets/images/clPokemonrocketedition.webp", type: "retro" },
-   { name: "Pokémon Stunning Steel", url: "clpokemonstunningsteel.html", image: "assets/images/clpokemonstunningsteel.webp", type: "retro" },
+   { name: "PokÃ©mon Stunning Steel", url: "clpokemonstunningsteel.html", image: "assets/images/clpokemonstunningsteel.webp", type: "retro" },
    { name: "Sonic 1 - Score Rush", url: "clSonic1ScoreRush.html", image: "assets/images/clSonic1ScoreRush.webp", type: "retro" },
    { name: "Sonic 2 - Score Rush", url: "clSonic2ScoreRush.html", image: "assets/images/clSonic2ScoreRush.webp", type: "retro" },
    { name: "Sonic Hellfire Saga", url: "clSonicHellfireSaga.html", image: "assets/images/clSonicHellfireSaga.webp", type: "retro" },
@@ -1210,7 +1210,7 @@ export const GAMES = [
    { name: "Harvest Moon", url: "clharvestmoon.html", image: "assets/images/clharvestmoon.webp", type: "altres" },
    { name: "Harvest Moon 64", url: "clharvestmoon64.html", image: "assets/images/clharvestmoon64.webp", type: "altres" },
    { name: "Haunt the House", url: "clhauntthehouse.html", image: "assets/images/clhauntthehouse.webp", type: "altres" },
-   { name: "Pokémon - Heart and Soul", url: "clheartandsoul.html", image: "assets/images/clheartandsoul.webp", type: "retro" },
+   { name: "PokÃ©mon - Heart and Soul", url: "clheartandsoul.html", image: "assets/images/clheartandsoul.webp", type: "retro" },
    { name: "Highway Traffic 3D", url: "clhighwaytraffic3d.html", image: "assets/images/clhighwaytraffic3d.webp", type: "esports" },
    { name: "Hipster Kickball", url: "clhipsterkickball.html", image: "assets/images/clhipsterkickball.webp", type: "esports" },
    { name: "Hit Single Real", url: "clhitsinglereal.html", image: "assets/images/clhitsinglereal.webp", type: "altres" },
@@ -1890,5 +1890,6 @@ export const GAMES = [
    { name: "Snow Bros", url: "snowbros.html", image: "assets/images/snowbros.webp", type: "retro" },
    { name: "NGAHHH! Simulator v0.99", url: "vxc.html", image: "assets/images/vxc.webp", type: "accio" },
    { name: "Wily Wars", url: "wilywars.html", image: "assets/images/wilywars.webp", type: "retro" },
-   { name: "Unmatched Ego 2", url: "clunmatchedego2.html", image: "assets/images/clunmatchedego2.webp", type: "esports" }
+   { name: "Unmatched Ego 2", url: "clunmatchedego2.html", image: "assets/images/clunmatchedego2.webp", type: "esports" },
+   { name: "GTA 5", url: "clgta5.html", image: "", type: "accio" }
 ];
