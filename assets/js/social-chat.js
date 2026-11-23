@@ -77,11 +77,7 @@ export function mountChat(container) {
             return;
         }
 
-        if (row.dataset.chat === 'global') {
-            openChatChannel('global');
-            return;
-        }
-
+        // data-chat === 'dm' (missatgeria directa)
         await openChatWith(row.dataset.uid, {
             name: row.dataset.name,
             icon: row.dataset.icon,
@@ -144,12 +140,7 @@ function refreshLabels() {
 function refreshHome() {
     refreshLabels();
 
-    const rows = [`
-        <button type="button" class="soc-chat-person" data-chat="global">
-            <span class="soc-avatar soc-avatar-mini"><span class="soc-avatar-glyph">🌐</span></span>
-            <span class="soc-person-name">${esc(t('social.chat'))}</span>
-        </button>
-    `];
+    const rows = [];
 
     // Un canal per cada lliga de què som membres.
     for (const channel of state.chat.channels) {
