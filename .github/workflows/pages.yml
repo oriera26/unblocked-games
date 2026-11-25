@@ -15,21 +15,21 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  publica:
+  # La pujada i el deploy de l'artefacte han d'estar en jobs diferents.
+  # Si es fan al mateix job, deploy-pages pot consultar l'API abans que
+  # l'artefacte acabi d'aparèixer-hi i fallar amb "Found 0 artifact(s)".
+  prepara:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Prepara el lloc
         run: |
@@ -52,9 +52,19 @@ jobs:
           echo "Fitxers a _site: $(find _site -type f | wc -l)"
           find _site -maxdepth 2 -type f | head -40
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
+  publica:
+    needs: prepara
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
