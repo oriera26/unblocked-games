@@ -3,6 +3,56 @@
 Registre de canvis i d'errors trobats, pensat per fer servir com a cos del
 commit. Tot és **local**; encara no s'ha fet `push`.
 
+## Penalty Shooters 1, 2 i 3: còpies completes i offline
+
+El catàleg tenia només el 3, i era un wrapper que carregava el joc de
+GameDistribution des de la xarxa. Ara els tres jocs són còpies completes
+dins del repositori i funcionen sense cap connexió: el 1 i el 2 de les build
+oficials de Poki (`*.gdn.poki.com`) i el 3 del build de GameDistribution que
+embebeix la llista regional de Poki.
+
+### Què s'ha canviat
+
+- `assets/games/penaltyshooters1/` — build de Construct 2 de Poki: 149 fitxers
+  del manifest offline (`offline.js`) més `index.html`, `offlineClient.js`,
+  `sw.js` i `offline.js`.
+- `assets/games/penaltyshooters2/` — build de Construct 3 de Poki: 90 fitxers
+  del manifest (`offline.json`) més `index.html`, `offline.json` i `sw.js`.
+- `assets/games/penaltyshooters3/` — build de GameDistribution (Construct 3):
+  311 fitxers del manifest més `index.html`, `offline.json` i `sw.js`.
+  L'antic `assets/games/penaltyshooters3.html` (el wrapper amb l'iframe
+  remote) s'ha esborrat.
+- Adaptadors locals en lloc dels SDK publicitaris remots:
+  - `poki-sdk.js` (1 i 2): `PokiSDK` amb les API que fa servir el joc,
+    sense anunci ni xarxa.
+  - `gamedistribution-sdk.js` i `crazygames-sdk.js` (3): `gdsdk` i
+    `CrazyGamesConstructSDK` locals.
+- `assets/games/penaltyshooters2/scripts/main.js`: el beacon de
+  `leveldata.poki.io` (que depenia de `poki_doBeacon`, activat al projecte)
+  s'ha desactivat: la còpia local no ha de trucar cap servidor de Poki.
+- `assets/games/penaltyshooters3/index.html`: els dos adaptadors es carreguen
+  de forma sincrona abans del runtime, i es treuen les injeccions
+  dinàmiques equivalents de `scripts/project/main.js` i
+  `scripts/project/gd-sdk.js` (hi havia una carrera: el joc podia cridar el
+  SDK abans que existís).
+- `server.js`: nous Content-Type per als fitxers que necessiten aquests jocs
+  (`.wasm`, `.glb`, `.gltf`, `.m4a`, `.txt`). Abans el servidor local
+  responia 415 i el 2 i el 3 no arrencaven a l'app d'escriptori.
+- `assets/js/gameList.js`: entrades de *Penalty Shooters*, *Penalty Shooters
+  2* i *Penalty Shooters 3* (el 3 passa de `penaltyshooters3.html` a
+  `penaltyshooters3/index.html`).
+- `assets/images/`: portades oficials de Poki per al 1 i el 2, amb les
+  variants de 400×400, 140×140 i lqip de 16×16.
+
+### Verificació
+
+- Manifests: 149 + 90 + 311 fitxers, tots al disc i tots servits amb HTTP
+  200 pel servidor local.
+- Playwright (Chromium): els tres jocs arrenquen, renderitzen i es juguen
+  dins l'iframe del reproductor, amb els service workers actius i sense cap
+  petició externa, cap error de consola i cap error de pàgina.
+- `npm run check` → **8/8 correctes**.
+
 ## Correcció: el lloc no s'obria (ERR_FAILED + version.json 404)
 
 Símptomes: `Failed to convert value to 'Response'`, `The FetchEvent for

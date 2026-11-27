@@ -15,7 +15,7 @@
  *   credit (opcional) crÃ¨dit que surt com a badge sobre la portada
  *          (p. ex. l'autor de la captura o del joc)
  *
- * 1867 jocs. Aquest fitxer Ã©s dades pures: no importa res i no fa res,
+ * 1871 jocs. Aquest fitxer Ã©s dades pures: no importa res i no fa res,
  * nomÃ©s exporta la llista.
  *
  * El camp image l'omple tools/fetch-covers.mjs. Els jocs que no tenen
@@ -1885,7 +1885,9 @@ export const GAMES = [
    { name: "Zuma Shooter", url: "clzumashooter.html", image: "assets/images/clzumashooter.webp", type: "puzle" },
    { name: "Greater Diplomacy 2", url: "fd.html", image: "assets/images/fd.webp", type: "altres" },
    { name: "Mario Builder 64", url: "mariobuilder64.html", image: "assets/images/mariobuilder64.webp", type: "retro" },
-   { name: "Penalty Shooters 3", url: "penaltyshooters3.html", image: "assets/images/penaltyshooters3.webp", type: "esports" },
+   { name: "Penalty Shooters", url: "penaltyshooters1/index.html", image: "assets/images/penaltyshooters1.webp", type: "esports" },
+   { name: "Penalty Shooters 2", url: "penaltyshooters2/index.html", image: "assets/images/penaltyshooters2.webp", type: "esports" },
+   { name: "Penalty Shooters 3", url: "penaltyshooters3/index.html", image: "assets/images/penaltyshooters3.webp", type: "esports" },
    { name: "Rocket Knight 2", url: "rocketknight2.html", image: "assets/images/rocketknight2.webp", type: "retro" },
    { name: "Snow Bros", url: "snowbros.html", image: "assets/images/snowbros.webp", type: "retro" },
    { name: "NGAHHH! Simulator v0.99", url: "vxc.html", image: "assets/images/vxc.webp", type: "accio" },

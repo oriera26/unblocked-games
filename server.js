@@ -51,8 +51,17 @@ const MIME = {
     '.mp3': 'audio/mpeg',
     '.ogg': 'audio/ogg',
     '.wav': 'audio/wav',
+    '.m4a': 'audio/mp4',
     '.mp4': 'video/mp4',
     '.webm': 'video/webm',
+
+    /* Tipus que necessiten alguns jocs (Box2D en WASM, models 3D de
+       Construct 3, llicencies en text). Sense ells el servidor local
+       responia 415 i el joc no arrencava. */
+    '.wasm': 'application/wasm',
+    '.glb': 'model/gltf-binary',
+    '.gltf': 'model/gltf+json',
+    '.txt': 'text/plain; charset=utf-8',
 
     '.woff': 'font/woff',
     '.woff2': 'font/woff2',
